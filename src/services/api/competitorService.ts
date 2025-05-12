@@ -19,14 +19,14 @@ function getSentimentFromRating(rating: number) {
 }
 
 // Combined data from Google Places and Yelp
-export const fetchCombinedCompetitorData = async (businessType: string, district: string, apiKeys: any) => {
+export const fetchCombinedCompetitorData = async (businessType: string, district: string, apiKeys: any, cuisineType?: string) => {
   try {
-    console.log(`Fetching combined data for ${businessType} in ${district}`);
+    console.log(`Fetching combined data for ${businessType} in ${district}${cuisineType ? ` (${cuisineType})` : ''}`);
     // Get appropriate business search term
     let searchTerm = '';
     switch (businessType) {
       case 'restaurant':
-        searchTerm = 'restaurants';
+        searchTerm = cuisineType ? `${cuisineType} restaurants` : 'restaurants';
         break;
       case 'coffee_shop':
         searchTerm = 'coffee shops';

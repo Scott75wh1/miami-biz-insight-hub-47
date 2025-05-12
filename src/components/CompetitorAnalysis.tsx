@@ -47,7 +47,11 @@ const CompetitorAnalysis = ({ businessType, cuisineType }: CompetitorAnalysisPro
           onDistrictChange={handleDistrictChange} 
         />
         
-        <CompetitorList competitors={competitors} isLoading={isLoading} />
+        <CompetitorList 
+          competitors={competitors} 
+          isLoading={isLoading} 
+          selectedDistrict={selectedDistrict} 
+        />
       </CardContent>
     </Card>
   );

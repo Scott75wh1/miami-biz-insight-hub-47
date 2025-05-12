@@ -51,7 +51,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 gap-6 mb-6">
-            <AIAssistant businessType={businessType} cuisineType={businessType === 'restaurant' ? selectedCuisine : undefined} />
+            <AIAssistant businessType={businessType} />
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
