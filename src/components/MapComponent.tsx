@@ -12,12 +12,14 @@ const MapComponent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
   const { toast } = useToast();
+  const [dataAttempted, setDataAttempted] = useState(false);
 
   useEffect(() => {
     const loadMapData = async () => {
-      if (!selectedDistrict || !isLoaded || !areKeysSet()) return;
+      if (!selectedDistrict || !isLoaded || !areKeysSet() || dataAttempted) return;
       
       setIsLoading(true);
+      setDataAttempted(true);
       
       try {
         const placesData = await fetchPlacesData(`business in ${selectedDistrict}`, apiKeys.googlePlaces, 'Miami, FL');
@@ -43,10 +45,11 @@ const MapComponent = () => {
     if (selectedDistrict) {
       loadMapData();
     }
-  }, [selectedDistrict, isLoaded, apiKeys.googlePlaces, toast, areKeysSet]);
+  }, [selectedDistrict, isLoaded, apiKeys.googlePlaces, toast, areKeysSet, dataAttempted]);
 
   const handleDistrictClick = (district: string) => {
     setSelectedDistrict(district);
+    setDataAttempted(false);
   };
 
   return (

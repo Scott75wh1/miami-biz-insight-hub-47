@@ -77,6 +77,11 @@ export const fetchGoogleTrendsData = async (apiKey: string, keywords: string[], 
     return null;
   }
   
+  if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
+    console.error('Invalid keywords parameter for Google Trends');
+    return null;
+  }
+  
   try {
     // This would be a real API call to Google Trends
     // Note: Google Trends doesn't have an official API, so this is a placeholder

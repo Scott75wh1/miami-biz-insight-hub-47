@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users } from 'lucide-react';
@@ -34,15 +35,16 @@ const DemographicsDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
   const { toast } = useToast();
+  const [dataAttempted, setDataAttempted] = useState(false);
 
   useEffect(() => {
     const loadDemographicData = async () => {
-      if (!isLoaded || !areKeysSet()) return;
+      if (!isLoaded || !areKeysSet() || dataAttempted) return;
       
       setIsLoading(true);
       
       try {
-        const data = await fetchCensusData('Miami');
+        const data = await fetchCensusData(apiKeys.censusGov, 'Miami');
         
         if (data) {
           // Process the real data here
@@ -62,11 +64,12 @@ const DemographicsDashboard = () => {
         });
       } finally {
         setIsLoading(false);
+        setDataAttempted(true);
       }
     };
 
     loadDemographicData();
-  }, [isLoaded, apiKeys.censusGov, toast, areKeysSet]);
+  }, [isLoaded, apiKeys.censusGov, toast, areKeysSet, dataAttempted]);
 
   return (
     <Card className="h-full">

@@ -35,26 +35,26 @@ const TrendsAnalysis = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
   const { toast } = useToast();
+  const [dataAttempted, setDataAttempted] = useState(false);
 
   useEffect(() => {
     const loadTrendsData = async () => {
-      if (!isLoaded || !areKeysSet()) return;
+      if (!isLoaded || !areKeysSet() || dataAttempted) return;
       
       setIsLoading(true);
       
       try {
         const keywords = ['restaurants miami beach', 'coffee shop wynwood', 'juice bar miami', 'co-working brickell'];
-        // Pass the API key as the first argument and keywords as the second argument
-        const data = await fetchGoogleTrendsData(apiKeys.googleTrends, keywords);
         
-        if (data) {
-          // Process the real data here
-          // For now, we'll keep using the placeholder data
-          // In a real implementation, you would transform the API response
-          toast({
-            title: "Trend data loaded",
-            description: "Google Trends data has been successfully retrieved.",
-          });
+        if (apiKeys.googleTrends && keywords && keywords.length > 0) {
+          const data = await fetchGoogleTrendsData(apiKeys.googleTrends, keywords);
+          
+          if (data) {
+            toast({
+              title: "Trend data loaded",
+              description: "Google Trends data has been successfully retrieved.",
+            });
+          }
         }
       } catch (error) {
         console.error('Error fetching trends data:', error);
@@ -65,11 +65,12 @@ const TrendsAnalysis = () => {
         });
       } finally {
         setIsLoading(false);
+        setDataAttempted(true);
       }
     };
 
     loadTrendsData();
-  }, [isLoaded, apiKeys.googleTrends, toast, areKeysSet]);
+  }, [isLoaded, apiKeys.googleTrends, toast, areKeysSet, dataAttempted]);
 
   return (
     <Card className="h-full">

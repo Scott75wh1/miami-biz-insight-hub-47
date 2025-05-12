@@ -66,10 +66,11 @@ const CompetitorAnalysis = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
   const { toast } = useToast();
+  const [dataAttempted, setDataAttempted] = useState(false);
 
   useEffect(() => {
     const loadCompetitorData = async () => {
-      if (!isLoaded || !areKeysSet()) return;
+      if (!isLoaded || !areKeysSet() || dataAttempted) return;
       
       setIsLoading(true);
       
@@ -94,11 +95,12 @@ const CompetitorAnalysis = () => {
         });
       } finally {
         setIsLoading(false);
+        setDataAttempted(true);
       }
     };
 
     loadCompetitorData();
-  }, [isLoaded, apiKeys.yelp, toast, areKeysSet]);
+  }, [isLoaded, apiKeys.yelp, toast, areKeysSet, dataAttempted]);
 
   return (
     <Card className="h-full">
