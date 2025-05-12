@@ -1,11 +1,11 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartBar, Loader2 } from 'lucide-react';
+import { ChartBar, Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { fetchGoogleTrendsData } from '@/services/apiService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface TrendItem {
   label: string;
@@ -28,6 +28,7 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { apiKeys, isLoaded } = useApiKeys();
+  const isUsingDemoKey = !apiKeys.googleTrends || apiKeys.googleTrends === 'demo-key';
 
   // Get search keywords based on business type
   const getSearchKeywords = (type: BusinessType): string[] => {
@@ -100,9 +101,12 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
           // Set the growing categories
           setGrowingCategories(getGrowingCategories(businessType));
           
+          const messageType = isUsingDemoKey ? "Dati dimostrativi di trend caricati" : "Dati reali dei trend caricati";
           toast({
-            title: "Dati dei trend caricati",
-            description: "I dati dei trend sono stati caricati con successo.",
+            title: messageType,
+            description: isUsingDemoKey 
+              ? "Stai visualizzando dati dimostrativi. Inserisci una API key valida per dati reali."
+              : "I dati dei trend sono stati caricati con successo.",
           });
         } else {
           // Use default data if API returns no results
@@ -143,7 +147,7 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
     };
     
     fetchTrendsData();
-  }, [businessType, apiKeys.googleTrends, toast, isLoaded]);
+  }, [businessType, apiKeys.googleTrends, toast, isLoaded, isUsingDemoKey]);
 
   return (
     <Card className="h-full">
@@ -158,6 +162,14 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
             </div>
           )}
         </CardTitle>
+        {isUsingDemoKey && (
+          <Alert variant="warning" className="mt-2 py-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              Stai visualizzando trend dimostrativi. Inserisci una API key valida nelle impostazioni per accedere ai dati reali.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardHeader>
       <CardContent>
         <div className="space-y-6">

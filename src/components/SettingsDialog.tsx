@@ -1,9 +1,8 @@
-
 import React, { useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Settings, KeyRound, Info } from "lucide-react";
+import { Settings, KeyRound, Info, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formSchema = z.object({
   googlePlacesApiKey: z.string().min(1, "L'API Key di Google Places è richiesta"),
@@ -124,8 +124,20 @@ export function SettingsDialog() {
           <p className="text-sm">
             Per questa demo, puoi usare il valore "demo-key" per tutte le API key. 
             L'app mostrerà dati simulati, ma sarà possibile vedere come funziona l'interfaccia.
-            Per dati reali, inserisci le tue API key autentiche per ciascun servizio.
           </p>
+          <Alert variant="warning" className="mt-3 bg-amber-100 border-amber-300">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-xs font-medium">
+              Per visualizzare dati reali, devi ottenere API key valide dai seguenti servizi:
+              <ul className="list-disc pl-5 mt-2 space-y-1 text-xs">
+                <li><a href="https://developers.google.com/maps/documentation/places/web-service/overview" target="_blank" rel="noopener noreferrer" className="underline">Google Places API</a></li>
+                <li><a href="https://www.census.gov/data/developers/about.html" target="_blank" rel="noopener noreferrer" className="underline">Census.gov API</a></li>
+                <li><a href="https://www.yelp.com/developers" target="_blank" rel="noopener noreferrer" className="underline">Yelp Fusion API</a></li>
+                <li><a href="https://developers.google.com/trends/api/quickstart" target="_blank" rel="noopener noreferrer" className="underline">Google Trends API</a></li>
+                <li><a href="https://platform.openai.com/" target="_blank" rel="noopener noreferrer" className="underline">OpenAI API</a></li>
+              </ul>
+            </AlertDescription>
+          </Alert>
           <Button 
             variant="outline" 
             size="sm" 

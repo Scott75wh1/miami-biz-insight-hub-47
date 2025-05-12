@@ -1,10 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Loader2 } from 'lucide-react';
+import { Users, Loader2, AlertCircle } from 'lucide-react';
 import { fetchCensusData } from '@/services/apiService';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface DemographicData {
   population: string;
@@ -35,6 +35,7 @@ const DemographicsDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { apiKeys, isLoaded } = useApiKeys();
   const { toast } = useToast();
+  const isUsingDemoKey = !apiKeys.censusGov || apiKeys.censusGov === 'demo-key';
 
   useEffect(() => {
     const loadDemographicData = async () => {
@@ -60,9 +61,12 @@ const DemographicsDashboard = () => {
             }
           });
           
+          const messageType = isUsingDemoKey ? "Dati demografici demo caricati" : "Dati demografici reali caricati";
           toast({
-            title: "Dati demografici caricati",
-            description: "I dati demografici sono stati caricati con successo.",
+            title: messageType,
+            description: isUsingDemoKey 
+              ? "Stai utilizzando dati dimostrativi. Inserisci una API key reale nelle impostazioni per dati reali."
+              : "I dati demografici sono stati caricati con successo.",
           });
         }
       } catch (error) {
@@ -78,7 +82,7 @@ const DemographicsDashboard = () => {
     };
 
     loadDemographicData();
-  }, [isLoaded, apiKeys.censusGov, toast]);
+  }, [isLoaded, apiKeys.censusGov, toast, isUsingDemoKey]);
 
   return (
     <Card className="h-full">
@@ -93,6 +97,14 @@ const DemographicsDashboard = () => {
             </div>
           )}
         </CardTitle>
+        {isUsingDemoKey && (
+          <Alert variant="warning" className="mt-2 py-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              Stai visualizzando dati dimostrativi. Inserisci una API key valida nelle impostazioni per accedere ai dati reali.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

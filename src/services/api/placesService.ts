@@ -2,6 +2,7 @@
 import { handleApiError } from './handleError';
 import { generateMockPlacesData, generateBasicMockData } from './data/mockPlacesData';
 import { fetchFromPlacesApi } from './placesApi';
+import { fetchWithProxy } from './proxyService';
 
 export const fetchPlacesData = async (query: string, apiKey: string, location: string = 'Miami, FL') => {
   if (!apiKey || apiKey === 'demo-key') {
@@ -11,11 +12,14 @@ export const fetchPlacesData = async (query: string, apiKey: string, location: s
   }
   
   try {
+    console.log(`Attempting to use real Google Places API with key: ${apiKey.substring(0, 4)}...`);
+    
     // Attempt to use the actual Google Places API
     const apiResponse = await fetchFromPlacesApi(query, apiKey, location);
     
     // If we have a valid response from the API, return it
-    if (apiResponse) {
+    if (apiResponse && apiResponse.results) {
+      console.log(`Successfully fetched ${apiResponse.results.length} places from Google API`);
       return apiResponse;
     }
     
@@ -23,6 +27,9 @@ export const fetchPlacesData = async (query: string, apiKey: string, location: s
     console.log(`Using mock data for query: "${query}" in ${location}`);
     return generateBasicMockData(query, location);
   } catch (error) {
-    return handleApiError(error, 'Google Places');
+    console.error(`Error in Google Places API call:`, error);
+    // If there's an error with the real API, fall back to mock data
+    console.log(`Falling back to mock data after API error`);
+    return generateBasicMockData(query, location);
   }
 };

@@ -48,11 +48,17 @@ export function useApiKeys() {
     // Check if any key is not the demo key
     return Object.values(apiKeys).some(key => key !== 'demo-key');
   };
+  
+  const isUsingRealData = () => {
+    // Check if we're using real data (not demo keys)
+    return Object.values(apiKeys).every(key => key !== 'demo-key');
+  };
 
   return {
     apiKeys,
     isLoaded,
     isLoadError,
     areKeysSet,
+    isUsingRealData,
   };
 }
