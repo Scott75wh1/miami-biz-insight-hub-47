@@ -12,17 +12,14 @@ export const DistrictSelector: React.FC<DistrictSelectorProps> = ({
   selectedDistrict,
   onDistrictChange,
 }) => {
+  // Nota: Questo componente non verrà più utilizzato, ma manteniamo il file per evitare errori di importazione
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className="hidden">
       {districts.map((district) => (
         <button
           key={district}
           type="button"
-          className={`text-xs py-1.5 px-2.5 rounded-full transition-colors ${
-            selectedDistrict === district
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-accent text-accent-foreground hover:bg-accent/80'
-          }`}
+          className="hidden"
           onClick={() => onDistrictChange(district)}
         >
           {district}

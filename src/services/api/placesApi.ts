@@ -11,9 +11,11 @@ export const fetchFromPlacesApi = async (query: string, apiKey: string, location
   try {
     console.log(`Making real API call to Google Places API for: ${query} in ${location}`);
     
-    // Build the actual Google Places API URL
+    // Build the actual Google Places API URL with radius parameter (2 miles = 3219 meters)
+    const radius = 3219; // 2 miles in meters
+    
     // We're using textSearch which can handle natural language queries like "restaurants near [address]"
-    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}&location=${encodeURIComponent(location)}`;
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}&location=${encodeURIComponent(location)}&radius=${radius}`;
     
     // Use a proxy to avoid CORS issues in the browser
     const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;

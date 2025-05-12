@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import { Map as MapIcon, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
@@ -19,8 +19,6 @@ interface PlaceData {
 }
 
 const MapComponent = ({ businessType }: MapComponentProps) => {
-  const miamiDistricts = ['Downtown', 'Brickell', 'Wynwood', 'Little Havana', 'Miami Beach'];
-  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [customAddress, setCustomAddress] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddressSearching, setIsAddressSearching] = useState(false);
@@ -31,7 +29,6 @@ const MapComponent = ({ businessType }: MapComponentProps) => {
   // Reset data when business type changes
   useEffect(() => {
     setPlacesData(null);
-    setSelectedDistrict(null);
     setCustomAddress(null);
   }, [businessType]);
 
@@ -55,7 +52,6 @@ const MapComponent = ({ businessType }: MapComponentProps) => {
   const handleAddressSubmit = (address: string) => {
     setIsAddressSearching(true);
     setCustomAddress(address);
-    setSelectedDistrict(null); // Reset district when using custom address
     
     // Add a small delay to show the loading state
     setTimeout(() => {
@@ -64,21 +60,9 @@ const MapComponent = ({ businessType }: MapComponentProps) => {
     }, 500);
   };
 
-  // Load data when district or custom address changes
-  useEffect(() => {
-    if ((!selectedDistrict && !customAddress) || !isLoaded) return;
-    
-    setIsLoading(true);
-    
-    const location = selectedDistrict 
-      ? `${selectedDistrict}, Miami, FL` 
-      : customAddress || 'Miami, FL';
-    
-    loadPlacesData(location);
-  }, [selectedDistrict, businessType, apiKeys.googlePlaces, isLoaded]);
-
   const loadPlacesData = async (location: string) => {
     try {
+      setIsLoading(true);
       const searchQuery = `${getBusinessTypeQuery(businessType)} near ${location} within 2 miles`;
       console.log(`Loading places data with query: ${searchQuery}`);
       
@@ -135,16 +119,11 @@ const MapComponent = ({ businessType }: MapComponentProps) => {
     }
   };
 
-  const handleDistrictClick = (district: string) => {
-    setCustomAddress(null); // Reset custom address when selecting district
-    setSelectedDistrict(district);
-  };
-
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between">
-          <span>Mappa di Miami - {getBusinessTypeQuery(businessType)}</span>
+          <span>Ricerca - {getBusinessTypeQuery(businessType)}</span>
           {isLoading && (
             <div className="flex items-center text-sm text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -157,50 +136,30 @@ const MapComponent = ({ businessType }: MapComponentProps) => {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="relative w-full h-[400px] bg-miami-blue/10 rounded-md flex items-center justify-center">
-          {/* Placeholder per la mappa interattiva */}
-          <div className="text-center p-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 mb-4">
-              <MapIcon className="h-8 w-8 text-primary" />
+        <div className="p-4">
+          {!customAddress ? (
+            <div className="text-center p-4 text-muted-foreground">
+              <p className="text-sm">Inserisci un indirizzo per visualizzare i dati di {getBusinessTypeQuery(businessType)}</p>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              {customAddress 
-                ? `Visualizzazione ${getBusinessTypeQuery(businessType)} vicino a ${customAddress} (raggio: 2 miglia)`
-                : selectedDistrict 
-                  ? `Visualizzazione ${getBusinessTypeQuery(businessType)} per ${selectedDistrict}`
-                  : `Seleziona un quartiere di Miami o inserisci un indirizzo per visualizzare i dati di ${getBusinessTypeQuery(businessType)}`}
-            </p>
-            {placesData && (
-              <div className="mt-4 text-left bg-white/80 p-3 rounded-md max-w-sm mx-auto">
-                <h4 className="font-medium mb-2 text-sm">Risultati per {customAddress || selectedDistrict}</h4>
-                <ul className="space-y-2 text-sm">
-                  {placesData.map((place, idx) => (
-                    <li key={idx} className="border-b pb-2">
-                      <div className="font-medium">{place.name}</div>
-                      <div className="text-xs text-muted-foreground">{place.vicinity}</div>
-                      <div className="text-xs">Rating: {place.rating}/5</div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 p-4">
-          {miamiDistricts.map((district) => (
-            <button
-              key={district}
-              type="button"
-              className={`text-xs py-1.5 px-2.5 rounded-full transition-colors ${
-                selectedDistrict === district
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-accent text-accent-foreground hover:bg-accent/80'
-              }`}
-              onClick={() => handleDistrictClick(district)}
-            >
-              {district}
-            </button>
-          ))}
+          ) : !placesData ? (
+            <div className="flex justify-center items-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Caricamento dati...</span>
+            </div>
+          ) : (
+            <div className="mt-4 bg-white/80 p-3 rounded-md">
+              <h4 className="font-medium mb-2 text-sm">Risultati per {customAddress}</h4>
+              <ul className="space-y-2 text-sm">
+                {placesData.map((place, idx) => (
+                  <li key={idx} className="border-b pb-2">
+                    <div className="font-medium">{place.name}</div>
+                    <div className="text-xs text-muted-foreground">{place.vicinity}</div>
+                    <div className="text-xs">Rating: {place.rating}/5</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
