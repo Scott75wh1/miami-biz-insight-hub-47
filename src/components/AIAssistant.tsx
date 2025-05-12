@@ -1,36 +1,83 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Loader2 } from 'lucide-react';
+import { fetchOpenAIAnalysis } from '@/services/apiService';
+import { useApiKeys } from '@/hooks/useApiKeys';
+import { useToast } from '@/components/ui/use-toast';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 const AIAssistant = () => {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'assistant', 
       content: 'Ciao! Sono il tuo Assistente AI per l\'analisi dei dati di business a Miami. Come posso aiutarti oggi?' 
     }
   ]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
+  const { toast } = useToast();
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isProcessing) return;
     
     // Add user message
-    const userMessage = { role: 'user', content: input };
-    setMessages([...messages, userMessage]);
+    const userMessage: Message = { role: 'user', content: input };
+    setMessages(prevMessages => [...prevMessages, userMessage]);
     setInput('');
     
-    // Simulate AI response (in a real app, this would call an API)
-    setTimeout(() => {
-      const placeholderResponse = { 
-        role: 'assistant', 
-        content: `Basandomi sui dati a disposizione, il settore "${input}" a Miami mostra un potenziale interessante. I quartieri con maggior domanda sono Wynwood e Brickell. Vuoi che analizzi meglio questi dati per te?`
-      };
-      setMessages(prevMessages => [...prevMessages, placeholderResponse]);
-    }, 1000);
+    if (!isLoaded || !areKeysSet()) {
+      setMessages(prevMessages => [
+        ...prevMessages,
+        { 
+          role: 'assistant', 
+          content: 'Per favore configura prima le API keys nelle impostazioni per utilizzare l\'assistente AI.' 
+        }
+      ]);
+      return;
+    }
+    
+    setIsProcessing(true);
+    
+    try {
+      const response = await fetchOpenAIAnalysis(input);
+      
+      if (response && response.choices && response.choices[0]) {
+        const aiResponse: Message = { 
+          role: 'assistant', 
+          content: response.choices[0].message.content 
+        };
+        setMessages(prevMessages => [...prevMessages, aiResponse]);
+      } else {
+        throw new Error('Invalid API response');
+      }
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      
+      setMessages(prevMessages => [
+        ...prevMessages,
+        { 
+          role: 'assistant', 
+          content: 'Mi dispiace, non sono riuscito a elaborare la tua richiesta. Verifica che la tua API key di OpenAI sia valida.' 
+        }
+      ]);
+      
+      toast({
+        title: "Errore AI",
+        description: "Impossibile ottenere una risposta dall'assistente AI. Verifica la tua API key.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -61,6 +108,15 @@ const AIAssistant = () => {
               </div>
             </div>
           ))}
+          
+          {isProcessing && (
+            <div className="flex justify-start">
+              <div className="bg-muted text-foreground max-w-[80%] rounded-lg px-4 py-2 flex items-center">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <span>L'assistente sta elaborando...</span>
+              </div>
+            </div>
+          )}
         </div>
         
         <form onSubmit={handleSend} className="flex gap-2">
@@ -69,8 +125,11 @@ const AIAssistant = () => {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Chiedi informazioni sui dati e ricevi analisi..."
             className="flex-1"
+            disabled={isProcessing}
           />
-          <Button type="submit">Invia</Button>
+          <Button type="submit" disabled={isProcessing}>
+            {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Invia'}
+          </Button>
         </form>
       </CardContent>
     </Card>

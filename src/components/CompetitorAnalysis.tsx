@@ -1,17 +1,39 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, Star } from 'lucide-react';
+import { fetchYelpData } from '@/services/apiService';
+import { useApiKeys } from '@/hooks/useApiKeys';
+import { useToast } from '@/components/ui/use-toast';
+
+interface Competitor {
+  name: string;
+  type: string;
+  location: string;
+  rating: number;
+  reviews: number;
+  priceLevel: string;
+  sentiments?: {
+    positive: number;
+    neutral: number;
+    negative: number;
+  };
+}
 
 const CompetitorAnalysis = () => {
-  const competitors = [
+  const [competitors, setCompetitors] = useState<Competitor[]>([
     { 
       name: 'Café Lirica', 
       type: 'Caffetteria', 
       location: 'Wynwood', 
       rating: 4.7, 
       reviews: 236, 
-      priceLevel: '$$'
+      priceLevel: '$$',
+      sentiments: {
+        positive: 75,
+        neutral: 20,
+        negative: 5
+      }
     },
     { 
       name: 'Tech Hub Co-working', 
@@ -19,7 +41,12 @@ const CompetitorAnalysis = () => {
       location: 'Brickell', 
       rating: 4.5, 
       reviews: 187, 
-      priceLevel: '$$$'
+      priceLevel: '$$$',
+      sentiments: {
+        positive: 70,
+        neutral: 25,
+        negative: 5
+      }
     },
     { 
       name: 'Ocean View Restaurant', 
@@ -27,9 +54,51 @@ const CompetitorAnalysis = () => {
       location: 'Miami Beach', 
       rating: 4.4, 
       reviews: 452, 
-      priceLevel: '$$$'
+      priceLevel: '$$$',
+      sentiments: {
+        positive: 65,
+        neutral: 30,
+        negative: 5
+      }
     },
-  ];
+  ]);
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const loadCompetitorData = async () => {
+      if (!isLoaded || !areKeysSet()) return;
+      
+      setIsLoading(true);
+      
+      try {
+        // Get competitors data for a sample business type
+        const data = await fetchYelpData('coffee shops', 'Miami, FL');
+        
+        if (data && data.businesses) {
+          // In a real implementation, you would transform the Yelp API response
+          // into the competitors array format
+          toast({
+            title: "Competitor data loaded",
+            description: "Yelp data has been successfully retrieved.",
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching competitor data:', error);
+        toast({
+          title: "Error loading competitors",
+          description: "Could not retrieve Yelp data. Check your API key.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCompetitorData();
+  }, [isLoaded, apiKeys.yelp, toast, areKeysSet]);
 
   return (
     <Card className="h-full">
@@ -37,6 +106,7 @@ const CompetitorAnalysis = () => {
         <CardTitle className="flex items-center">
           <Building className="mr-2 h-5 w-5" />
           Analisi Competitor
+          {isLoading && <span className="ml-2 text-xs text-muted-foreground">(Caricamento...)</span>}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -60,9 +130,13 @@ const CompetitorAnalysis = () => {
               <div className="mt-2">
                 <div className="text-xs font-medium mt-2 mb-1">Sentimento Recensioni</div>
                 <div className="flex h-1.5 w-full rounded-full overflow-hidden">
-                  <div className="bg-green-500 h-full" style={{ width: '75%' }}></div>
-                  <div className="bg-yellow-500 h-full" style={{ width: '20%' }}></div>
-                  <div className="bg-red-500 h-full" style={{ width: '5%' }}></div>
+                  {competitor.sentiments && (
+                    <>
+                      <div className="bg-green-500 h-full" style={{ width: `${competitor.sentiments.positive}%` }}></div>
+                      <div className="bg-yellow-500 h-full" style={{ width: `${competitor.sentiments.neutral}%` }}></div>
+                      <div className="bg-red-500 h-full" style={{ width: `${competitor.sentiments.negative}%` }}></div>
+                    </>
+                  )}
                 </div>
                 <div className="flex justify-between mt-1 text-xs text-muted-foreground">
                   <span>Positivo</span>

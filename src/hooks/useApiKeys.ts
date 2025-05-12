@@ -19,20 +19,26 @@ export function useApiKeys() {
   });
 
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoadError, setIsLoadError] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const keys = {
-      googlePlaces: localStorage.getItem('googlePlacesApiKey') || '',
-      censusGov: localStorage.getItem('censusGovApiKey') || '',
-      yelp: localStorage.getItem('yelpApiKey') || '',
-      googleTrends: localStorage.getItem('googleTrendsApiKey') || '',
-      openAI: localStorage.getItem('openAIApiKey') || '',
-    };
-    
-    setApiKeys(keys);
-    setIsLoaded(true);
+    try {
+      const keys = {
+        googlePlaces: localStorage.getItem('googlePlacesApiKey') || '',
+        censusGov: localStorage.getItem('censusGovApiKey') || '',
+        yelp: localStorage.getItem('yelpApiKey') || '',
+        googleTrends: localStorage.getItem('googleTrendsApiKey') || '',
+        openAI: localStorage.getItem('openAIApiKey') || '',
+      };
+      
+      setApiKeys(keys);
+      setIsLoaded(true);
+    } catch (error) {
+      console.error('Error loading API keys:', error);
+      setIsLoadError(true);
+    }
   }, []);
 
   const areKeysSet = () => {
@@ -48,6 +54,7 @@ export function useApiKeys() {
   return {
     apiKeys,
     isLoaded,
+    isLoadError,
     areKeysSet,
   };
 }
