@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Star, MapPin, MessageSquare } from 'lucide-react';
+import { Star, MapPin, MessageSquare, Award } from 'lucide-react';
 
 export interface Competitor {
   name: string;
@@ -16,6 +16,7 @@ export interface Competitor {
   };
   yelpMatch?: boolean;
   reviewHighlight?: string | null;
+  strengths?: string[];
 }
 
 interface CompetitorCardProps {
@@ -68,6 +69,26 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({ competitor }) =>
           <span>{competitor.sentiments?.neutral || 0}% Neutro</span>
           <span>{competitor.sentiments?.negative || 0}% Negativo</span>
         </div>
+        
+        {/* Display strengths if available */}
+        {competitor.strengths && competitor.strengths.length > 0 && (
+          <div className="mt-2">
+            <div className="text-xs font-medium mb-1 flex items-center">
+              <Award className="h-3.5 w-3.5 mr-1 text-amber-500" />
+              Punti di Forza
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {competitor.strengths.map((strength, index) => (
+                <span 
+                  key={index} 
+                  className="text-xs px-2 py-0.5 bg-amber-50 text-amber-800 rounded-full border border-amber-100"
+                >
+                  {strength}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         
         {competitor.reviewHighlight && (
           <div className="mt-2 text-xs bg-muted/30 p-2 rounded-md">

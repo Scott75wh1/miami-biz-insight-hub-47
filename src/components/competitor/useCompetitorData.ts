@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { fetchCombinedCompetitorData } from '@/services/apiService';
+import { fetchCombinedCompetitorData, analyzeCompetitorReviews } from '@/services/apiService';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { Competitor } from './CompetitorCard';
 
@@ -208,7 +207,7 @@ export const useCompetitorData = (
     }
   };
 
-  // Load competitor data function
+  // Load competitor data function with AI analysis
   const loadCompetitorData = async () => {
     if (!isLoaded || !selectedDistrict) return;
     
@@ -225,8 +224,11 @@ export const useCompetitorData = (
         cuisineType
       );
       
+      // Variable to hold the competitor data
+      let competitorData: Competitor[] = [];
+      
       if (combinedData && combinedData.length > 0) {
-        setCompetitors(combinedData);
+        competitorData = combinedData;
         
         toast({
           title: "Dati competitor caricati",
@@ -234,14 +236,46 @@ export const useCompetitorData = (
         });
       } else {
         // Use default data if API returns no results
-        const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
-        setCompetitors(defaultData);
+        competitorData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
         
         toast({
           title: "Utilizzando dati predefiniti",
           description: "Nessun dato disponibile dalle API, utilizzando dati di esempio.",
         });
       }
+      
+      // Get strengths analysis from OpenAI
+      console.log("Analyzing competitor strengths with AI...");
+      
+      const strengthsAnalysis = await analyzeCompetitorReviews(
+        apiKeys.openAI,
+        competitorData,
+        businessType,
+        selectedDistrict,
+        cuisineType
+      );
+      
+      console.log("Strengths analysis:", strengthsAnalysis);
+      
+      // Merge strengths data with competitor data
+      const enhancedCompetitors = competitorData.map(competitor => {
+        const strengthsData = strengthsAnalysis.find(item => 
+          item.name.toLowerCase().includes(competitor.name.toLowerCase().split(' ')[0]) || 
+          competitor.name.toLowerCase().includes(item.name.toLowerCase().split(' ')[0])
+        );
+        
+        return {
+          ...competitor,
+          strengths: strengthsData?.strengths || []
+        };
+      });
+      
+      setCompetitors(enhancedCompetitors);
+      
+      toast({
+        title: "Analisi AI completata",
+        description: "I punti di forza dei competitor sono stati analizzati con successo.",
+      });
     } catch (error) {
       console.error('Error fetching competitor data:', error);
       
