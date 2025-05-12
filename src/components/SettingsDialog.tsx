@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Settings } from "lucide-react";
+import { Settings, KeyRound, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,7 +42,13 @@ export function SettingsDialog() {
   
   // Recupera le API key salvate in localStorage
   const getSavedApiKeys = () => {
-    if (typeof window === 'undefined') return {};
+    if (typeof window === 'undefined') return {
+      googlePlacesApiKey: '',
+      censusGovApiKey: '',
+      yelpApiKey: '',
+      googleTrendsApiKey: '',
+      openAIApiKey: '',
+    };
     
     const savedKeys = {
       googlePlacesApiKey: localStorage.getItem('googlePlacesApiKey') || '',
@@ -60,6 +66,13 @@ export function SettingsDialog() {
     defaultValues: getSavedApiKeys(),
   });
 
+  // Update form values when dialog opens
+  useEffect(() => {
+    if (open) {
+      form.reset(getSavedApiKeys());
+    }
+  }, [open, form]);
+
   function onSubmit(data: SettingsFormValues) {
     // Salva le API keys nel localStorage
     localStorage.setItem('googlePlacesApiKey', data.googlePlacesApiKey);
@@ -70,11 +83,20 @@ export function SettingsDialog() {
     
     toast({
       title: "Impostazioni salvate",
-      description: "Le API keys sono state salvate con successo",
+      description: "Le API keys sono state salvate con successo. Ricarica la pagina per applicare le modifiche.",
     });
     
     setOpen(false);
   }
+
+  // Function to use demo keys
+  const useDemoKeys = () => {
+    form.setValue('googlePlacesApiKey', 'demo-key');
+    form.setValue('censusGovApiKey', 'demo-key');
+    form.setValue('yelpApiKey', 'demo-key');
+    form.setValue('googleTrendsApiKey', 'demo-key');
+    form.setValue('openAIApiKey', 'demo-key');
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -85,11 +107,35 @@ export function SettingsDialog() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Impostazioni API</DialogTitle>
+          <DialogTitle className="flex items-center">
+            <KeyRound className="h-5 w-5 mr-2" />
+            Impostazioni API
+          </DialogTitle>
           <DialogDescription>
             Configura le API keys per i servizi esterni. Queste chiavi sono salvate localmente nel tuo browser.
           </DialogDescription>
         </DialogHeader>
+        
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-md mb-4">
+          <div className="flex items-center mb-2">
+            <Info className="h-5 w-5 mr-2" />
+            <p className="font-medium">Informazione sui dati</p>
+          </div>
+          <p className="text-sm">
+            Per questa demo, puoi usare il valore "demo-key" per tutte le API key. 
+            L'app mostrerà dati simulati, ma sarà possibile vedere come funziona l'interfaccia.
+            Per dati reali, inserisci le tue API key autentiche per ciascun servizio.
+          </p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-3"
+            onClick={useDemoKeys}
+          >
+            Usa chiavi demo
+          </Button>
+        </div>
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
             <FormField

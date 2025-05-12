@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users } from 'lucide-react';
+import { Users, Loader2 } from 'lucide-react';
 import { fetchCensusData } from '@/services/apiService';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
@@ -33,13 +33,12 @@ const DemographicsDashboard = () => {
     }
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
+  const { apiKeys, isLoaded } = useApiKeys();
   const { toast } = useToast();
-  const [dataAttempted, setDataAttempted] = useState(false);
 
   useEffect(() => {
     const loadDemographicData = async () => {
-      if (!isLoaded || !areKeysSet() || dataAttempted) return;
+      if (!isLoaded) return;
       
       setIsLoading(true);
       
@@ -47,29 +46,39 @@ const DemographicsDashboard = () => {
         const data = await fetchCensusData(apiKeys.censusGov, 'Miami');
         
         if (data) {
-          // Process the real data here
-          // For now, we'll keep using the placeholder data
-          // In a real implementation, you would transform the API response
+          // Process the API data 
+          setDemographicData({
+            population: data.population.toLocaleString(),
+            medianAge: data.median_age.toString(),
+            medianIncome: `$${data.median_income.toLocaleString()}`,
+            households: data.households.toLocaleString(),
+            ageDistribution: {
+              under18: 15,
+              age18to35: 32,
+              age36to55: 28,
+              over55: 25,
+            }
+          });
+          
           toast({
-            title: "Demographic data loaded",
-            description: "Census data has been successfully retrieved.",
+            title: "Dati demografici caricati",
+            description: "I dati demografici sono stati caricati con successo.",
           });
         }
       } catch (error) {
         console.error('Error fetching demographic data:', error);
         toast({
-          title: "Error loading data",
-          description: "Could not retrieve census data. Check your API key.",
+          title: "Errore nel caricamento dei dati",
+          description: "Controlla la tua API key di Census.gov.",
           variant: "destructive",
         });
       } finally {
         setIsLoading(false);
-        setDataAttempted(true);
       }
     };
 
     loadDemographicData();
-  }, [isLoaded, apiKeys.censusGov, toast, areKeysSet, dataAttempted]);
+  }, [isLoaded, apiKeys.censusGov, toast]);
 
   return (
     <Card className="h-full">
@@ -77,7 +86,12 @@ const DemographicsDashboard = () => {
         <CardTitle className="flex items-center">
           <Users className="mr-2 h-5 w-5" />
           Demografia
-          {isLoading && <span className="ml-2 text-xs text-muted-foreground">(Caricamento...)</span>}
+          {isLoading && (
+            <div className="ml-2 flex items-center text-xs text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              <span>Caricamento...</span>
+            </div>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -89,8 +103,8 @@ const DemographicsDashboard = () => {
             { label: 'Famiglie', value: demographicData.households }
           ].map((stat, index) => (
             <div key={index} className="text-center p-2 rounded-md bg-muted/30">
-              <div className="stat-value">{stat.value}</div>
-              <div className="stat-label">{stat.label}</div>
+              <div className="text-lg font-semibold">{stat.value}</div>
+              <div className="text-sm text-muted-foreground">{stat.label}</div>
             </div>
           ))}
         </div>

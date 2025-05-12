@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
 import { BusinessType } from '@/components/BusinessTypeSelector';
+import { fetchPlacesData } from '@/services/apiService';
 
 interface MapComponentProps {
   businessType: BusinessType;
@@ -20,13 +21,14 @@ const MapComponent = ({ businessType }: MapComponentProps) => {
   const miamiDistricts = ['Downtown', 'Brickell', 'Wynwood', 'Little Havana', 'Miami Beach'];
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { apiKeys } = useApiKeys();
+  const { apiKeys, isLoaded } = useApiKeys();
   const { toast } = useToast();
   const [placesData, setPlacesData] = useState<PlaceData[] | null>(null);
 
   // Reset data when business type changes
   useEffect(() => {
     setPlacesData(null);
+    setSelectedDistrict(null);
   }, [businessType]);
 
   const getBusinessTypeQuery = (type: BusinessType) => {
@@ -47,29 +49,68 @@ const MapComponent = ({ businessType }: MapComponentProps) => {
   };
 
   useEffect(() => {
-    if (!selectedDistrict) return;
+    if (!selectedDistrict || !isLoaded) return;
     
     setIsLoading(true);
     
-    // Simulate API call with mock data
-    setTimeout(() => {
-      // Generate mock data based on the district and business type
-      const mockData: PlaceData[] = [
-        { name: `${getBusinessTypeQuery(businessType)} 1 in ${selectedDistrict}`, vicinity: `${selectedDistrict} Ave 123`, rating: 4.5 },
-        { name: `${getBusinessTypeQuery(businessType)} 2 in ${selectedDistrict}`, vicinity: `${selectedDistrict} St 456`, rating: 4.2 },
-        { name: `${getBusinessTypeQuery(businessType)} 3 in ${selectedDistrict}`, vicinity: `${selectedDistrict} Blvd 789`, rating: 4.7 },
-      ];
-      
-      setPlacesData(mockData);
-      
-      toast({
-        title: "Dati del distretto caricati",
-        description: `Mostrando dati di ${getBusinessTypeQuery(businessType)} per ${selectedDistrict}`,
-      });
-      
-      setIsLoading(false);
-    }, 500); // Simulate network delay
-  }, [selectedDistrict, businessType, toast]);
+    const loadPlacesData = async () => {
+      try {
+        const searchQuery = `${getBusinessTypeQuery(businessType)} in ${selectedDistrict}, Miami`;
+        const data = await fetchPlacesData(searchQuery, apiKeys.googlePlaces);
+        
+        if (data && data.results) {
+          // Map the API response to our PlaceData interface
+          const mappedData = data.results.map((place: any) => ({
+            name: place.name,
+            vicinity: place.vicinity || place.formatted_address || `${selectedDistrict}, Miami`,
+            rating: place.rating || 0,
+          }));
+          
+          setPlacesData(mappedData);
+          
+          toast({
+            title: "Dati del distretto caricati",
+            description: `Mostrando dati di ${getBusinessTypeQuery(businessType)} per ${selectedDistrict}`,
+          });
+        } else {
+          // Fall back to mock data if the API doesn't return results
+          const mockData: PlaceData[] = [
+            { name: `${getBusinessTypeQuery(businessType)} 1 in ${selectedDistrict}`, vicinity: `${selectedDistrict} Ave 123`, rating: 4.5 },
+            { name: `${getBusinessTypeQuery(businessType)} 2 in ${selectedDistrict}`, vicinity: `${selectedDistrict} St 456`, rating: 4.2 },
+            { name: `${getBusinessTypeQuery(businessType)} 3 in ${selectedDistrict}`, vicinity: `${selectedDistrict} Blvd 789`, rating: 4.7 },
+          ];
+          
+          setPlacesData(mockData);
+          
+          toast({
+            title: "Dati simulati caricati",
+            description: `L'API non ha restituito risultati, mostrando dati simulati per ${selectedDistrict}`,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching places data:', error);
+        
+        // Fall back to mock data on error
+        const mockData: PlaceData[] = [
+          { name: `${getBusinessTypeQuery(businessType)} 1 in ${selectedDistrict}`, vicinity: `${selectedDistrict} Ave 123`, rating: 4.5 },
+          { name: `${getBusinessTypeQuery(businessType)} 2 in ${selectedDistrict}`, vicinity: `${selectedDistrict} St 456`, rating: 4.2 },
+          { name: `${getBusinessTypeQuery(businessType)} 3 in ${selectedDistrict}`, vicinity: `${selectedDistrict} Blvd 789`, rating: 4.7 },
+        ];
+        
+        setPlacesData(mockData);
+        
+        toast({
+          title: "Errore nel caricamento dei dati",
+          description: "Controlla la tua API key di Google Places. Mostrando dati simulati.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadPlacesData();
+  }, [selectedDistrict, businessType, apiKeys.googlePlaces, toast, isLoaded]);
 
   const handleDistrictClick = (district: string) => {
     setSelectedDistrict(district);

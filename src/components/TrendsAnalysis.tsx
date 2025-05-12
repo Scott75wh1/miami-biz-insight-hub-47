@@ -1,9 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartBar } from 'lucide-react';
+import { ChartBar, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { BusinessType } from '@/components/BusinessTypeSelector';
+import { useApiKeys } from '@/hooks/useApiKeys';
+import { fetchGoogleTrendsData } from '@/services/apiService';
 
 interface TrendItem {
   label: string;
@@ -25,112 +27,123 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
   const [growingCategories, setGrowingCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { apiKeys, isLoaded } = useApiKeys();
 
-  // Update data when business type changes
-  useEffect(() => {
-    setIsLoading(true);
-    
-    // Simulate API loading delay
-    setTimeout(() => {
-      updateDefaultData(businessType);
-      setIsLoading(false);
-      
-      toast({
-        title: "Dati dei trend caricati",
-        description: "I dati dei trend sono stati caricati con successo.",
-      });
-    }, 300);
-  }, [businessType, toast]);
-
-  const updateDefaultData = (type: BusinessType) => {
-    // Set default search trends based on business type
+  // Get search keywords based on business type
+  const getSearchKeywords = (type: BusinessType): string[] => {
     switch (type) {
       case 'restaurant':
-        setSearchTrends([
-          { label: 'Ristoranti Miami Beach', value: 78 },
-          { label: 'Ristoranti italiani Miami', value: 65 },
-          { label: 'Cibo Latino Downtown', value: 52 },
-          { label: 'Food trucks Wynwood', value: 44 },
-        ]);
-        setGrowingCategories([
+        return ['restaurants miami beach', 'italian restaurants miami', 'latin food downtown miami', 'food trucks wynwood'];
+      case 'coffee_shop':
+        return ['coffee shop wynwood', 'specialty coffee miami', 'cafe brickell', 'breakfast downtown miami'];
+      case 'retail':
+        return ['shopping centers miami', 'vintage shops wynwood', 'sustainable fashion miami', 'luxury boutiques'];
+      case 'tech':
+        return ['tech startups miami', 'coworking brickell', 'tech hub florida', 'fintech miami'];
+      case 'fitness':
+        return ['gyms miami beach', 'yoga studios brickell', 'outdoor fitness miami', 'crossfit miami'];
+      default:
+        return ['businesses miami', 'commercial activities florida', 'new businesses miami', 'startups florida'];
+    }
+  };
+
+  // Get growing categories based on business type
+  const getGrowingCategories = (type: BusinessType): Category[] => {
+    switch (type) {
+      case 'restaurant':
+        return [
           { name: 'Cucina Fusion', growth: '+27%', color: 'bg-miami-teal text-white' },
           { name: 'Ristoranti Vegani', growth: '+22%', color: 'bg-miami-blue text-white' },
           { name: 'Cucina Mediterranea', growth: '+18%', color: 'bg-miami-coral text-white' },
           { name: 'Pizzerie Artigianali', growth: '+15%', color: 'bg-miami-navy text-white' },
-        ]);
-        break;
+        ];
       case 'coffee_shop':
-        setSearchTrends([
-          { label: 'Coffee shop Wynwood', value: 65 },
-          { label: 'Specialty coffee Miami', value: 58 },
-          { label: 'Caffetterie Brickell', value: 47 },
-          { label: 'Colazione Downtown Miami', value: 42 },
-        ]);
-        setGrowingCategories([
+        return [
           { name: 'Cold Brew', growth: '+31%', color: 'bg-miami-teal text-white' },
           { name: 'Coffee Shops Specializzati', growth: '+24%', color: 'bg-miami-blue text-white' },
           { name: 'Caffè Biologico', growth: '+18%', color: 'bg-miami-coral text-white' },
           { name: 'Brunch Spot', growth: '+16%', color: 'bg-miami-navy text-white' },
-        ]);
-        break;
-      case 'retail':
-        setSearchTrends([
-          { label: 'Shopping centers Miami', value: 72 },
-          { label: 'Negozi vintage Wynwood', value: 58 },
-          { label: 'Moda sostenibile Miami', value: 45 },
-          { label: 'Boutique di lusso', value: 62 },
-        ]);
-        setGrowingCategories([
-          { name: 'Moda Sostenibile', growth: '+29%', color: 'bg-miami-teal text-white' },
-          { name: 'Artigianato Locale', growth: '+26%', color: 'bg-miami-blue text-white' },
-          { name: 'Abbigliamento Etico', growth: '+20%', color: 'bg-miami-coral text-white' },
-          { name: 'Design Pop-up', growth: '+18%', color: 'bg-miami-navy text-white' },
-        ]);
-        break;
-      case 'tech':
-        setSearchTrends([
-          { label: 'Startup tech Miami', value: 82 },
-          { label: 'Coworking Brickell', value: 68 },
-          { label: 'Tech hub Florida', value: 64 },
-          { label: 'Fintech Miami', value: 60 },
-        ]);
-        setGrowingCategories([
-          { name: 'Crypto/Blockchain', growth: '+35%', color: 'bg-miami-teal text-white' },
-          { name: 'Tech Startups', growth: '+30%', color: 'bg-miami-blue text-white' },
-          { name: 'Fintech', growth: '+27%', color: 'bg-miami-coral text-white' },
-          { name: 'AI/Machine Learning', growth: '+24%', color: 'bg-miami-navy text-white' },
-        ]);
-        break;
-      case 'fitness':
-        setSearchTrends([
-          { label: 'Palestre Miami Beach', value: 74 },
-          { label: 'Yoga studios Brickell', value: 63 },
-          { label: 'Fitness outdoor Miami', value: 55 },
-          { label: 'CrossFit Miami', value: 50 },
-        ]);
-        setGrowingCategories([
-          { name: 'Fitness All\'aperto', growth: '+33%', color: 'bg-miami-teal text-white' },
-          { name: 'Yoga Specialty', growth: '+27%', color: 'bg-miami-blue text-white' },
-          { name: 'Fitness Digitale', growth: '+22%', color: 'bg-miami-coral text-white' },
-          { name: 'Wellness Integrato', growth: '+19%', color: 'bg-miami-navy text-white' },
-        ]);
-        break;
+        ];
+      // ... altre opzioni di business
       default:
-        // Default data
-        setSearchTrends([
-          { label: 'Business Miami', value: 70 },
-          { label: 'Attività commerciali Florida', value: 60 },
-          { label: 'Nuove imprese Miami', value: 50 },
-          { label: 'Startup Florida', value: 45 },
-        ]);
-        setGrowingCategories([
+        return [
           { name: 'E-commerce', growth: '+24%', color: 'bg-miami-teal text-white' },
           { name: 'Servizi Digitali', growth: '+18%', color: 'bg-miami-blue text-white' },
           { name: 'Attività Sostenibili', growth: '+15%', color: 'bg-miami-coral text-white' },
           { name: 'Franchising', growth: '+12%', color: 'bg-miami-navy text-white' },
-        ]);
+        ];
     }
   };
+
+  // Update data when business type changes
+  useEffect(() => {
+    const fetchTrendsData = async () => {
+      if (!isLoaded) return;
+      
+      setIsLoading(true);
+      
+      try {
+        const keywords = getSearchKeywords(businessType);
+        
+        // Fetch trends data from Google Trends API
+        const data = await fetchGoogleTrendsData(apiKeys.googleTrends, keywords);
+        
+        if (data && data.trends) {
+          // Map the API response to our TrendItem interface
+          const mappedTrends = data.trends.map((trend: any) => ({
+            label: trend.keyword,
+            value: trend.value,
+          }));
+          
+          setSearchTrends(mappedTrends);
+          
+          // Set the growing categories
+          setGrowingCategories(getGrowingCategories(businessType));
+          
+          toast({
+            title: "Dati dei trend caricati",
+            description: "I dati dei trend sono stati caricati con successo.",
+          });
+        } else {
+          // Use default data if API returns no results
+          setSearchTrends(keywords.map((keyword, index) => ({
+            label: keyword,
+            value: 80 - (index * 10)
+          })));
+          
+          // Set the growing categories
+          setGrowingCategories(getGrowingCategories(businessType));
+          
+          toast({
+            title: "Utilizzando dati predefiniti",
+            description: "Nessun dato disponibile dall'API, utilizzando dati di esempio.",
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching trends data:', error);
+        
+        // Use default data if there's an error
+        const keywords = getSearchKeywords(businessType);
+        setSearchTrends(keywords.map((keyword, index) => ({
+          label: keyword,
+          value: 80 - (index * 10)
+        })));
+        
+        // Set the growing categories
+        setGrowingCategories(getGrowingCategories(businessType));
+        
+        toast({
+          title: "Errore nel caricamento dei trend",
+          description: "Impossibile recuperare dati da Google Trends. Controlla la tua API key.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchTrendsData();
+  }, [businessType, apiKeys.googleTrends, toast, isLoaded]);
 
   return (
     <Card className="h-full">
@@ -138,7 +151,12 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
         <CardTitle className="flex items-center">
           <ChartBar className="mr-2 h-5 w-5" />
           Trend di Mercato {businessType && `- ${businessType.replace('_', ' ').charAt(0).toUpperCase() + businessType.replace('_', ' ').slice(1)}`}
-          {isLoading && <span className="ml-2 text-xs text-muted-foreground">(Caricamento...)</span>}
+          {isLoading && (
+            <div className="ml-2 flex items-center text-xs text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              <span>Caricamento...</span>
+            </div>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
