@@ -12,13 +12,14 @@ import APILogDownloader from './APILogDownloader';
 
 interface MapComponentProps {
   businessType: BusinessType;
+  cuisineType?: string;
 }
 
-const MapComponent = ({ businessType }: MapComponentProps) => {
+const MapComponent = ({ businessType, cuisineType }: MapComponentProps) => {
   const [customAddress, setCustomAddress] = useState<string | null>(null);
   const [isAddressSearching, setIsAddressSearching] = useState(false);
   const { apiKeys } = useApiKeys();
-  const { placesData, isLoading, loadPlacesData } = usePlacesData(businessType, apiKeys.googlePlaces);
+  const { placesData, isLoading, loadPlacesData } = usePlacesData(businessType, apiKeys.googlePlaces, cuisineType);
 
   const handleAddressSubmit = (address: string) => {
     setIsAddressSearching(true);
@@ -31,11 +32,20 @@ const MapComponent = ({ businessType }: MapComponentProps) => {
     }, 500);
   };
 
+  // Get the proper title based on business type and cuisine type
+  const getTitle = () => {
+    const baseQuery = getBusinessTypeQuery(businessType);
+    if (businessType === 'restaurant' && cuisineType) {
+      return `Ricerca - ${baseQuery} (${cuisineType})`;
+    }
+    return `Ricerca - ${baseQuery}`;
+  };
+
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between">
-          <span>Ricerca - {getBusinessTypeQuery(businessType)}</span>
+          <span>{getTitle()}</span>
           {isLoading && (
             <div className="flex items-center text-sm text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin mr-1" />

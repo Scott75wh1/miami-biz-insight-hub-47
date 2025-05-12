@@ -9,9 +9,12 @@ import CompetitorAnalysis from '@/components/CompetitorAnalysis';
 import AIAssistant from '@/components/AIAssistant';
 import BusinessTypeSelector, { BusinessType } from '@/components/BusinessTypeSelector';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CuisineTypeSelector } from '@/components/restaurant/CuisineTypeSelector';
+import { useCuisineSelection } from '@/hooks/useCuisineSelection';
 
 const Index = () => {
   const [businessType, setBusinessType] = useState<BusinessType>('restaurant');
+  const { selectedCuisine, handleCuisineChange } = useCuisineSelection();
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -19,14 +22,23 @@ const Index = () => {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <BusinessTypeSelector
-            selectedType={businessType}
-            onTypeChange={setBusinessType}
-          />
+          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+            <BusinessTypeSelector
+              selectedType={businessType}
+              onTypeChange={setBusinessType}
+            />
+            
+            {businessType === 'restaurant' && (
+              <CuisineTypeSelector
+                selectedCuisine={selectedCuisine}
+                onCuisineChange={handleCuisineChange}
+              />
+            )}
+          </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div className="lg:col-span-2">
-              <MapComponent businessType={businessType} />
+              <MapComponent businessType={businessType} cuisineType={businessType === 'restaurant' ? selectedCuisine : undefined} />
             </div>
             <div>
               <DemographicsDashboard />
@@ -35,11 +47,11 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <TrendsAnalysis businessType={businessType} />
-            <CompetitorAnalysis businessType={businessType} />
+            <CompetitorAnalysis businessType={businessType} cuisineType={businessType === 'restaurant' ? selectedCuisine : undefined} />
           </div>
           
           <div className="grid grid-cols-1 gap-6 mb-6">
-            <AIAssistant businessType={businessType} />
+            <AIAssistant businessType={businessType} cuisineType={businessType === 'restaurant' ? selectedCuisine : undefined} />
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">

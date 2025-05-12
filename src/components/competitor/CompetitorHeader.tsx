@@ -1,27 +1,52 @@
 
 import React from 'react';
-import { Building, Loader2 } from 'lucide-react';
-import { BusinessType } from '@/components/BusinessTypeSelector';
+import { Loader2 } from 'lucide-react';
 
 interface CompetitorHeaderProps {
-  businessType: BusinessType;
+  businessType: string;
+  district: string;
   isLoading: boolean;
+  cuisineType?: string;
 }
 
-export const CompetitorHeader: React.FC<CompetitorHeaderProps> = ({ 
+export const CompetitorHeader: React.FC<CompetitorHeaderProps> = ({
   businessType,
-  isLoading 
+  district,
+  isLoading,
+  cuisineType
 }) => {
+  const getBusinessTypeLabel = () => {
+    switch(businessType) {
+      case 'restaurant': 
+        return cuisineType ? `Ristoranti (${cuisineType})` : 'Ristoranti';
+      case 'coffee_shop': 
+        return 'Caffetterie';
+      case 'retail': 
+        return 'Negozi';
+      case 'tech': 
+        return 'Aziende Tech';
+      case 'fitness': 
+        return 'Centri Fitness';
+      default: 
+        return businessType;
+    }
+  };
+
   return (
-    <div className="flex items-center">
-      <Building className="mr-2 h-5 w-5" />
-      Analisi Competitor {businessType && `- ${businessType.replace('_', ' ').charAt(0).toUpperCase() + businessType.replace('_', ' ').slice(1)}`}
-      {isLoading && (
-        <div className="ml-2 flex items-center text-xs text-muted-foreground">
-          <Loader2 className="h-3 w-3 animate-spin mr-1" />
-          <span>Caricamento...</span>
-        </div>
-      )}
+    <div className="flex flex-col space-y-1 text-sm text-muted-foreground">
+      <div className="flex items-center">
+        {isLoading ? (
+          <div className="flex items-center">
+            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+            <span>Caricamento competitor...</span>
+          </div>
+        ) : (
+          <span>I principali competitor nella zona {district}</span>
+        )}
+      </div>
+      <div>
+        Tipo di business: <span className="font-medium">{getBusinessTypeLabel()}</span>
+      </div>
     </div>
   );
 };

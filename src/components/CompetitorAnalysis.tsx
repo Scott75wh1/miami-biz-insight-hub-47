@@ -11,31 +11,34 @@ import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 
 interface CompetitorAnalysisProps {
   businessType: BusinessType;
+  cuisineType?: string;
 }
 
-const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
+const CompetitorAnalysis = ({ businessType, cuisineType }: CompetitorAnalysisProps) => {
   const { selectedDistrict, districts, handleDistrictChange } = useDistrictSelection();
   const { apiKeys, isLoaded } = useApiKeys();
   
   const { competitors, isLoading } = useCompetitorData(
-    businessType, 
-    selectedDistrict, 
+    businessType,
+    selectedDistrict,
     apiKeys, 
-    isLoaded
+    isLoaded,
+    cuisineType
   );
 
   // For debugging
-  console.log('CompetitorAnalysis rendering with:', { businessType, selectedDistrict, competitors });
-
+  console.log('CompetitorAnalysis rendering with:', { businessType, selectedDistrict, cuisineType, competitors });
+  
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
-        <CardTitle>
-          <CompetitorHeader 
-            businessType={businessType} 
-            isLoading={isLoading} 
-          />
-        </CardTitle>
+        <CardTitle>Competitor Analysis</CardTitle>
+        <CompetitorHeader 
+          businessType={businessType} 
+          district={selectedDistrict} 
+          isLoading={isLoading}
+          cuisineType={cuisineType}
+        />
       </CardHeader>
       <CardContent>
         <DistrictSelector 
@@ -44,11 +47,7 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
           onDistrictChange={handleDistrictChange} 
         />
         
-        <CompetitorList 
-          competitors={competitors} 
-          isLoading={isLoading} 
-          selectedDistrict={selectedDistrict} 
-        />
+        <CompetitorList competitors={competitors} isLoading={isLoading} />
       </CardContent>
     </Card>
   );

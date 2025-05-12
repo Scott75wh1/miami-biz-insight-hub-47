@@ -9,19 +9,68 @@ export const useCompetitorData = (
   businessType: BusinessType, 
   selectedDistrict: string,
   apiKeys: any,
-  isLoaded: boolean
+  isLoaded: boolean,
+  cuisineType?: string
 ) => {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
-  // Get default competitors data based on business type and district
-  const getDefaultCompetitors = (type: BusinessType, district: string): Competitor[] => {
+  // Get default competitors data based on business type, district and cuisine type
+  const getDefaultCompetitors = (type: BusinessType, district: string, cuisine?: string): Competitor[] => {
     const districtPrefix = district.replace(' ', '').toLowerCase();
     const timestamp = Date.now(); // Add timestamp to ensure different data each time
     
     switch (type) {
       case 'restaurant':
+        if (cuisine) {
+          return [
+            { 
+              name: `${district} ${cuisine} ${districtPrefix}${timestamp % 100}`, 
+              type: `Ristorante ${cuisine}`, 
+              location: district, 
+              rating: 4.5 + (Math.random() * 0.5), 
+              reviews: 400 + Math.floor(Math.random() * 200), 
+              priceLevel: '$$$',
+              sentiments: {
+                positive: 70 + Math.floor(Math.random() * 10),
+                neutral: 20 + Math.floor(Math.random() * 10),
+                negative: 5 + Math.floor(Math.random() * 5)
+              },
+              reviewHighlight: `Una delle migliori esperienze di cucina ${cuisine} a Miami!`
+            },
+            { 
+              name: `${cuisine} ${district} ${districtPrefix}${(timestamp + 1) % 100}`, 
+              type: `Ristorante ${cuisine}`, 
+              location: district, 
+              rating: 4.2 + (Math.random() * 0.6), 
+              reviews: 300 + Math.floor(Math.random() * 150), 
+              priceLevel: '$$$',
+              sentiments: {
+                positive: 65 + Math.floor(Math.random() * 10),
+                neutral: 25 + Math.floor(Math.random() * 10),
+                negative: 5 + Math.floor(Math.random() * 5)
+              },
+              reviewHighlight: `Cucina ${cuisine} autentica, ingredienti di prima qualità.`
+            },
+            { 
+              name: `${district} ${cuisine} Express ${districtPrefix}${(timestamp + 2) % 100}`, 
+              type: `Ristorante ${cuisine} Casual`, 
+              location: district, 
+              rating: 4.0 + (Math.random() * 0.5), 
+              reviews: 250 + Math.floor(Math.random() * 100), 
+              priceLevel: '$$',
+              sentiments: {
+                positive: 60 + Math.floor(Math.random() * 10),
+                neutral: 30 + Math.floor(Math.random() * 5),
+                negative: 5 + Math.floor(Math.random() * 10)
+              },
+              reviewHighlight: `Ottimo rapporto qualità-prezzo per cucina ${cuisine}.`
+            },
+          ];
+        }
+        
+        // Default restaurant data without cuisine specification
         return [
           { 
             name: `${district} Fine Dining ${districtPrefix}${timestamp % 100}`, 
@@ -166,13 +215,14 @@ export const useCompetitorData = (
     setIsLoading(true);
     
     try {
-      console.log(`Loading competitor data for ${businessType} in ${selectedDistrict}`);
+      console.log(`Loading competitor data for ${businessType} in ${selectedDistrict} ${cuisineType ? `(${cuisineType})` : ''}`);
       
       // Use the combined data function
       const combinedData = await fetchCombinedCompetitorData(
         businessType, 
         selectedDistrict, 
-        apiKeys
+        apiKeys,
+        cuisineType
       );
       
       if (combinedData && combinedData.length > 0) {
@@ -184,7 +234,7 @@ export const useCompetitorData = (
         });
       } else {
         // Use default data if API returns no results
-        const defaultData = getDefaultCompetitors(businessType, selectedDistrict);
+        const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
         setCompetitors(defaultData);
         
         toast({
@@ -196,7 +246,7 @@ export const useCompetitorData = (
       console.error('Error fetching competitor data:', error);
       
       // Use default data if there's an error
-      const defaultData = getDefaultCompetitors(businessType, selectedDistrict);
+      const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
       setCompetitors(defaultData);
       
       toast({
@@ -209,15 +259,15 @@ export const useCompetitorData = (
     }
   };
 
-  // Load data when business type or district changes
+  // Load data when business type, district, or cuisine type changes
   useEffect(() => {
-    console.log(`Business type changed to: ${businessType}`);
+    console.log(`Business type changed to: ${businessType}, Cuisine: ${cuisineType}`);
     if (isLoaded) {
       // Clear previous data
       setCompetitors([]);
       loadCompetitorData();
     }
-  }, [businessType, isLoaded]);
+  }, [businessType, cuisineType, isLoaded]);
   
   // Load data when district changes
   useEffect(() => {
