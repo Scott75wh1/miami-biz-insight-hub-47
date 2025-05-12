@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Star, Loader2 } from 'lucide-react';
-import { fetchYelpData } from '@/services/apiService';
+import { Building, Star, Loader2, MapPin } from 'lucide-react';
+import { fetchPlacesData } from '@/services/apiService';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
 import { BusinessType } from '@/components/BusinessTypeSelector';
@@ -28,11 +28,13 @@ interface CompetitorAnalysisProps {
 const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("Miami Beach");
   const { apiKeys, isLoaded } = useApiKeys();
   const { toast } = useToast();
+  const miamiDistricts = ['Downtown', 'Brickell', 'Wynwood', 'Little Havana', 'Miami Beach'];
 
-  // Get appropriate business term for Yelp API based on business type
-  const getYelpSearchTerm = (type: BusinessType) => {
+  // Get appropriate business term for Google Places API based on business type
+  const getBusinessTypeQuery = (type: BusinessType) => {
     switch (type) {
       case 'restaurant':
         return 'restaurants';
@@ -41,7 +43,7 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
       case 'retail':
         return 'retail shops';
       case 'tech':
-        return 'coworking spaces';
+        return 'tech companies';
       case 'fitness':
         return 'fitness centers';
       default:
@@ -49,7 +51,7 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
     }
   };
   
-  // Default sentiment distribution for businesses
+  // Default sentiment distribution for businesses based on rating
   const getDefaultSentiments = (rating: number) => {
     if (rating >= 4.5) {
       return { positive: 75, neutral: 20, negative: 5 };
@@ -62,45 +64,40 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
     }
   };
   
-  // Get price level string based on number
-  const getPriceLevel = (priceCount: number) => {
-    return Array(priceCount).fill('$').join('');
-  };
-
-  // Load competitor data when business type changes
+  // Load competitor data when business type or district changes
   useEffect(() => {
     const loadCompetitorData = async () => {
-      if (!isLoaded) return;
+      if (!isLoaded || !selectedDistrict) return;
       
       setIsLoading(true);
       setCompetitors([]);
       
       try {
-        // Get competitors data based on the selected business type
-        const searchTerm = getYelpSearchTerm(businessType);
-        const data = await fetchYelpData(apiKeys.yelp, searchTerm, 'Miami, FL');
+        // Get competitors data based on the selected business type and district
+        const searchQuery = `${getBusinessTypeQuery(businessType)} in ${selectedDistrict}, Miami`;
+        const data = await fetchPlacesData(searchQuery, apiKeys.googlePlaces, `${selectedDistrict}, Miami`);
         
-        if (data && data.businesses) {
-          // Map Yelp API data to our competitor format
-          const mappedCompetitors = data.businesses.map((business: any) => ({
-            name: business.name,
-            type: business.categories?.[0]?.title || getYelpSearchTerm(businessType),
-            location: business.location?.address1 || 'Miami',
-            rating: business.rating || 0,
-            reviews: business.review_count || 0,
-            priceLevel: business.price || '$$$',
-            sentiments: getDefaultSentiments(business.rating || 0)
+        if (data && data.results && data.results.length > 0) {
+          // Map Google Places API data to our competitor format
+          const mappedCompetitors = data.results.map((place: any) => ({
+            name: place.name,
+            type: place.types ? place.types[0].replace('_', ' ') : getBusinessTypeQuery(businessType),
+            location: place.vicinity || `${selectedDistrict}, Miami`,
+            rating: place.rating || 0,
+            reviews: place.user_ratings_total || 0,
+            priceLevel: place.price_level ? '$'.repeat(place.price_level) : '$$$',
+            sentiments: getDefaultSentiments(place.rating || 0)
           }));
           
           setCompetitors(mappedCompetitors);
           
           toast({
             title: "Dati competitor caricati",
-            description: `I dati dei competitor per ${searchTerm} sono stati caricati con successo.`,
+            description: `I dati dei competitor per ${searchQuery} sono stati caricati con successo.`,
           });
         } else {
           // Use default data if API returns no results
-          setCompetitors(getDefaultCompetitors(businessType));
+          setCompetitors(getDefaultCompetitors(businessType, selectedDistrict));
           
           toast({
             title: "Utilizzando dati predefiniti",
@@ -111,11 +108,11 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
         console.error('Error fetching competitor data:', error);
         
         // Use default data if there's an error
-        setCompetitors(getDefaultCompetitors(businessType));
+        setCompetitors(getDefaultCompetitors(businessType, selectedDistrict));
         
         toast({
           title: "Errore nel caricamento competitor",
-          description: "Impossibile recuperare dati da Yelp. Controlla la tua API key.",
+          description: "Impossibile recuperare dati. Controlla la tua API key.",
           variant: "destructive",
         });
       } finally {
@@ -124,17 +121,17 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
     };
 
     loadCompetitorData();
-  }, [isLoaded, apiKeys.yelp, toast, businessType]);
+  }, [isLoaded, apiKeys.googlePlaces, toast, businessType, selectedDistrict]);
   
-  // Default competitors data based on business type
-  const getDefaultCompetitors = (type: BusinessType): Competitor[] => {
+  // Default competitors data based on business type and district
+  const getDefaultCompetitors = (type: BusinessType, district: string): Competitor[] => {
     switch (type) {
       case 'restaurant':
         return [
           { 
-            name: 'Ocean View Restaurant', 
+            name: `${district} Fine Dining`, 
             type: 'Ristorante', 
-            location: 'Miami Beach', 
+            location: district, 
             rating: 4.7, 
             reviews: 452, 
             priceLevel: '$$$',
@@ -145,9 +142,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
             }
           },
           { 
-            name: 'La Trattoria', 
+            name: `${district} Trattoria`, 
             type: 'Ristorante Italiano', 
-            location: 'Brickell', 
+            location: district, 
             rating: 4.5, 
             reviews: 326, 
             priceLevel: '$$$',
@@ -158,9 +155,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
             }
           },
           { 
-            name: 'Taqueria Downtown', 
+            name: `${district} Taqueria`, 
             type: 'Ristorante Messicano', 
-            location: 'Downtown', 
+            location: district, 
             rating: 4.3, 
             reviews: 287, 
             priceLevel: '$$',
@@ -174,9 +171,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
       case 'coffee_shop':
         return [
           { 
-            name: 'Café Lirica', 
+            name: `Café ${district}`, 
             type: 'Caffetteria', 
-            location: 'Wynwood', 
+            location: district, 
             rating: 4.7, 
             reviews: 236, 
             priceLevel: '$$',
@@ -187,9 +184,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
             }
           },
           { 
-            name: 'Brew Corner', 
+            name: `${district} Coffee Corner`, 
             type: 'Specialty Coffee', 
-            location: 'Brickell', 
+            location: district, 
             rating: 4.6, 
             reviews: 198, 
             priceLevel: '$$',
@@ -200,9 +197,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
             }
           },
           { 
-            name: 'Morning Bliss', 
+            name: `${district} Morning Brew`, 
             type: 'Caffetteria & Bakery', 
-            location: 'Miami Beach', 
+            location: district, 
             rating: 4.4, 
             reviews: 312, 
             priceLevel: '$$',
@@ -217,9 +214,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
       default:
         return [
           { 
-            name: 'Generic Business A', 
+            name: `${district} Business A`, 
             type: 'Business', 
-            location: 'Miami Beach', 
+            location: district, 
             rating: 4.5, 
             reviews: 250, 
             priceLevel: '$$$',
@@ -230,9 +227,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
             }
           },
           { 
-            name: 'Generic Business B', 
+            name: `${district} Business B`, 
             type: 'Business', 
-            location: 'Brickell', 
+            location: district, 
             rating: 4.3, 
             reviews: 210, 
             priceLevel: '$$',
@@ -243,9 +240,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
             }
           },
           { 
-            name: 'Generic Business C', 
+            name: `${district} Business C`, 
             type: 'Business', 
-            location: 'Downtown', 
+            location: district, 
             rating: 4.6, 
             reviews: 180, 
             priceLevel: '$$$',
@@ -257,6 +254,10 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
           },
         ];
     }
+  };
+
+  const handleDistrictChange = (district: string) => {
+    setSelectedDistrict(district);
   };
 
   return (
@@ -274,6 +275,23 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {miamiDistricts.map((district) => (
+            <button
+              key={district}
+              type="button"
+              className={`text-xs py-1.5 px-2.5 rounded-full transition-colors ${
+                selectedDistrict === district
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-accent text-accent-foreground hover:bg-accent/80'
+              }`}
+              onClick={() => handleDistrictChange(district)}
+            >
+              {district}
+            </button>
+          ))}
+        </div>
+
         <div className="space-y-4">
           {competitors.length === 0 && !isLoading ? (
             <div className="text-center p-8 text-muted-foreground">
@@ -285,8 +303,15 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium">{competitor.name}</h3>
-                    <div className="text-sm text-muted-foreground">
-                      {competitor.type} · {competitor.location} · {competitor.priceLevel}
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <span>{competitor.type}</span>
+                      <span className="mx-1">·</span>
+                      <div className="flex items-center">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        <span>{competitor.location}</span>
+                      </div>
+                      <span className="mx-1">·</span>
+                      <span>{competitor.priceLevel}</span>
                     </div>
                   </div>
                   <div className="flex items-center bg-muted/30 px-2 py-1 rounded-md text-sm">
@@ -320,7 +345,7 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
           {competitors.length > 0 && (
             <div className="text-center mt-4">
               <button type="button" className="text-primary text-sm hover:underline">
-                Visualizza tutti i competitor in questa zona
+                Visualizza tutti i competitor in {selectedDistrict}
               </button>
             </div>
           )}
