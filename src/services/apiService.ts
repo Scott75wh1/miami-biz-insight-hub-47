@@ -276,18 +276,6 @@ export const fetchPlacesData = async (query: string, apiKey: string, location: s
         business.types.includes('shopping') || 
         business.types.includes('clothing')
       );
-    } else if (businessType === 'tech') {
-      filteredData = districtData.filter(business => 
-        business.types.includes('tech') || 
-        business.types.includes('business_center') || 
-        business.types.includes('coworking')
-      );
-    } else if (businessType === 'fitness') {
-      filteredData = districtData.filter(business => 
-        business.types.includes('gym') || 
-        business.types.includes('fitness') || 
-        business.types.includes('dance')
-      );
     }
     
     // If no matches after filtering, return all district data
@@ -621,12 +609,6 @@ export const fetchCombinedCompetitorData = async (businessType: string, district
         break;
       case 'retail':
         searchTerm = 'retail shops';
-        break;
-      case 'tech':
-        searchTerm = 'tech companies';
-        break;
-      case 'fitness':
-        searchTerm = 'fitness centers';
         break;
       default:
         searchTerm = 'businesses';
