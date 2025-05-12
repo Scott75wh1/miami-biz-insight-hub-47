@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, Star, Loader2, MapPin } from 'lucide-react';
@@ -79,15 +78,25 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
         
         if (data && data.results && data.results.length > 0) {
           // Map Google Places API data to our competitor format
-          const mappedCompetitors = data.results.map((place: any) => ({
-            name: place.name,
-            type: place.types ? place.types[0].replace('_', ' ') : getBusinessTypeQuery(businessType),
-            location: place.vicinity || `${selectedDistrict}, Miami`,
-            rating: place.rating || 0,
-            reviews: place.user_ratings_total || 0,
-            priceLevel: place.price_level ? '$'.repeat(place.price_level) : '$$$',
-            sentiments: getDefaultSentiments(place.rating || 0)
-          }));
+          const mappedCompetitors = data.results.map((place: any) => {
+            // Get a meaningful type from the place types array
+            const typeFromData = place.types && place.types.length > 0
+              ? place.types[0].replace(/_/g, ' ')
+              : getBusinessTypeQuery(businessType).replace(/_/g, ' ');
+              
+            // Format the type to be more user-friendly
+            const formattedType = typeFromData.charAt(0).toUpperCase() + typeFromData.slice(1);
+            
+            return {
+              name: place.name,
+              type: formattedType,
+              location: place.vicinity || `${selectedDistrict}, Miami`,
+              rating: place.rating || 0,
+              reviews: place.user_ratings_total || 0,
+              priceLevel: place.price_level ? '$'.repeat(place.price_level) : '$$$',
+              sentiments: getDefaultSentiments(place.rating || 0)
+            };
+          });
           
           setCompetitors(mappedCompetitors);
           
@@ -259,6 +268,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
   const handleDistrictChange = (district: string) => {
     setSelectedDistrict(district);
   };
+
+  // For debugging
+  console.log('CompetitorAnalysis rendering with:', { businessType, selectedDistrict, competitors });
 
   return (
     <Card className="h-full">
