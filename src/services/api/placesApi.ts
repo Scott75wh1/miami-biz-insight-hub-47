@@ -12,6 +12,7 @@ export const fetchFromPlacesApi = async (query: string, apiKey: string, location
     console.log(`Making real API call to Google Places API for: ${query} in ${location}`);
     
     // Build the actual Google Places API URL
+    // We're using textSearch which can handle natural language queries like "restaurants near [address]"
     const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}&location=${encodeURIComponent(location)}`;
     
     // Use a proxy to avoid CORS issues in the browser

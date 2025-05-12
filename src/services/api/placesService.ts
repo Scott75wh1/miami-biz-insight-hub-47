@@ -13,6 +13,7 @@ export const fetchPlacesData = async (query: string, apiKey: string, location: s
   
   try {
     console.log(`Attempting to use real Google Places API with key: ${apiKey.substring(0, 4)}...`);
+    console.log(`Query: "${query}", Location: "${location}"`);
     
     // Attempt to use the actual Google Places API
     const apiResponse = await fetchFromPlacesApi(query, apiKey, location);

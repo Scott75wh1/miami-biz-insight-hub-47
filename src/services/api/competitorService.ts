@@ -38,13 +38,13 @@ export const fetchCombinedCompetitorData = async (businessType: string, district
         searchTerm = 'businesses';
     }
 
-    // Get location data from Google Places
-    const placesQuery = `${searchTerm} in ${district}, Miami`;
-    const placesData = await fetchPlacesData(placesQuery, apiKeys.googlePlaces, `${district}, Miami`);
+    // Get location data from Google Places with 2 mile radius
+    const placesQuery = `${searchTerm} near ${district} within 2 miles`;
+    const placesData = await fetchPlacesData(placesQuery, apiKeys.googlePlaces, district);
     console.log("Places data fetched:", placesData?.results ? placesData.results.length : 0);
 
     // Get review data from Yelp
-    const yelpData = await fetchYelpData(apiKeys.yelp, searchTerm, `${district}, Miami`);
+    const yelpData = await fetchYelpData(apiKeys.yelp, searchTerm, district);
     console.log("Yelp data fetched:", yelpData?.businesses ? yelpData.businesses.length : 0);
     
     // If we have both sets of data, combine them based on similar names
@@ -104,7 +104,7 @@ export const fetchCombinedCompetitorData = async (businessType: string, district
         return {
           name: place.name,
           type: formattedType,
-          location: place.vicinity || `${district}, Miami`,
+          location: place.vicinity || place.formatted_address || district,
           rating: place.rating || (yelpMatch ? yelpMatch.rating : 0),
           reviews: place.user_ratings_total || (yelpMatch ? yelpMatch.review_count : 0),
           priceLevel: place.price_level ? '$'.repeat(place.price_level) : '$$$',
