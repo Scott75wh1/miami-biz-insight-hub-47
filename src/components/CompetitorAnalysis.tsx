@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, Star, Loader2, MapPin, MessageSquare } from 'lucide-react';
@@ -5,6 +6,7 @@ import { fetchCombinedCompetitorData } from '@/services/apiService';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
 import { BusinessType } from '@/components/BusinessTypeSelector';
+import { Progress } from '@/components/ui/progress';
 
 interface Competitor {
   name: string;
@@ -34,58 +36,70 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
   const { toast } = useToast();
   const miamiDistricts = ['Downtown', 'Brickell', 'Wynwood', 'Little Havana', 'Miami Beach'];
   
-  // Load competitor data when business type or district changes
+  // Reset data when business type changes
   useEffect(() => {
-    const loadCompetitorData = async () => {
-      if (!isLoaded || !selectedDistrict) return;
+    console.log(`Business type changed to: ${businessType}`);
+    if (isLoaded) {
+      loadCompetitorData();
+    }
+  }, [businessType, isLoaded]);
+  
+  // Load data when district changes
+  useEffect(() => {
+    console.log(`District changed to: ${selectedDistrict}`);
+    if (isLoaded) {
+      loadCompetitorData();
+    }
+  }, [selectedDistrict, isLoaded]);
+  
+  // Load competitor data function
+  const loadCompetitorData = async () => {
+    if (!isLoaded || !selectedDistrict) return;
+    
+    setIsLoading(true);
+    setCompetitors([]);
+    
+    try {
+      console.log(`Loading competitor data for ${businessType} in ${selectedDistrict}`);
       
-      setIsLoading(true);
-      setCompetitors([]);
+      // Use the combined data function
+      const combinedData = await fetchCombinedCompetitorData(
+        businessType, 
+        selectedDistrict, 
+        apiKeys
+      );
       
-      try {
-        console.log(`Loading competitor data for ${businessType} in ${selectedDistrict}`);
+      if (combinedData && combinedData.length > 0) {
+        setCompetitors(combinedData);
         
-        // Use the new combined data function
-        const combinedData = await fetchCombinedCompetitorData(
-          businessType, 
-          selectedDistrict, 
-          apiKeys
-        );
-        
-        if (combinedData && combinedData.length > 0) {
-          setCompetitors(combinedData);
-          
-          toast({
-            title: "Dati competitor caricati",
-            description: `I dati dei competitor per ${businessType} in ${selectedDistrict} sono stati caricati con successo.`,
-          });
-        } else {
-          // Use default data if API returns no results
-          setCompetitors(getDefaultCompetitors(businessType, selectedDistrict));
-          
-          toast({
-            title: "Utilizzando dati predefiniti",
-            description: "Nessun dato disponibile dalle API, utilizzando dati di esempio.",
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching competitor data:', error);
-        
-        // Use default data if there's an error
+        toast({
+          title: "Dati competitor caricati",
+          description: `I dati dei competitor per ${businessType} in ${selectedDistrict} sono stati caricati con successo.`,
+        });
+      } else {
+        // Use default data if API returns no results
         setCompetitors(getDefaultCompetitors(businessType, selectedDistrict));
         
         toast({
-          title: "Errore nel caricamento competitor",
-          description: "Impossibile recuperare dati. Controlla le tue API key.",
-          variant: "destructive",
+          title: "Utilizzando dati predefiniti",
+          description: "Nessun dato disponibile dalle API, utilizzando dati di esempio.",
         });
-      } finally {
-        setIsLoading(false);
       }
-    };
-
-    loadCompetitorData();
-  }, [isLoaded, apiKeys, toast, businessType, selectedDistrict]);
+    } catch (error) {
+      console.error('Error fetching competitor data:', error);
+      
+      // Use default data if there's an error
+      setCompetitors(getDefaultCompetitors(businessType, selectedDistrict));
+      
+      toast({
+        title: "Errore nel caricamento competitor",
+        description: "Impossibile recuperare dati. Controlla le tue API key.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Default competitors data based on business type and district
   const getDefaultCompetitors = (type: BusinessType, district: string): Competitor[] => {
@@ -229,7 +243,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
   };
 
   const handleDistrictChange = (district: string) => {
-    setSelectedDistrict(district);
+    if (district !== selectedDistrict) {
+      setSelectedDistrict(district);
+    }
   };
 
   // For debugging
@@ -304,7 +320,7 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
                 
                 <div className="mt-2">
                   <div className="text-xs font-medium mt-2 mb-1">Sentimento Recensioni</div>
-                  <div className="flex h-1.5 w-full rounded-full overflow-hidden">
+                  <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-gray-200">
                     {competitor.sentiments && (
                       <>
                         <div className="bg-green-500 h-full" style={{ width: `${competitor.sentiments.positive}%` }}></div>
@@ -314,9 +330,9 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
                     )}
                   </div>
                   <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                    <span>Positivo</span>
-                    <span>Neutro</span>
-                    <span>Negativo</span>
+                    <span>{competitor.sentiments?.positive || 0}% Positivo</span>
+                    <span>{competitor.sentiments?.neutral || 0}% Neutro</span>
+                    <span>{competitor.sentiments?.negative || 0}% Negativo</span>
                   </div>
                   
                   {competitor.reviewHighlight && (
