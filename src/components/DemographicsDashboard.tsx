@@ -98,10 +98,10 @@ const DemographicsDashboard = () => {
           )}
         </CardTitle>
         {isUsingDemoKey && (
-          <Alert variant="warning" className="mt-2 py-2">
+          <Alert className="text-amber-800 bg-amber-50 border-amber-300 mb-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-xs">
-              Stai visualizzando dati dimostrativi. Inserisci una API key valida nelle impostazioni per accedere ai dati reali.
+            <AlertDescription>
+              I dati demografici mostrati sono simulati. Inserisci API keys valide nelle impostazioni per visualizzare dati reali.
             </AlertDescription>
           </Alert>
         )}
