@@ -1,6 +1,7 @@
 
 // API utility functions for Google Places API
 import { apiLogger } from '../logService';
+import { fetchWithProxy } from './proxyService';
 
 export const fetchFromPlacesApi = async (query: string, apiKey: string, location: string) => {
   const logIndex = apiLogger.logAPICall('Google Places API', 'textSearch', { query, location });
@@ -23,22 +24,16 @@ export const fetchFromPlacesApi = async (query: string, apiKey: string, location
     // We're using textSearch which can handle natural language queries like "restaurants near [address]"
     const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}&location=${encodeURIComponent(location)}&radius=${radius}`;
     
-    // Use a proxy to avoid CORS issues in the browser
-    const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
+    // Use the fetchWithProxy utility instead of direct fetch with a proxy URL
+    const data = await fetchWithProxy(url);
     
-    // Make the actual API call
-    const response = await fetch(proxyUrl);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      const error = new Error(`Google Places API returned status: ${response.status}, body: ${errorText}`);
-      apiLogger.logAPIError(logIndex, { status: response.status, error: errorText });
+    if (!data) {
+      const error = new Error('No data returned from Google Places API');
+      apiLogger.logAPIError(logIndex, { status: 'NO_DATA', error: error.message });
       throw error;
     }
     
-    const data = await response.json();
     apiLogger.logAPIResponse(logIndex, data);
-    
     return data;
   } catch (error) {
     console.error('Error fetching from Google Places API:', error);
