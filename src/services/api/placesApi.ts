@@ -1,10 +1,16 @@
 
 // API utility functions for Google Places API
+import { apiLogger } from '../logService';
 
 export const fetchFromPlacesApi = async (query: string, apiKey: string, location: string) => {
+  const logIndex = apiLogger.logAPICall('Google Places API', 'textSearch', { query, location });
+  
   // Skip real API call if using demo key
   if (!apiKey || apiKey === 'demo-key') {
-    console.log(`[API Simulation] Fetching places from Google API for: ${query} in ${location}`);
+    apiLogger.logAPIResponse(logIndex, {
+      status: 'MOCKED',
+      message: 'Using mock data (API key not provided)'
+    });
     return null;
   }
   
@@ -24,15 +30,19 @@ export const fetchFromPlacesApi = async (query: string, apiKey: string, location
     const response = await fetch(proxyUrl);
     
     if (!response.ok) {
-      throw new Error(`Google Places API returned status: ${response.status}`);
+      const errorText = await response.text();
+      const error = new Error(`Google Places API returned status: ${response.status}, body: ${errorText}`);
+      apiLogger.logAPIError(logIndex, { status: response.status, error: errorText });
+      throw error;
     }
     
     const data = await response.json();
-    console.log('Google Places API returned data:', data);
+    apiLogger.logAPIResponse(logIndex, data);
     
     return data;
   } catch (error) {
     console.error('Error fetching from Google Places API:', error);
+    apiLogger.logAPIError(logIndex, error);
     throw error;
   }
 };

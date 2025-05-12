@@ -8,6 +8,7 @@ import AddressInput from './AddressInput';
 import PlaceResultsList from './places/PlaceResultsList';
 import PlacesLoadingState from './places/PlacesLoadingState';
 import { usePlacesData, getBusinessTypeQuery } from '@/hooks/usePlacesData';
+import APILogDownloader from './APILogDownloader';
 
 interface MapComponentProps {
   businessType: BusinessType;
@@ -41,6 +42,9 @@ const MapComponent = ({ businessType }: MapComponentProps) => {
               <span>Caricamento...</span>
             </div>
           )}
+          <div className="flex-shrink-0">
+            <APILogDownloader />
+          </div>
         </CardTitle>
         <div className="mt-2">
           <AddressInput onAddressSubmit={handleAddressSubmit} isLoading={isAddressSearching} />
