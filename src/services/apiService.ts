@@ -1,15 +1,12 @@
 
-import { useApiKeys } from '@/hooks/useApiKeys';
-
 // Error handler for API requests
 const handleApiError = (error: any, serviceName: string) => {
   console.error(`Error in ${serviceName} API call:`, error);
   return null;
 };
 
-export const fetchPlacesData = async (query: string, location: string = 'Miami, FL') => {
-  const { apiKeys } = useApiKeys();
-  if (!apiKeys.googlePlaces) {
+export const fetchPlacesData = async (query: string, apiKey: string, location: string = 'Miami, FL') => {
+  if (!apiKey) {
     console.error('Google Places API key is not set');
     return null;
   }
@@ -17,7 +14,7 @@ export const fetchPlacesData = async (query: string, location: string = 'Miami, 
   try {
     // This would be a real API call to Google Places
     // For demonstration purposes, we're using a mock implementation
-    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&key=${apiKeys.googlePlaces}`;
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&key=${apiKey}`;
     
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch from Google Places API');
@@ -28,9 +25,8 @@ export const fetchPlacesData = async (query: string, location: string = 'Miami, 
   }
 };
 
-export const fetchCensusData = async (location: string = 'Miami') => {
-  const { apiKeys } = useApiKeys();
-  if (!apiKeys.censusGov) {
+export const fetchCensusData = async (apiKey: string, location: string = 'Miami') => {
+  if (!apiKey) {
     console.error('Census.gov API key is not set');
     return null;
   }
@@ -38,7 +34,7 @@ export const fetchCensusData = async (location: string = 'Miami') => {
   try {
     // This would be a real API call to Census.gov
     // For demonstration purposes, we're using a mock implementation
-    const url = `https://api.census.gov/data/2019/pep/population?key=${apiKeys.censusGov}&get=POP,NAME&for=place:*&in=state:12&NAME=${encodeURIComponent(location)}*`;
+    const url = `https://api.census.gov/data/2019/pep/population?key=${apiKey}&get=POP,NAME&for=place:*&in=state:12&NAME=${encodeURIComponent(location)}*`;
     
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch from Census.gov API');
@@ -49,9 +45,8 @@ export const fetchCensusData = async (location: string = 'Miami') => {
   }
 };
 
-export const fetchYelpData = async (term: string, location: string = 'Miami, FL') => {
-  const { apiKeys } = useApiKeys();
-  if (!apiKeys.yelp) {
+export const fetchYelpData = async (apiKey: string, term: string, location: string = 'Miami, FL') => {
+  if (!apiKey) {
     console.error('Yelp API key is not set');
     return null;
   }
@@ -64,7 +59,7 @@ export const fetchYelpData = async (term: string, location: string = 'Miami, FL'
     
     const response = await fetch(url, {
       headers: {
-        Authorization: `Bearer ${apiKeys.yelp}`,
+        Authorization: `Bearer ${apiKey}`,
       },
     });
     
@@ -76,9 +71,8 @@ export const fetchYelpData = async (term: string, location: string = 'Miami, FL'
   }
 };
 
-export const fetchGoogleTrendsData = async (keywords: string[], geo: string = 'US-FL-528') => {
-  const { apiKeys } = useApiKeys();
-  if (!apiKeys.googleTrends) {
+export const fetchGoogleTrendsData = async (apiKey: string, keywords: string[], geo: string = 'US-FL-528') => {
+  if (!apiKey) {
     console.error('Google Trends API key is not set');
     return null;
   }
@@ -87,7 +81,7 @@ export const fetchGoogleTrendsData = async (keywords: string[], geo: string = 'U
     // This would be a real API call to Google Trends
     // Note: Google Trends doesn't have an official API, so this is a placeholder
     const keywordsParam = keywords.join(',');
-    const url = `https://trends.google.com/trends/api/explore?hl=en-US&tz=-120&req={"comparisonItem":[{"keyword":"${keywordsParam}","geo":"${geo}","time":"today 12-m"}]}&tz=120&key=${apiKeys.googleTrends}`;
+    const url = `https://trends.google.com/trends/api/explore?hl=en-US&tz=-120&req={"comparisonItem":[{"keyword":"${keywordsParam}","geo":"${geo}","time":"today 12-m"}]}&tz=120&key=${apiKey}`;
     
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch from Google Trends API');
@@ -98,9 +92,8 @@ export const fetchGoogleTrendsData = async (keywords: string[], geo: string = 'U
   }
 };
 
-export const fetchOpenAIAnalysis = async (prompt: string) => {
-  const { apiKeys } = useApiKeys();
-  if (!apiKeys.openAI) {
+export const fetchOpenAIAnalysis = async (apiKey: string, prompt: string) => {
+  if (!apiKey) {
     console.error('OpenAI API key is not set');
     return null;
   }
@@ -112,7 +105,7 @@ export const fetchOpenAIAnalysis = async (prompt: string) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKeys.openAI}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',

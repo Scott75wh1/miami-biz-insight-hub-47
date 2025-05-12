@@ -20,7 +20,7 @@ const MapComponent = () => {
       setIsLoading(true);
       
       try {
-        const placesData = await fetchPlacesData(`business in ${selectedDistrict}`, 'Miami, FL');
+        const placesData = await fetchPlacesData(`business in ${selectedDistrict}`, apiKeys.googlePlaces, 'Miami, FL');
         
         if (placesData) {
           toast({

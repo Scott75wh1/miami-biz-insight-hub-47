@@ -75,7 +75,7 @@ const CompetitorAnalysis = () => {
       
       try {
         // Get competitors data for a sample business type
-        const data = await fetchYelpData('coffee shops', 'Miami, FL');
+        const data = await fetchYelpData(apiKeys.yelp, 'coffee shops', 'Miami, FL');
         
         if (data && data.businesses) {
           // In a real implementation, you would transform the Yelp API response

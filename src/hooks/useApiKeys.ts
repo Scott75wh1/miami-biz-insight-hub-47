@@ -22,6 +22,7 @@ export function useApiKeys() {
   const [isLoadError, setIsLoadError] = useState(false);
 
   useEffect(() => {
+    // This ensures the hook only runs in browser environment
     if (typeof window === 'undefined') return;
 
     try {
