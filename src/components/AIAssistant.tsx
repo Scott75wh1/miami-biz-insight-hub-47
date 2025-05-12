@@ -7,18 +7,23 @@ import { MessageSquare, Loader2 } from 'lucide-react';
 import { fetchOpenAIAnalysis } from '@/services/apiService';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
+import { BusinessType } from '@/components/BusinessTypeSelector';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
-const AIAssistant = () => {
+interface AIAssistantProps {
+  businessType: BusinessType;
+}
+
+const AIAssistant = ({ businessType }: AIAssistantProps) => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'assistant', 
-      content: 'Ciao! Sono il tuo Assistente AI per l\'analisi dei dati di business a Miami. Come posso aiutarti oggi?' 
+      content: `Ciao! Sono il tuo Assistente AI per l'analisi dei dati di business a Miami. Come posso aiutarti con la tua attività di ${businessType.replace('_', ' ')}?` 
     }
   ]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,7 +54,9 @@ const AIAssistant = () => {
     
     try {
       // Pass the API key as the first argument and the prompt as second
-      const response = await fetchOpenAIAnalysis(apiKeys.openAI, input);
+      // Include businessType in the prompt for more relevant responses
+      const enhancedPrompt = `[Contesto: Analisi business type: ${businessType.replace('_', ' ')}] ${input}`;
+      const response = await fetchOpenAIAnalysis(apiKeys.openAI, enhancedPrompt);
       
       if (response && response.choices && response.choices[0]) {
         const aiResponse: Message = { 
@@ -86,7 +93,7 @@ const AIAssistant = () => {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center">
           <MessageSquare className="mr-2 h-5 w-5" />
-          Assistente AI
+          Assistente AI {businessType && `- ${businessType.replace('_', ' ').charAt(0).toUpperCase() + businessType.replace('_', ' ').slice(1)}`}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col h-[calc(100%-60px)]">
@@ -124,7 +131,7 @@ const AIAssistant = () => {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Chiedi informazioni sui dati e ricevi analisi..."
+            placeholder={`Chiedi informazioni sui dati per ${businessType.replace('_', ' ')}...`}
             className="flex-1"
             disabled={isProcessing}
           />
