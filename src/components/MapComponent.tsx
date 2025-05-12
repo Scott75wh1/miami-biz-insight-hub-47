@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Map as MapIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const MapComponent = () => {
@@ -13,7 +14,7 @@ const MapComponent = () => {
           {/* Placeholder per la mappa interattiva (da integrare con una vera API di mappe) */}
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 mb-4">
-              <Map className="h-8 w-8 text-primary" />
+              <MapIcon className="h-8 w-8 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground">
               Seleziona un quartiere di Miami per visualizzare i dati demografici e commerciali
