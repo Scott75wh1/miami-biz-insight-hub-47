@@ -119,6 +119,7 @@ const MapComponent = ({ businessType }: MapComponentProps) => {
           {miamiDistricts.map((district) => (
             <button
               key={district}
+              type="button"
               className={`text-xs py-1.5 px-2.5 rounded-full transition-colors ${
                 selectedDistrict === district
                   ? 'bg-primary text-primary-foreground'
