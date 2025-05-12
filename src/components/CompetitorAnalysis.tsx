@@ -40,6 +40,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
   useEffect(() => {
     console.log(`Business type changed to: ${businessType}`);
     if (isLoaded) {
+      // Clear previous data
+      setCompetitors([]);
       loadCompetitorData();
     }
   }, [businessType, isLoaded]);
@@ -48,6 +50,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
   useEffect(() => {
     console.log(`District changed to: ${selectedDistrict}`);
     if (isLoaded) {
+      // Clear previous data
+      setCompetitors([]);
       loadCompetitorData();
     }
   }, [selectedDistrict, isLoaded]);
@@ -57,7 +61,6 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
     if (!isLoaded || !selectedDistrict) return;
     
     setIsLoading(true);
-    setCompetitors([]);
     
     try {
       console.log(`Loading competitor data for ${businessType} in ${selectedDistrict}`);
@@ -78,7 +81,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
         });
       } else {
         // Use default data if API returns no results
-        setCompetitors(getDefaultCompetitors(businessType, selectedDistrict));
+        const defaultData = getDefaultCompetitors(businessType, selectedDistrict);
+        setCompetitors(defaultData);
         
         toast({
           title: "Utilizzando dati predefiniti",
@@ -89,7 +93,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
       console.error('Error fetching competitor data:', error);
       
       // Use default data if there's an error
-      setCompetitors(getDefaultCompetitors(businessType, selectedDistrict));
+      const defaultData = getDefaultCompetitors(businessType, selectedDistrict);
+      setCompetitors(defaultData);
       
       toast({
         title: "Errore nel caricamento competitor",
@@ -103,48 +108,51 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
   
   // Default competitors data based on business type and district
   const getDefaultCompetitors = (type: BusinessType, district: string): Competitor[] => {
+    const districtPrefix = district.replace(' ', '').toLowerCase();
+    const timestamp = Date.now(); // Add timestamp to ensure different data each time
+    
     switch (type) {
       case 'restaurant':
         return [
           { 
-            name: `${district} Fine Dining`, 
+            name: `${district} Fine Dining ${districtPrefix}${timestamp % 100}`, 
             type: 'Ristorante', 
             location: district, 
-            rating: 4.7, 
-            reviews: 452, 
+            rating: 4.5 + (Math.random() * 0.5), 
+            reviews: 400 + Math.floor(Math.random() * 200), 
             priceLevel: '$$$',
             sentiments: {
-              positive: 75,
-              neutral: 20,
-              negative: 5
+              positive: 70 + Math.floor(Math.random() * 10),
+              neutral: 20 + Math.floor(Math.random() * 10),
+              negative: 5 + Math.floor(Math.random() * 5)
             },
             reviewHighlight: "Una delle migliori esperienze culinarie a Miami!"
           },
           { 
-            name: `${district} Trattoria`, 
+            name: `${district} Trattoria ${districtPrefix}${(timestamp + 1) % 100}`, 
             type: 'Ristorante Italiano', 
             location: district, 
-            rating: 4.5, 
-            reviews: 326, 
+            rating: 4.2 + (Math.random() * 0.6), 
+            reviews: 300 + Math.floor(Math.random() * 150), 
             priceLevel: '$$$',
             sentiments: {
-              positive: 70,
-              neutral: 25,
-              negative: 5
+              positive: 65 + Math.floor(Math.random() * 10),
+              neutral: 25 + Math.floor(Math.random() * 10),
+              negative: 5 + Math.floor(Math.random() * 5)
             },
             reviewHighlight: "Pasta fatta in casa eccezionale, atmosfera autentica."
           },
           { 
-            name: `${district} Taqueria`, 
+            name: `${district} Taqueria ${districtPrefix}${(timestamp + 2) % 100}`, 
             type: 'Ristorante Messicano', 
             location: district, 
-            rating: 4.3, 
-            reviews: 287, 
+            rating: 4.0 + (Math.random() * 0.5), 
+            reviews: 250 + Math.floor(Math.random() * 100), 
             priceLevel: '$$',
             sentiments: {
-              positive: 65,
-              neutral: 30,
-              negative: 5
+              positive: 60 + Math.floor(Math.random() * 10),
+              neutral: 30 + Math.floor(Math.random() * 5),
+              negative: 5 + Math.floor(Math.random() * 10)
             },
             reviewHighlight: "I migliori tacos della zona, salse fatte in casa."
           },
@@ -152,44 +160,44 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
       case 'coffee_shop':
         return [
           { 
-            name: `Café ${district}`, 
+            name: `Café ${district} ${districtPrefix}${timestamp % 100}`, 
             type: 'Caffetteria', 
             location: district, 
-            rating: 4.7, 
-            reviews: 236, 
+            rating: 4.5 + (Math.random() * 0.4), 
+            reviews: 200 + Math.floor(Math.random() * 100), 
             priceLevel: '$$',
             sentiments: {
-              positive: 75,
-              neutral: 20,
-              negative: 5
+              positive: 70 + Math.floor(Math.random() * 10),
+              neutral: 20 + Math.floor(Math.random() * 10),
+              negative: 5 + Math.floor(Math.random() * 5)
             },
             reviewHighlight: "Caffè di qualità e ottimi dolci fatti in casa."
           },
           { 
-            name: `${district} Coffee Corner`, 
+            name: `${district} Coffee Corner ${districtPrefix}${(timestamp + 1) % 100}`, 
             type: 'Specialty Coffee', 
             location: district, 
-            rating: 4.6, 
-            reviews: 198, 
+            rating: 4.3 + (Math.random() * 0.5), 
+            reviews: 180 + Math.floor(Math.random() * 80), 
             priceLevel: '$$',
             sentiments: {
-              positive: 72,
-              neutral: 23,
-              negative: 5
+              positive: 67 + Math.floor(Math.random() * 10),
+              neutral: 23 + Math.floor(Math.random() * 10),
+              negative: 5 + Math.floor(Math.random() * 5)
             },
             reviewHighlight: "Miscele di caffè uniche, baristi competenti."
           },
           { 
-            name: `${district} Morning Brew`, 
+            name: `${district} Morning Brew ${districtPrefix}${(timestamp + 2) % 100}`, 
             type: 'Caffetteria & Bakery', 
             location: district, 
-            rating: 4.4, 
-            reviews: 312, 
+            rating: 4.2 + (Math.random() * 0.4), 
+            reviews: 280 + Math.floor(Math.random() * 120), 
             priceLevel: '$$',
             sentiments: {
-              positive: 68,
-              neutral: 25,
-              negative: 7
+              positive: 63 + Math.floor(Math.random() * 10),
+              neutral: 27 + Math.floor(Math.random() * 5),
+              negative: 5 + Math.floor(Math.random() * 10)
             },
             reviewHighlight: "Ottima colazione e ambiente perfetto per lavorare."
           },
@@ -197,44 +205,44 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
       default:
         return [
           { 
-            name: `${district} Business A`, 
-            type: 'Business', 
+            name: `${district} Business A ${districtPrefix}${timestamp % 100}`, 
+            type: type.replace('_', ' ').charAt(0).toUpperCase() + type.replace('_', ' ').slice(1), 
             location: district, 
-            rating: 4.5, 
-            reviews: 250, 
+            rating: 4.3 + (Math.random() * 0.4), 
+            reviews: 220 + Math.floor(Math.random() * 100), 
             priceLevel: '$$$',
             sentiments: {
-              positive: 70,
-              neutral: 25,
-              negative: 5
+              positive: 65 + Math.floor(Math.random() * 10),
+              neutral: 25 + Math.floor(Math.random() * 10),
+              negative: 5 + Math.floor(Math.random() * 5)
             },
             reviewHighlight: "Servizio eccellente e prodotti di qualità."
           },
           { 
-            name: `${district} Business B`, 
-            type: 'Business', 
+            name: `${district} Business B ${districtPrefix}${(timestamp + 1) % 100}`, 
+            type: type.replace('_', ' ').charAt(0).toUpperCase() + type.replace('_', ' ').slice(1), 
             location: district, 
-            rating: 4.3, 
-            reviews: 210, 
+            rating: 4.1 + (Math.random() * 0.4), 
+            reviews: 190 + Math.floor(Math.random() * 80), 
             priceLevel: '$$',
             sentiments: {
-              positive: 65,
-              neutral: 30,
-              negative: 5
+              positive: 60 + Math.floor(Math.random() * 10),
+              neutral: 30 + Math.floor(Math.random() * 5),
+              negative: 5 + Math.floor(Math.random() * 10)
             },
             reviewHighlight: "Ottimo rapporto qualità-prezzo."
           },
           { 
-            name: `${district} Business C`, 
-            type: 'Business', 
+            name: `${district} Business C ${districtPrefix}${(timestamp + 2) % 100}`, 
+            type: type.replace('_', ' ').charAt(0).toUpperCase() + type.replace('_', ' ').slice(1), 
             location: district, 
-            rating: 4.6, 
-            reviews: 180, 
+            rating: 4.4 + (Math.random() * 0.4), 
+            reviews: 160 + Math.floor(Math.random() * 60), 
             priceLevel: '$$$',
             sentiments: {
-              positive: 72,
-              neutral: 23,
-              negative: 5
+              positive: 67 + Math.floor(Math.random() * 10),
+              neutral: 28 + Math.floor(Math.random() * 5),
+              negative: 5 + Math.floor(Math.random() * 5)
             },
             reviewHighlight: "Staff competente e servizio impeccabile."
           },
@@ -290,7 +298,7 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
             </div>
           ) : (
             competitors.map((competitor, index) => (
-              <div key={index} className="p-3 border rounded-md">
+              <div key={`${competitor.name}-${index}`} className="p-3 border rounded-md">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium">{competitor.name}</h3>
@@ -313,7 +321,7 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
                   </div>
                   <div className="flex items-center bg-muted/30 px-2 py-1 rounded-md text-sm">
                     <Star className="h-3.5 w-3.5 text-yellow-500 mr-1 fill-yellow-500" />
-                    <span className="font-medium">{competitor.rating}</span>
+                    <span className="font-medium">{competitor.rating.toFixed(1)}</span>
                     <span className="text-muted-foreground text-xs ml-1">({competitor.reviews})</span>
                   </div>
                 </div>
