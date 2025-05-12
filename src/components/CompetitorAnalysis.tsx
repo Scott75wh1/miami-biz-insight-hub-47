@@ -5,6 +5,7 @@ import { Building, Star } from 'lucide-react';
 import { fetchYelpData } from '@/services/apiService';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
+import { BusinessType } from '@/components/BusinessTypeSelector';
 
 interface Competitor {
   name: string;
@@ -20,53 +21,302 @@ interface Competitor {
   };
 }
 
-const CompetitorAnalysis = () => {
-  const [competitors, setCompetitors] = useState<Competitor[]>([
-    { 
-      name: 'Café Lirica', 
-      type: 'Caffetteria', 
-      location: 'Wynwood', 
-      rating: 4.7, 
-      reviews: 236, 
-      priceLevel: '$$',
-      sentiments: {
-        positive: 75,
-        neutral: 20,
-        negative: 5
-      }
-    },
-    { 
-      name: 'Tech Hub Co-working', 
-      type: 'Spazio Co-working', 
-      location: 'Brickell', 
-      rating: 4.5, 
-      reviews: 187, 
-      priceLevel: '$$$',
-      sentiments: {
-        positive: 70,
-        neutral: 25,
-        negative: 5
-      }
-    },
-    { 
-      name: 'Ocean View Restaurant', 
-      type: 'Ristorante', 
-      location: 'Miami Beach', 
-      rating: 4.4, 
-      reviews: 452, 
-      priceLevel: '$$$',
-      sentiments: {
-        positive: 65,
-        neutral: 30,
-        negative: 5
-      }
-    },
-  ]);
-  
+interface CompetitorAnalysisProps {
+  businessType: BusinessType;
+}
+
+const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
+  const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
   const { toast } = useToast();
   const [dataAttempted, setDataAttempted] = useState(false);
+
+  // Reset data attempted when business type changes
+  useEffect(() => {
+    setDataAttempted(false);
+    updateDefaultData(businessType);
+  }, [businessType]);
+
+  const updateDefaultData = (type: BusinessType) => {
+    switch (type) {
+      case 'restaurant':
+        setCompetitors([
+          { 
+            name: 'Ocean View Restaurant', 
+            type: 'Ristorante', 
+            location: 'Miami Beach', 
+            rating: 4.7, 
+            reviews: 452, 
+            priceLevel: '$$$',
+            sentiments: {
+              positive: 75,
+              neutral: 20,
+              negative: 5
+            }
+          },
+          { 
+            name: 'La Trattoria', 
+            type: 'Ristorante Italiano', 
+            location: 'Brickell', 
+            rating: 4.5, 
+            reviews: 326, 
+            priceLevel: '$$$',
+            sentiments: {
+              positive: 70,
+              neutral: 25,
+              negative: 5
+            }
+          },
+          { 
+            name: 'Taqueria Downtown', 
+            type: 'Ristorante Messicano', 
+            location: 'Downtown', 
+            rating: 4.3, 
+            reviews: 287, 
+            priceLevel: '$$',
+            sentiments: {
+              positive: 65,
+              neutral: 30,
+              negative: 5
+            }
+          },
+        ]);
+        break;
+      case 'coffee_shop':
+        setCompetitors([
+          { 
+            name: 'Café Lirica', 
+            type: 'Caffetteria', 
+            location: 'Wynwood', 
+            rating: 4.7, 
+            reviews: 236, 
+            priceLevel: '$$',
+            sentiments: {
+              positive: 75,
+              neutral: 20,
+              negative: 5
+            }
+          },
+          { 
+            name: 'Brew Corner', 
+            type: 'Specialty Coffee', 
+            location: 'Brickell', 
+            rating: 4.6, 
+            reviews: 198, 
+            priceLevel: '$$',
+            sentiments: {
+              positive: 72,
+              neutral: 23,
+              negative: 5
+            }
+          },
+          { 
+            name: 'Morning Bliss', 
+            type: 'Caffetteria & Bakery', 
+            location: 'Miami Beach', 
+            rating: 4.4, 
+            reviews: 312, 
+            priceLevel: '$$',
+            sentiments: {
+              positive: 68,
+              neutral: 25,
+              negative: 7
+            }
+          },
+        ]);
+        break;
+      case 'tech':
+        setCompetitors([
+          { 
+            name: 'Tech Hub Co-working', 
+            type: 'Spazio Co-working', 
+            location: 'Brickell', 
+            rating: 4.5, 
+            reviews: 187, 
+            priceLevel: '$$$',
+            sentiments: {
+              positive: 70,
+              neutral: 25,
+              negative: 5
+            }
+          },
+          { 
+            name: 'Digital Innovation Lab', 
+            type: 'Tech Hub', 
+            location: 'Wynwood', 
+            rating: 4.6, 
+            reviews: 156, 
+            priceLevel: '$$$',
+            sentiments: {
+              positive: 73,
+              neutral: 22,
+              negative: 5
+            }
+          },
+          { 
+            name: 'Startup Nexus', 
+            type: 'Incubatore', 
+            location: 'Downtown', 
+            rating: 4.3, 
+            reviews: 142, 
+            priceLevel: '$$$',
+            sentiments: {
+              positive: 65,
+              neutral: 30,
+              negative: 5
+            }
+          },
+        ]);
+        break;
+      case 'retail':
+        setCompetitors([
+          { 
+            name: 'The Fashion Hub', 
+            type: 'Boutique', 
+            location: 'Miami Beach', 
+            rating: 4.4, 
+            reviews: 276, 
+            priceLevel: '$$$',
+            sentiments: {
+              positive: 68,
+              neutral: 27,
+              negative: 5
+            }
+          },
+          { 
+            name: 'Vintage Collection', 
+            type: 'Negozio Vintage', 
+            location: 'Wynwood', 
+            rating: 4.6, 
+            reviews: 213, 
+            priceLevel: '$$',
+            sentiments: {
+              positive: 72,
+              neutral: 23,
+              negative: 5
+            }
+          },
+          { 
+            name: 'Luxury Avenue', 
+            type: 'Negozio di Lusso', 
+            location: 'Brickell', 
+            rating: 4.5, 
+            reviews: 189, 
+            priceLevel: '$$$$',
+            sentiments: {
+              positive: 70,
+              neutral: 25,
+              negative: 5
+            }
+          },
+        ]);
+        break;
+      case 'fitness':
+        setCompetitors([
+          { 
+            name: 'Elite Fitness Center', 
+            type: 'Palestra', 
+            location: 'Brickell', 
+            rating: 4.7, 
+            reviews: 312, 
+            priceLevel: '$$$',
+            sentiments: {
+              positive: 75,
+              neutral: 20,
+              negative: 5
+            }
+          },
+          { 
+            name: 'Zen Yoga Studio', 
+            type: 'Studio Yoga', 
+            location: 'Miami Beach', 
+            rating: 4.8, 
+            reviews: 287, 
+            priceLevel: '$$',
+            sentiments: {
+              positive: 80,
+              neutral: 15,
+              negative: 5
+            }
+          },
+          { 
+            name: 'CrossFit Revolution', 
+            type: 'CrossFit Box', 
+            location: 'Wynwood', 
+            rating: 4.6, 
+            reviews: 198, 
+            priceLevel: '$$$',
+            sentiments: {
+              positive: 72,
+              neutral: 23,
+              negative: 5
+            }
+          },
+        ]);
+        break;
+      default:
+        setCompetitors([
+          { 
+            name: 'Generic Business A', 
+            type: 'Business', 
+            location: 'Miami Beach', 
+            rating: 4.5, 
+            reviews: 250, 
+            priceLevel: '$$$',
+            sentiments: {
+              positive: 70,
+              neutral: 25,
+              negative: 5
+            }
+          },
+          { 
+            name: 'Generic Business B', 
+            type: 'Business', 
+            location: 'Brickell', 
+            rating: 4.3, 
+            reviews: 210, 
+            priceLevel: '$$',
+            sentiments: {
+              positive: 65,
+              neutral: 30,
+              negative: 5
+            }
+          },
+          { 
+            name: 'Generic Business C', 
+            type: 'Business', 
+            location: 'Downtown', 
+            rating: 4.6, 
+            reviews: 180, 
+            priceLevel: '$$$',
+            sentiments: {
+              positive: 72,
+              neutral: 23,
+              negative: 5
+            }
+          },
+        ]);
+    }
+  };
+
+  // Get appropriate business term for Yelp API based on business type
+  const getYelpSearchTerm = (type: BusinessType) => {
+    switch (type) {
+      case 'restaurant':
+        return 'restaurants';
+      case 'coffee_shop':
+        return 'coffee shops';
+      case 'retail':
+        return 'retail shops';
+      case 'tech':
+        return 'coworking spaces';
+      case 'fitness':
+        return 'fitness centers';
+      default:
+        return 'businesses';
+    }
+  };
 
   useEffect(() => {
     const loadCompetitorData = async () => {
@@ -75,22 +325,23 @@ const CompetitorAnalysis = () => {
       setIsLoading(true);
       
       try {
-        // Get competitors data for a sample business type
-        const data = await fetchYelpData(apiKeys.yelp, 'coffee shops', 'Miami, FL');
+        // Get competitors data based on the selected business type
+        const searchTerm = getYelpSearchTerm(businessType);
+        const data = await fetchYelpData(apiKeys.yelp, searchTerm, 'Miami, FL');
         
         if (data && data.businesses) {
           // In a real implementation, you would transform the Yelp API response
           // into the competitors array format
           toast({
-            title: "Competitor data loaded",
-            description: "Yelp data has been successfully retrieved.",
+            title: "Dati competitor caricati",
+            description: `I dati dei competitor per ${searchTerm} sono stati caricati con successo.`,
           });
         }
       } catch (error) {
         console.error('Error fetching competitor data:', error);
         toast({
-          title: "Error loading competitors",
-          description: "Could not retrieve Yelp data. Check your API key.",
+          title: "Errore nel caricamento competitor",
+          description: "Impossibile recuperare dati da Yelp. Controlla la tua API key.",
           variant: "destructive",
         });
       } finally {
@@ -100,14 +351,14 @@ const CompetitorAnalysis = () => {
     };
 
     loadCompetitorData();
-  }, [isLoaded, apiKeys.yelp, toast, areKeysSet, dataAttempted]);
+  }, [isLoaded, apiKeys.yelp, toast, areKeysSet, dataAttempted, businessType]);
 
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center">
           <Building className="mr-2 h-5 w-5" />
-          Analisi Competitor
+          Analisi Competitor {businessType && `- ${businessType.replace('_', ' ').charAt(0).toUpperCase() + businessType.replace('_', ' ').slice(1)}`}
           {isLoading && <span className="ml-2 text-xs text-muted-foreground">(Caricamento...)</span>}
         </CardTitle>
       </CardHeader>

@@ -5,14 +5,43 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { fetchPlacesData } from '@/services/apiService';
 import { useToast } from '@/components/ui/use-toast';
+import { BusinessType } from '@/components/BusinessTypeSelector';
 
-const MapComponent = () => {
+interface MapComponentProps {
+  businessType: BusinessType;
+}
+
+const MapComponent = ({ businessType }: MapComponentProps) => {
   const miamiDistricts = ['Downtown', 'Brickell', 'Wynwood', 'Little Havana', 'Miami Beach'];
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
   const { toast } = useToast();
   const [dataAttempted, setDataAttempted] = useState(false);
+  const [placesData, setPlacesData] = useState<any>(null);
+
+  // Reset data attempted when business type changes
+  useEffect(() => {
+    setDataAttempted(false);
+    setPlacesData(null);
+  }, [businessType]);
+
+  const getBusinessTypeQuery = (type: BusinessType) => {
+    switch (type) {
+      case 'restaurant':
+        return 'restaurants';
+      case 'coffee_shop':
+        return 'coffee shops';
+      case 'retail':
+        return 'retail shops';
+      case 'tech':
+        return 'tech companies';
+      case 'fitness':
+        return 'fitness centers';
+      default:
+        return 'businesses';
+    }
+  };
 
   useEffect(() => {
     const loadMapData = async () => {
@@ -22,19 +51,21 @@ const MapComponent = () => {
       setDataAttempted(true);
       
       try {
-        const placesData = await fetchPlacesData(`business in ${selectedDistrict}`, apiKeys.googlePlaces, 'Miami, FL');
+        const businessQuery = `${getBusinessTypeQuery(businessType)} in ${selectedDistrict}`;
+        const data = await fetchPlacesData(businessQuery, apiKeys.googlePlaces, 'Miami, FL');
         
-        if (placesData) {
+        if (data) {
+          setPlacesData(data);
           toast({
-            title: "District data loaded",
-            description: `Showing business data for ${selectedDistrict}`,
+            title: "Dati del distretto caricati",
+            description: `Mostrando dati di ${getBusinessTypeQuery(businessType)} per ${selectedDistrict}`,
           });
         }
       } catch (error) {
         console.error('Error fetching map data:', error);
         toast({
-          title: "Error loading map data",
-          description: "Could not retrieve Google Places data. Check your API key.",
+          title: "Errore nel caricamento dei dati",
+          description: "Impossibile recuperare i dati da Google Places. Controlla la tua API key.",
           variant: "destructive",
         });
       } finally {
@@ -45,7 +76,7 @@ const MapComponent = () => {
     if (selectedDistrict) {
       loadMapData();
     }
-  }, [selectedDistrict, isLoaded, apiKeys.googlePlaces, toast, areKeysSet, dataAttempted]);
+  }, [selectedDistrict, isLoaded, apiKeys.googlePlaces, toast, areKeysSet, dataAttempted, businessType]);
 
   const handleDistrictClick = (district: string) => {
     setSelectedDistrict(district);
@@ -56,7 +87,7 @@ const MapComponent = () => {
     <Card className="h-full">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between">
-          <span>Mappa di Miami</span>
+          <span>Mappa di Miami - {getBusinessTypeQuery(businessType)}</span>
           {isLoading && (
             <div className="flex items-center text-sm text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -74,9 +105,14 @@ const MapComponent = () => {
             </div>
             <p className="text-sm text-muted-foreground">
               {selectedDistrict 
-                ? `Visualizzazione dei dati per ${selectedDistrict}`
-                : "Seleziona un quartiere di Miami per visualizzare i dati demografici e commerciali"}
+                ? `Visualizzazione ${getBusinessTypeQuery(businessType)} per ${selectedDistrict}`
+                : `Seleziona un quartiere di Miami per visualizzare i dati di ${getBusinessTypeQuery(businessType)}`}
             </p>
+            {placesData && (
+              <div className="mt-4 text-xs">
+                <p>Dati caricati correttamente</p>
+              </div>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 p-4">

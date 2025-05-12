@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import MapComponent from '@/components/MapComponent';
@@ -7,18 +6,26 @@ import DemographicsDashboard from '@/components/DemographicsDashboard';
 import TrendsAnalysis from '@/components/TrendsAnalysis';
 import CompetitorAnalysis from '@/components/CompetitorAnalysis';
 import AIAssistant from '@/components/AIAssistant';
+import BusinessTypeSelector, { BusinessType } from '@/components/BusinessTypeSelector';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Index = () => {
+  const [businessType, setBusinessType] = useState<BusinessType>('restaurant');
+
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <BusinessTypeSelector
+            selectedType={businessType}
+            onTypeChange={setBusinessType}
+          />
+          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div className="lg:col-span-2">
-              <MapComponent />
+              <MapComponent businessType={businessType} />
             </div>
             <div>
               <DemographicsDashboard />
@@ -26,12 +33,12 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <TrendsAnalysis />
-            <CompetitorAnalysis />
+            <TrendsAnalysis businessType={businessType} />
+            <CompetitorAnalysis businessType={businessType} />
           </div>
           
           <div className="grid grid-cols-1 gap-6 mb-6">
-            <AIAssistant />
+            <AIAssistant businessType={businessType} />
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">

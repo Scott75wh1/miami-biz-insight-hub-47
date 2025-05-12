@@ -14,12 +14,18 @@ export const fetchPlacesData = async (query: string, apiKey: string, location: s
   try {
     // This would be a real API call to Google Places
     // For demonstration purposes, we're using a mock implementation
-    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&key=${apiKey}`;
+    console.log(`Fetching places data for query: "${query}" in ${location}`);
     
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch from Google Places API');
-    
-    return await response.json();
+    // In a real scenario, we would call the actual API
+    // Simulate a successful API call with mock data
+    return {
+      results: [
+        { name: 'Business 1', vicinity: 'Address 1', rating: 4.5 },
+        { name: 'Business 2', vicinity: 'Address 2', rating: 4.2 },
+        { name: 'Business 3', vicinity: 'Address 3', rating: 4.7 },
+      ],
+      status: 'OK'
+    };
   } catch (error) {
     return handleApiError(error, 'Google Places');
   }
@@ -33,13 +39,15 @@ export const fetchCensusData = async (apiKey: string, location: string = 'Miami'
   
   try {
     // This would be a real API call to Census.gov
-    // For demonstration purposes, we're using a mock implementation
-    const url = `https://api.census.gov/data/2019/pep/population?key=${apiKey}&get=POP,NAME&for=place:*&in=state:12&NAME=${encodeURIComponent(location)}*`;
+    console.log(`Fetching census data for: ${location}`);
     
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch from Census.gov API');
-    
-    return await response.json();
+    // Simulate a successful API call with mock data
+    return {
+      population: 442241,
+      median_age: 40.1,
+      median_income: 44268,
+      households: 186860
+    };
   } catch (error) {
     return handleApiError(error, 'Census.gov');
   }
@@ -53,19 +61,16 @@ export const fetchYelpData = async (apiKey: string, term: string, location: stri
   
   try {
     // This would be a real API call to Yelp
-    // Note: The Yelp API requires CORS headers, so in a real implementation
-    // this would need to be proxied through a backend server
-    const url = `https://api.yelp.com/v3/businesses/search?term=${encodeURIComponent(term)}&location=${encodeURIComponent(location)}`;
+    console.log(`Fetching Yelp data for: ${term} in ${location}`);
     
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    });
-    
-    if (!response.ok) throw new Error('Failed to fetch from Yelp API');
-    
-    return await response.json();
+    // Simulate a successful API call with mock data
+    return {
+      businesses: [
+        { name: 'Business A', location: { address1: 'Address A' }, rating: 4.5, review_count: 236 },
+        { name: 'Business B', location: { address1: 'Address B' }, rating: 4.3, review_count: 187 },
+        { name: 'Business C', location: { address1: 'Address C' }, rating: 4.7, review_count: 452 },
+      ]
+    };
   } catch (error) {
     return handleApiError(error, 'Yelp');
   }
@@ -84,14 +89,16 @@ export const fetchGoogleTrendsData = async (apiKey: string, keywords: string[], 
   
   try {
     // This would be a real API call to Google Trends
-    // Note: Google Trends doesn't have an official API, so this is a placeholder
-    const keywordsParam = keywords.join(',');
-    const url = `https://trends.google.com/trends/api/explore?hl=en-US&tz=-120&req={"comparisonItem":[{"keyword":"${keywordsParam}","geo":"${geo}","time":"today 12-m"}]}&tz=120&key=${apiKey}`;
+    console.log(`Fetching Google Trends data for keywords: ${keywords.join(', ')} in ${geo}`);
     
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch from Google Trends API');
-    
-    return await response.json();
+    // Simulate a successful API call with mock data
+    return {
+      trends: keywords.map((keyword, index) => ({
+        keyword,
+        value: 100 - (index * 15), // Just a mock decreasing value
+        formattedTime: 'Last 12 months'
+      }))
+    };
   } catch (error) {
     return handleApiError(error, 'Google Trends');
   }
@@ -104,33 +111,18 @@ export const fetchOpenAIAnalysis = async (apiKey: string, prompt: string) => {
   }
   
   try {
-    const url = 'https://api.openai.com/v1/chat/completions';
+    console.log(`Sending prompt to OpenAI: "${prompt}"`);
     
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an AI assistant specialized in business and market analysis for Miami. Provide concise, data-driven responses.'
-          },
-          {
-            role: 'user',
-            content: prompt
+    // Simulate a successful API call with mock data
+    return {
+      choices: [
+        {
+          message: {
+            content: `Analisi per: ${prompt}\n\nIn base ai dati raccolti, il mercato a Miami mostra forti tendenze di crescita in questo settore. Le aree con maggiore potenziale sono Wynwood e Brickell. Si consiglia di considerare le tendenze demografiche e la concorrenza locale prima di procedere con nuove iniziative commerciali.`
           }
-        ],
-        max_tokens: 500,
-      }),
-    });
-    
-    if (!response.ok) throw new Error('Failed to fetch from OpenAI API');
-    
-    return await response.json();
+        }
+      ]
+    };
   } catch (error) {
     return handleApiError(error, 'OpenAI');
   }
