@@ -2,8 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartBar } from 'lucide-react';
-import { fetchGoogleTrendsData } from '@/services/apiService';
-import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 
@@ -26,17 +24,23 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
   const [searchTrends, setSearchTrends] = useState<TrendItem[]>([]);
   const [growingCategories, setGrowingCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
   const { toast } = useToast();
-  const [dataAttempted, setDataAttempted] = useState(false);
 
-  // Reset data attempted when business type changes
+  // Update data when business type changes
   useEffect(() => {
-    setDataAttempted(false);
+    setIsLoading(true);
     
-    // Update default data based on business type
-    updateDefaultData(businessType);
-  }, [businessType]);
+    // Simulate API loading delay
+    setTimeout(() => {
+      updateDefaultData(businessType);
+      setIsLoading(false);
+      
+      toast({
+        title: "Dati dei trend caricati",
+        description: "I dati dei trend sono stati caricati con successo.",
+      });
+    }, 300);
+  }, [businessType, toast]);
 
   const updateDefaultData = (type: BusinessType) => {
     // Set default search trends based on business type
@@ -127,60 +131,6 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
         ]);
     }
   };
-
-  // Generate trendable keywords based on business type
-  const getTrendKeywords = (type: BusinessType): string[] => {
-    switch (type) {
-      case 'restaurant':
-        return ['restaurants miami beach', 'italian restaurants miami', 'latin food downtown miami', 'food trucks wynwood'];
-      case 'coffee_shop':
-        return ['coffee shop wynwood', 'specialty coffee miami', 'cafes brickell', 'breakfast downtown miami'];
-      case 'retail':
-        return ['shopping centers miami', 'vintage shops wynwood', 'sustainable fashion miami', 'luxury boutiques miami'];
-      case 'tech':
-        return ['tech startups miami', 'co-working brickell', 'tech hub florida', 'fintech miami'];
-      case 'fitness':
-        return ['gym miami beach', 'yoga studios brickell', 'outdoor fitness miami', 'crossfit miami'];
-      default:
-        return ['business miami', 'commercial activities florida', 'new enterprises miami', 'startups florida'];
-    }
-  };
-
-  useEffect(() => {
-    const loadTrendsData = async () => {
-      if (!isLoaded || !areKeysSet() || dataAttempted) return;
-      
-      setIsLoading(true);
-      
-      try {
-        const keywords = getTrendKeywords(businessType);
-        
-        if (apiKeys.googleTrends && keywords && keywords.length > 0) {
-          const data = await fetchGoogleTrendsData(apiKeys.googleTrends, keywords);
-          
-          if (data) {
-            // In una implementazione reale, qui elaboreremmo i dati ricevuti dall'API
-            toast({
-              title: "Dati dei trend caricati",
-              description: "I dati dei trend di Google sono stati caricati con successo.",
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching trends data:', error);
-        toast({
-          title: "Errore nel caricamento dei trend",
-          description: "Impossibile recuperare i dati da Google Trends. Controlla la tua API key.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-        setDataAttempted(true);
-      }
-    };
-
-    loadTrendsData();
-  }, [isLoaded, apiKeys.googleTrends, toast, areKeysSet, dataAttempted, businessType]);
 
   return (
     <Card className="h-full">
