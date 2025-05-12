@@ -105,7 +105,7 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
           { label: 'CrossFit Miami', value: 50 },
         ]);
         setGrowingCategories([
-          { name: 'Fitness All'aperto', growth: '+33%', color: 'bg-miami-teal text-white' },
+          { name: 'Fitness All\'aperto', growth: '+33%', color: 'bg-miami-teal text-white' },
           { name: 'Yoga Specialty', growth: '+27%', color: 'bg-miami-blue text-white' },
           { name: 'Fitness Digitale', growth: '+22%', color: 'bg-miami-coral text-white' },
           { name: 'Wellness Integrato', growth: '+19%', color: 'bg-miami-navy text-white' },
