@@ -7,7 +7,7 @@ import {
   Database, 
   Building, 
   MessageSquare,
-  Map,
+  Map as MapIcon,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -42,7 +42,7 @@ const Sidebar = ({ className }: SidebarProps) => {
       </div>
       
       <nav className="flex-1 p-2 space-y-1">
-        <SidebarItem icon={Map} label="Mappa di Miami" collapsed={collapsed} active />
+        <SidebarItem icon={MapIcon} label="Mappa di Miami" collapsed={collapsed} active />
         <SidebarItem icon={Users} label="Demografia" collapsed={collapsed} />
         <SidebarItem icon={ChartBar} label="Trend di Mercato" collapsed={collapsed} />
         <SidebarItem icon={Building} label="Analisi Competitor" collapsed={collapsed} />
