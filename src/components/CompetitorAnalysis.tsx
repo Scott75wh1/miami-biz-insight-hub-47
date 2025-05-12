@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Star, Loader2, MapPin } from 'lucide-react';
-import { fetchPlacesData } from '@/services/apiService';
+import { Building, Star, Loader2, MapPin, MessageSquare } from 'lucide-react';
+import { fetchCombinedCompetitorData } from '@/services/apiService';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
 import { BusinessType } from '@/components/BusinessTypeSelector';
@@ -18,6 +18,8 @@ interface Competitor {
     neutral: number;
     negative: number;
   };
+  yelpMatch?: boolean;
+  reviewHighlight?: string | null;
 }
 
 interface CompetitorAnalysisProps {
@@ -31,37 +33,6 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
   const { apiKeys, isLoaded } = useApiKeys();
   const { toast } = useToast();
   const miamiDistricts = ['Downtown', 'Brickell', 'Wynwood', 'Little Havana', 'Miami Beach'];
-
-  // Get appropriate business term for Google Places API based on business type
-  const getBusinessTypeQuery = (type: BusinessType) => {
-    switch (type) {
-      case 'restaurant':
-        return 'restaurants';
-      case 'coffee_shop':
-        return 'coffee shops';
-      case 'retail':
-        return 'retail shops';
-      case 'tech':
-        return 'tech companies';
-      case 'fitness':
-        return 'fitness centers';
-      default:
-        return 'businesses';
-    }
-  };
-  
-  // Default sentiment distribution for businesses based on rating
-  const getDefaultSentiments = (rating: number) => {
-    if (rating >= 4.5) {
-      return { positive: 75, neutral: 20, negative: 5 };
-    } else if (rating >= 4.0) {
-      return { positive: 65, neutral: 25, negative: 10 };
-    } else if (rating >= 3.5) {
-      return { positive: 55, neutral: 30, negative: 15 };
-    } else {
-      return { positive: 40, neutral: 35, negative: 25 };
-    }
-  };
   
   // Load competitor data when business type or district changes
   useEffect(() => {
@@ -72,37 +43,21 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
       setCompetitors([]);
       
       try {
-        // Get competitors data based on the selected business type and district
-        const searchQuery = `${getBusinessTypeQuery(businessType)} in ${selectedDistrict}, Miami`;
-        const data = await fetchPlacesData(searchQuery, apiKeys.googlePlaces, `${selectedDistrict}, Miami`);
+        console.log(`Loading competitor data for ${businessType} in ${selectedDistrict}`);
         
-        if (data && data.results && data.results.length > 0) {
-          // Map Google Places API data to our competitor format
-          const mappedCompetitors = data.results.map((place: any) => {
-            // Get a meaningful type from the place types array
-            const typeFromData = place.types && place.types.length > 0
-              ? place.types[0].replace(/_/g, ' ')
-              : getBusinessTypeQuery(businessType).replace(/_/g, ' ');
-              
-            // Format the type to be more user-friendly
-            const formattedType = typeFromData.charAt(0).toUpperCase() + typeFromData.slice(1);
-            
-            return {
-              name: place.name,
-              type: formattedType,
-              location: place.vicinity || `${selectedDistrict}, Miami`,
-              rating: place.rating || 0,
-              reviews: place.user_ratings_total || 0,
-              priceLevel: place.price_level ? '$'.repeat(place.price_level) : '$$$',
-              sentiments: getDefaultSentiments(place.rating || 0)
-            };
-          });
-          
-          setCompetitors(mappedCompetitors);
+        // Use the new combined data function
+        const combinedData = await fetchCombinedCompetitorData(
+          businessType, 
+          selectedDistrict, 
+          apiKeys
+        );
+        
+        if (combinedData && combinedData.length > 0) {
+          setCompetitors(combinedData);
           
           toast({
             title: "Dati competitor caricati",
-            description: `I dati dei competitor per ${searchQuery} sono stati caricati con successo.`,
+            description: `I dati dei competitor per ${businessType} in ${selectedDistrict} sono stati caricati con successo.`,
           });
         } else {
           // Use default data if API returns no results
@@ -110,7 +65,7 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
           
           toast({
             title: "Utilizzando dati predefiniti",
-            description: "Nessun dato disponibile dall'API, utilizzando dati di esempio.",
+            description: "Nessun dato disponibile dalle API, utilizzando dati di esempio.",
           });
         }
       } catch (error) {
@@ -121,7 +76,7 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
         
         toast({
           title: "Errore nel caricamento competitor",
-          description: "Impossibile recuperare dati. Controlla la tua API key.",
+          description: "Impossibile recuperare dati. Controlla le tue API key.",
           variant: "destructive",
         });
       } finally {
@@ -130,7 +85,7 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
     };
 
     loadCompetitorData();
-  }, [isLoaded, apiKeys.googlePlaces, toast, businessType, selectedDistrict]);
+  }, [isLoaded, apiKeys, toast, businessType, selectedDistrict]);
   
   // Default competitors data based on business type and district
   const getDefaultCompetitors = (type: BusinessType, district: string): Competitor[] => {
@@ -148,7 +103,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
               positive: 75,
               neutral: 20,
               negative: 5
-            }
+            },
+            reviewHighlight: "Una delle migliori esperienze culinarie a Miami!"
           },
           { 
             name: `${district} Trattoria`, 
@@ -161,7 +117,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
               positive: 70,
               neutral: 25,
               negative: 5
-            }
+            },
+            reviewHighlight: "Pasta fatta in casa eccezionale, atmosfera autentica."
           },
           { 
             name: `${district} Taqueria`, 
@@ -174,7 +131,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
               positive: 65,
               neutral: 30,
               negative: 5
-            }
+            },
+            reviewHighlight: "I migliori tacos della zona, salse fatte in casa."
           },
         ];
       case 'coffee_shop':
@@ -190,7 +148,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
               positive: 75,
               neutral: 20,
               negative: 5
-            }
+            },
+            reviewHighlight: "Caffè di qualità e ottimi dolci fatti in casa."
           },
           { 
             name: `${district} Coffee Corner`, 
@@ -203,7 +162,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
               positive: 72,
               neutral: 23,
               negative: 5
-            }
+            },
+            reviewHighlight: "Miscele di caffè uniche, baristi competenti."
           },
           { 
             name: `${district} Morning Brew`, 
@@ -216,10 +176,10 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
               positive: 68,
               neutral: 25,
               negative: 7
-            }
+            },
+            reviewHighlight: "Ottima colazione e ambiente perfetto per lavorare."
           },
         ];
-      // ... altre opzioni di business
       default:
         return [
           { 
@@ -233,7 +193,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
               positive: 70,
               neutral: 25,
               negative: 5
-            }
+            },
+            reviewHighlight: "Servizio eccellente e prodotti di qualità."
           },
           { 
             name: `${district} Business B`, 
@@ -246,7 +207,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
               positive: 65,
               neutral: 30,
               negative: 5
-            }
+            },
+            reviewHighlight: "Ottimo rapporto qualità-prezzo."
           },
           { 
             name: `${district} Business C`, 
@@ -259,7 +221,8 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
               positive: 72,
               neutral: 23,
               negative: 5
-            }
+            },
+            reviewHighlight: "Staff competente e servizio impeccabile."
           },
         ];
     }
@@ -324,6 +287,12 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
                       </div>
                       <span className="mx-1">·</span>
                       <span>{competitor.priceLevel}</span>
+                      {competitor.yelpMatch && (
+                        <>
+                          <span className="mx-1">·</span>
+                          <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded">Yelp</span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center bg-muted/30 px-2 py-1 rounded-md text-sm">
@@ -349,6 +318,15 @@ const CompetitorAnalysis = ({ businessType }: CompetitorAnalysisProps) => {
                     <span>Neutro</span>
                     <span>Negativo</span>
                   </div>
+                  
+                  {competitor.reviewHighlight && (
+                    <div className="mt-2 text-xs bg-muted/30 p-2 rounded-md">
+                      <div className="flex items-start">
+                        <MessageSquare className="h-3 w-3 mr-1 mt-0.5 text-muted-foreground" />
+                        <span className="text-muted-foreground italic">"{competitor.reviewHighlight}"</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))
