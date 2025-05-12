@@ -3,6 +3,7 @@ import React from 'react';
 import { Search, Building, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SettingsDialog } from './SettingsDialog';
 
 const Navbar = () => {
   return (
@@ -29,6 +30,7 @@ const Navbar = () => {
           <Button variant="ghost" size="sm" className="md:hidden">
             <Search className="h-5 w-5" />
           </Button>
+          <SettingsDialog />
         </div>
       </div>
     </header>
