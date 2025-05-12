@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartBar } from 'lucide-react';
@@ -43,7 +44,8 @@ const TrendsAnalysis = () => {
       
       try {
         const keywords = ['restaurants miami beach', 'coffee shop wynwood', 'juice bar miami', 'co-working brickell'];
-        const data = await fetchGoogleTrendsData(keywords);
+        // Pass the API key as the first argument and keywords as the second argument
+        const data = await fetchGoogleTrendsData(apiKeys.googleTrends, keywords);
         
         if (data) {
           // Process the real data here

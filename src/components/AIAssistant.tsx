@@ -48,7 +48,8 @@ const AIAssistant = () => {
     setIsProcessing(true);
     
     try {
-      const response = await fetchOpenAIAnalysis(input);
+      // Pass the API key as the first argument and the prompt as second
+      const response = await fetchOpenAIAnalysis(apiKeys.openAI, input);
       
       if (response && response.choices && response.choices[0]) {
         const aiResponse: Message = { 
