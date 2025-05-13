@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -92,6 +91,7 @@ const MyBusinessPage = () => {
         trends: trendsResult
       };
       
+      // Create a structured prompt for OpenAI to generate JSON
       const aiPrompt = `Analizza questi dati per l'attività "${values.businessName}" situata a ${values.businessAddress} nel quartiere ${selectedDistrict}:
         
         Dati demografici: ${JSON.stringify(censusResult)}
@@ -116,8 +116,24 @@ const MyBusinessPage = () => {
       if (aiAnalysis && aiAnalysis.choices && aiAnalysis.choices[0]) {
         try {
           // Attempt to parse as JSON if the response is formatted correctly
-          parsedAnalysis = JSON.parse(aiAnalysis.choices[0].message.content);
+          const content = aiAnalysis.choices[0].message.content;
+          // Try to extract JSON if it's embedded in text
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          const jsonString = jsonMatch ? jsonMatch[0] : content;
+          parsedAnalysis = JSON.parse(jsonString);
+          
+          // Ensure all required fields exist
+          parsedAnalysis = {
+            summary: parsedAnalysis.summary || "Analisi non disponibile",
+            demographicAnalysis: parsedAnalysis.demographicAnalysis || "Analisi demografica non disponibile",
+            competitionAnalysis: parsedAnalysis.competitionAnalysis || "Analisi competitiva non disponibile",
+            trendsAnalysis: parsedAnalysis.trendsAnalysis || "Analisi delle tendenze non disponibile",
+            recommendations: Array.isArray(parsedAnalysis.recommendations) ? 
+              parsedAnalysis.recommendations : 
+              ["Raccomandazioni non disponibili"]
+          };
         } catch (e) {
+          console.error("Error parsing OpenAI response:", e);
           // If not proper JSON, use the raw text
           parsedAnalysis = {
             summary: aiAnalysis.choices[0].message.content,
@@ -178,7 +194,7 @@ const MyBusinessPage = () => {
   const detectBusinessType = (businessName: string): string => {
     const name = businessName.toLowerCase();
     if (name.includes("pizz") || name.includes("trattoria") || name.includes("ristorant") || 
-        name.includes("osteria") || name.includes("cucina")) {
+        name.includes("osteria") || name.includes("cucina") || name.includes("sapori")) {
       return "restaurant";
     } else if (name.includes("caffè") || name.includes("caffe") || name.includes("espresso") || 
               name.includes("bar") || name.includes("coffee")) {
