@@ -8,6 +8,7 @@ import { DistrictSelectionProvider } from "./hooks/useDistrictSelection";
 import Index from "./pages/Index";
 import CensusDetail from "./pages/CensusDetail";
 import TrafficPage from "./pages/TrafficPage";
+import MyBusinessPage from "./pages/MyBusinessPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/census" element={<CensusDetail />} />
             <Route path="/traffic" element={<TrafficPage />} />
+            <Route path="/my-business" element={<MyBusinessPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,143 +1,151 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { MapPin } from 'lucide-react';
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 
-interface TrafficMapDisplayProps {
-  district: string;
+interface District {
+  name: string;
+  lat: number;
+  lng: number;
 }
 
-export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district }) => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [trafficLayer, setTrafficLayer] = useState<google.maps.TrafficLayer | null>(null);
-  const { toast } = useToast();
+interface TrafficMapDisplayProps {
+  isLoaded: boolean;
+  mapInstance: google.maps.Map | null;
+  district?: string;
+  setMapInstance: (map: google.maps.Map) => void;
+  errorMessage?: string;
+  onDistrictChange?: (district: string) => void;
+}
 
-  // Initialize the map
+const districtCoordinates: Record<string, { lat: number; lng: number }> = {
+  'Miami Beach': { lat: 25.790654, lng: -80.130045 },
+  'Wynwood': { lat: 25.8050, lng: -80.1994 },
+  'Brickell': { lat: 25.7617, lng: -80.1918 },
+  'Downtown': { lat: 25.7743, lng: -80.1937 },
+  'Little Havana': { lat: 25.7659, lng: -80.2149 },
+  'Coral Gables': { lat: 25.7215, lng: -80.2684 },
+  'Coconut Grove': { lat: 25.7313, lng: -80.2419 },
+  'Design District': { lat: 25.8136, lng: -80.1953 }
+};
+
+const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ 
+  isLoaded, 
+  mapInstance, 
+  district = 'Miami Beach',
+  setMapInstance, 
+  errorMessage,
+  onDistrictChange
+}) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
+  const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
+  const { toast } = useToast();
+  const { selectedDistrict } = useDistrictSelection();
+  const [currentDistrict, setCurrentDistrict] = useState(district || selectedDistrict);
+
+  // Initialize map when component mounts
   useEffect(() => {
-    if (!mapRef.current || !window.google || !window.google.maps) {
-      return;
-    }
+    if (!isLoaded || !window.google || mapInstance || !mapRef.current) return;
 
     try {
-      if (map) {
-        // Map already initialized, just update center
-        return;
-      }
-
-      // Default coordinates for the selected district
-      let defaultCenter = { lat: 25.7617, lng: -80.1918 }; // Default to Miami
-      
-      // Set center based on district if available
-      if (district === "Miami Beach") {
-        defaultCenter = { lat: 25.790654, lng: -80.1300455 };
-      } else if (district === "Wynwood") {
-        defaultCenter = { lat: 25.8049, lng: -80.1937 };
-      } else if (district === "Brickell") {
-        defaultCenter = { lat: 25.7602, lng: -80.1959 };
-      } else if (district === "Downtown") {
-        defaultCenter = { lat: 25.7742, lng: -80.1936 };
-      } else if (district === "Little Havana") {
-        defaultCenter = { lat: 25.7659, lng: -80.2273 };
-      }
-      
-      // Create the map
-      const newMap = new window.google.maps.Map(mapRef.current, {
+      const mapOptions = {
+        center: districtCoordinates[currentDistrict] || { lat: 25.790654, lng: -80.130045 },
         zoom: 14,
-        center: defaultCenter,
-        mapTypeId: "roadmap",
         mapTypeControl: true,
-        streetViewControl: true,
         fullscreenControl: true,
-      });
-
-      // Create TrafficLayer and add it to the map
-      const newTrafficLayer = new window.google.maps.TrafficLayer();
-      newTrafficLayer.setMap(newMap);
-
+        streetViewControl: true,
+        mapTypeId: window.google.maps.MapTypeId.ROADMAP
+      };
+      
+      const map = new window.google.maps.Map(mapRef.current, mapOptions);
+      
+      // Create traffic layer
+      const trafficLayer = new window.google.maps.TrafficLayer();
+      trafficLayer.setMap(map);
+      trafficLayerRef.current = trafficLayer;
+      
       // Add a marker for the district
       const marker = new window.google.maps.Marker({
-        position: defaultCenter,
-        map: newMap,
-        title: district,
+        position: districtCoordinates[currentDistrict] || { lat: 25.790654, lng: -80.130045 },
+        map: map,
+        title: currentDistrict,
         animation: window.google.maps.Animation.DROP
       });
-
-      setMap(newMap);
-      setTrafficLayer(newTrafficLayer);
+      markerRef.current = marker;
+      
+      // Add info window to the marker
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `<div><strong>${currentDistrict}</strong><p>Dati di traffico in tempo reale</p></div>`
+      });
+      
+      marker.addListener("click", () => {
+        infoWindow.open({
+          anchor: marker,
+          map,
+        });
+      });
+      
+      setMapInstance(map);
       
       toast({
-        title: "Traffico visualizzato",
-        description: `Visualizzazione del traffico in ${district}`,
+        title: "Mappa del traffico caricata",
+        description: `Visualizzazione del traffico per ${currentDistrict}`,
       });
-      
-      console.log('Map initialized successfully with TrafficLayer');
     } catch (error) {
-      console.error('Error initializing map:', error);
+      console.error("Error initializing map:", error);
+      toast({
+        title: "Errore mappa",
+        description: "Impossibile caricare la mappa del traffico",
+        variant: "destructive",
+      });
     }
-  }, [district, toast]);
+  }, [isLoaded, mapInstance, setMapInstance, currentDistrict, toast]);
 
-  // Update center when district changes
+  // Update map when district changes
   useEffect(() => {
-    if (!map || !window.google || !window.google.maps) {
-      return;
-    }
+    if (!mapInstance || !window.google || !markerRef.current) return;
+    
+    const newCoords = districtCoordinates[currentDistrict] || districtCoordinates['Miami Beach'];
+    
+    // Update marker position with animation
+    markerRef.current.setPosition(newCoords);
+    markerRef.current.setAnimation(window.google.maps.Animation.DROP);
+    markerRef.current.setTitle(currentDistrict);
+    
+    // Center map on new district
+    mapInstance.panTo(newCoords);
+    
+  }, [currentDistrict, mapInstance]);
 
-    try {
-      let newCenter;
-      
-      // Update center based on district
-      if (district === "Miami Beach") {
-        newCenter = new window.google.maps.LatLng(25.790654, -80.1300455);
-      } else if (district === "Wynwood") {
-        newCenter = new window.google.maps.LatLng(25.8049, -80.1937);
-      } else if (district === "Brickell") {
-        newCenter = new window.google.maps.LatLng(25.7602, -80.1959);
-      } else if (district === "Downtown") {
-        newCenter = new window.google.maps.LatLng(25.7742, -80.1936);
-      } else if (district === "Little Havana") {
-        newCenter = new window.google.maps.LatLng(25.7659, -80.2273);
-      } else {
-        // Default to Miami
-        newCenter = new window.google.maps.LatLng(25.7617, -80.1918);
-      }
-      
-      map.setCenter(newCenter);
-      
-      // Add a new marker for the district
-      const marker = new window.google.maps.Marker({
-        position: newCenter,
-        map: map,
-        title: district,
-        animation: window.google.maps.Animation.DROP
-      });
-      
-      console.log(`Map centered on ${district}`);
-    } catch (error) {
-      console.error('Error updating map center:', error);
+  // Update local state when prop district changes
+  useEffect(() => {
+    if (district && district !== currentDistrict) {
+      setCurrentDistrict(district);
     }
-  }, [district, map]);
+  }, [district]);
+
+  if (errorMessage) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-slate-50 text-red-500 p-4 rounded-md">
+        <p>{errorMessage}</p>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-slate-50 p-4 rounded-md">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <p className="ml-2">Caricamento mappa traffico...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full h-full">
-      <div ref={mapRef} className="h-full w-full">
-        {!district && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 bg-opacity-75 z-10">
-            <p className="text-lg font-medium text-gray-700">
-              Seleziona un quartiere per visualizzare il traffico
-            </p>
-          </div>
-        )}
-      </div>
-      
-      {district && (
-        <div className="absolute top-2 right-2 bg-white p-2 rounded shadow-md text-sm z-10">
-          <p className="font-medium flex items-center">
-            <MapPin className="h-4 w-4 mr-1 text-red-500" />
-            <span>Quartiere: {district}</span>
-          </p>
-        </div>
-      )}
-    </div>
+    <div ref={mapRef} className="h-full w-full rounded-md overflow-hidden" />
   );
 };
+
+export default TrafficMapDisplay;

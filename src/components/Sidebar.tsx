@@ -67,8 +67,14 @@ const Sidebar = ({ className }: SidebarProps) => {
           active={location.pathname === '/traffic'} 
           onClick={() => navigate('/traffic')}
         />
+        <SidebarItem 
+          icon={Building} 
+          label="La mia Attività" 
+          collapsed={collapsed} 
+          active={location.pathname === '/my-business'} 
+          onClick={() => navigate('/my-business')}
+        />
         <SidebarItem icon={ChartBar} label="Trend di Mercato" collapsed={collapsed} />
-        <SidebarItem icon={Building} label="Analisi Competitor" collapsed={collapsed} />
         <SidebarItem icon={Search} label="Ricerca Avanzata" collapsed={collapsed} />
         <SidebarItem icon={Database} label="Dataset" collapsed={collapsed} />
         <SidebarItem icon={MessageSquare} label="Assistente AI" collapsed={collapsed} />
