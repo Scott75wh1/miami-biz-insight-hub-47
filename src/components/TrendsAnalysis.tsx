@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -48,8 +47,8 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
   const { apiKeys, isLoaded } = useApiKeys();
   const isUsingDemoKey = !apiKeys.googleTrends || apiKeys.googleTrends === 'demo-key';
 
-  // Add district selection state
-  const { districts, selectedDistrict, handleDistrictChange } = useDistrictSelection();
+  // Use district selection from global context
+  const { selectedDistrict, handleDistrictChange } = useDistrictSelection();
   const [selectedTab, setSelectedTab] = useState<string>("general");
 
   // Update data when business type or selected district changes
@@ -207,10 +206,7 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
               </Tabs>
               
               {selectedTab === "district" && (
-                <DistrictTrendsSelector
-                  selectedDistrict={selectedDistrict}
-                  onChange={handleDistrictChange}
-                />
+                <DistrictTrendsSelector />
               )}
             </div>
           </div>
