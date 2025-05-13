@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import Layout from '@/components/Layout';
 import { TrafficMap } from '@/components/traffic/TrafficMap';
@@ -10,24 +10,14 @@ import { TrafficControls } from '@/components/traffic/TrafficControls';
 import { useTrafficData } from '@/hooks/useTrafficData';
 
 const TrafficPage = () => {
-  const { selectedDistrict } = useDistrictSelection();
-  const [destination, setDestination] = useState<string>("");
-  const { isLoading, isTrafficLayerAvailable, showErrorToast } = useTrafficData();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const { selectedDistrict, handleDistrictChange } = useDistrictSelection();
+  const { isTrafficLayerAvailable, showErrorToast } = useTrafficData();
 
-  const handleAnalyzeTraffic = (address: string, transportType: string) => {
+  React.useEffect(() => {
     if (!isTrafficLayerAvailable()) {
       showErrorToast("È necessaria una chiave API di Google Maps valida. Configura una chiave API nelle impostazioni.");
-      return;
     }
-
-    setIsAnalyzing(true);
-    setDestination(address);
-    // Simulate loading for better UX
-    setTimeout(() => {
-      setIsAnalyzing(false);
-    }, 1500);
-  };
+  }, [isTrafficLayerAvailable, showErrorToast]);
 
   return (
     <Layout>
@@ -51,10 +41,13 @@ const TrafficPage = () => {
         <div className="grid grid-cols-1 gap-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle>Cerca indirizzo</CardTitle>
+              <CardTitle>Seleziona quartiere</CardTitle>
             </CardHeader>
             <CardContent>
-              <TrafficControls onAnalyzeTraffic={handleAnalyzeTraffic} isLoading={isAnalyzing} />
+              <TrafficControls 
+                selectedDistrict={selectedDistrict} 
+                onDistrictChange={handleDistrictChange} 
+              />
             </CardContent>
           </Card>
           
@@ -66,10 +59,7 @@ const TrafficPage = () => {
             </CardHeader>
             <CardContent>
               <div className="h-[600px] w-full rounded-md overflow-hidden border">
-                <TrafficMap 
-                  district={selectedDistrict} 
-                  destination={destination}
-                />
+                <TrafficMap district={selectedDistrict} />
               </div>
             </CardContent>
           </Card>

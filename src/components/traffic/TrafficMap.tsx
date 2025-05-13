@@ -7,10 +7,9 @@ import { TrafficMapError } from './TrafficMapError';
 
 interface TrafficMapProps {
   district: string;
-  destination: string;
 }
 
-export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination }) => {
+export const TrafficMap: React.FC<TrafficMapProps> = ({ district }) => {
   const { mapLoaded, mapError } = useGoogleMaps();
 
   if (mapError) {
@@ -21,5 +20,5 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination })
     return <TrafficMapLoading />;
   }
 
-  return <TrafficMapDisplay district={district} destination={destination} />;
+  return <TrafficMapDisplay district={district} />;
 };

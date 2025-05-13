@@ -4,17 +4,12 @@ import { useToast } from '@/components/ui/use-toast';
 
 interface TrafficMapDisplayProps {
   district: string;
-  destination: string;
 }
 
-export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, destination }) => {
+export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [trafficLayer, setTrafficLayer] = useState<google.maps.TrafficLayer | null>(null);
-  const [searchMarker, setSearchMarker] = useState<google.maps.Marker | null>(null);
-  const [searchTime, setSearchTime] = useState<string>('');
-  const [isMapInitialized, setIsMapInitialized] = useState<boolean>(false);
-  const [lastSearchedDestination, setLastSearchedDestination] = useState<string>('');
   const { toast } = useToast();
 
   // Initialize the map
@@ -34,6 +29,10 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
         defaultCenter = { lat: 25.8049, lng: -80.1937 };
       } else if (district === "Brickell") {
         defaultCenter = { lat: 25.7602, lng: -80.1959 };
+      } else if (district === "Downtown") {
+        defaultCenter = { lat: 25.7742, lng: -80.1936 };
+      } else if (district === "Little Havana") {
+        defaultCenter = { lat: 25.7659, lng: -80.2273 };
       }
       
       // Create the map
@@ -52,13 +51,17 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
 
       setMap(newMap);
       setTrafficLayer(newTrafficLayer);
-      setIsMapInitialized(true);
+      
+      toast({
+        title: "Traffico visualizzato",
+        description: `Visualizzazione del traffico in ${district}`,
+      });
       
       console.log('Map initialized successfully with TrafficLayer');
     } catch (error) {
       console.error('Error initializing map:', error);
     }
-  }, [map, district]);
+  }, [map, district, toast]);
 
   // Update center when district changes
   useEffect(() => {
@@ -76,6 +79,10 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
         newCenter = new window.google.maps.LatLng(25.8049, -80.1937);
       } else if (district === "Brickell") {
         newCenter = new window.google.maps.LatLng(25.7602, -80.1959);
+      } else if (district === "Downtown") {
+        newCenter = new window.google.maps.LatLng(25.7742, -80.1936);
+      } else if (district === "Little Havana") {
+        newCenter = new window.google.maps.LatLng(25.7659, -80.2273);
       }
       
       map.setCenter(newCenter);
@@ -85,105 +92,6 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       console.error('Error updating map center:', error);
     }
   }, [district, map]);
-
-  // Handle destination search
-  useEffect(() => {
-    // Return early if any condition is not met
-    if (!map || !destination || !window.google || !window.google.maps || !isMapInitialized) {
-      return;
-    }
-
-    // Prevent infinite loop by checking if we've already searched this destination
-    if (destination === lastSearchedDestination) {
-      return;
-    }
-
-    // Set this destination as the last searched one
-    setLastSearchedDestination(destination);
-
-    // Remove previous marker if exists
-    if (searchMarker) {
-      searchMarker.setMap(null);
-    }
-
-    try {
-      const geocoder = new window.google.maps.Geocoder();
-      
-      geocoder.geocode({ address: destination }, (results, status) => {
-        if (status === window.google.maps.GeocoderStatus.OK && results && results[0]) {
-          const location = results[0].geometry.location;
-          
-          // Set the current timestamp
-          const now = new Date();
-          const formattedTime = now.toLocaleString('it-IT', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-          });
-          setSearchTime(formattedTime);
-          
-          // Center and zoom the map
-          map.setCenter(location);
-          map.setZoom(15);
-          
-          const newMarker = new window.google.maps.Marker({
-            position: location,
-            map: map,
-            title: destination,
-            animation: window.google.maps.Animation.DROP
-          });
-          
-          // Create an info window with the timestamp
-          const infoWindow = new window.google.maps.InfoWindow({
-            content: `
-              <div>
-                <h4 style="margin:0;padding:0;font-weight:bold;">${destination}</h4>
-                <p style="margin:5px 0 0;padding:0;font-size:0.9em;">Analisi traffico: ${formattedTime}</p>
-              </div>
-            `
-          });
-          
-          // Open the info window on click
-          newMarker.addListener('click', function() {
-            infoWindow.open({
-              map: map,
-              anchor: newMarker
-            });
-          });
-          
-          // Open info window initially
-          infoWindow.open({
-            map: map,
-            anchor: newMarker
-          });
-          
-          setSearchMarker(newMarker);
-          
-          toast({
-            title: "Indirizzo trovato",
-            description: `Visualizzazione traffico per: ${destination}`,
-          });
-        } else {
-          console.error('Geocode error:', status);
-          toast({
-            title: "Indirizzo non trovato",
-            description: "Impossibile trovare l'indirizzo specificato.",
-            variant: "destructive",
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Error in address search:', error);
-      toast({
-        title: "Errore nella ricerca",
-        description: "Si è verificato un errore durante la ricerca dell'indirizzo.",
-        variant: "destructive",
-      });
-    }
-  }, [destination, map, toast, searchMarker, isMapInitialized, lastSearchedDestination]);
 
   return (
     <div className="relative">
@@ -197,12 +105,10 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
         )}
       </div>
       
-      {searchTime && (
-        <div className="absolute top-2 right-2 bg-white p-2 rounded shadow-md text-sm z-10">
-          <p className="font-medium">Ultima ricerca:</p>
-          <p>{searchTime}</p>
-        </div>
-      )}
+      <div className="absolute top-2 right-2 bg-white p-2 rounded shadow-md text-sm z-10">
+        <p className="font-medium">Quartiere selezionato:</p>
+        <p>{district}</p>
+      </div>
     </div>
   );
 };
