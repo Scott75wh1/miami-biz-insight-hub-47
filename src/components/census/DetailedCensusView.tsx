@@ -5,7 +5,7 @@ import { Database } from 'lucide-react';
 import { CensusDataResponse, fetchDistrictCensusData } from '@/services/api/censusService';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useApiKeys } from '@/hooks/useApiKeys';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import CensusTabsContainer from './CensusTabsContainer';
 import CensusLoadingState from './CensusLoadingState';
