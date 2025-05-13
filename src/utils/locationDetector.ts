@@ -18,7 +18,7 @@ export async function identifyDistrict(address: string, placesData: any, apiKey:
       'Wynwood': ['wynwood', 'nw 2nd ave', 'nw 24th', 'nw 26th', 'nw 29th', 'art district'],
       'Little Havana': ['little havana', 'calle ocho', 'sw 8th', 'flagler', 'cuban'],
       'Miami Beach': ['miami beach', 'south beach', 'ocean dr', 'collins ave', 'lincoln rd'],
-      'North Miami': ['north miami', 'ne 125th', 'ne 123rd', 'ne 135th', 'biscayne blvd'],
+      'North Miami': ['north miami', 'ne 125th', 'ne 123rd', 'ne 135th', 'ne 8th', 'ne 6th', 'biscayne blvd'],
       'Coral Gables': ['coral gables', 'miracle mile', 'ponce de leon', 'granada'],
       'Coconut Grove': ['coconut grove', 'grand ave', 'main hwy', 'bayshore'],
       'Design District': ['design district', 'ne 39th', 'ne 40th', 'ne 2nd ave', 'buena vista'],
@@ -55,6 +55,12 @@ export async function identifyDistrict(address: string, placesData: any, apiKey:
               }
             }
           }
+          
+          // Explicitly check for North Miami
+          if (value === "north miami") {
+            console.log(`District explicitly identified as North Miami`);
+            return "North Miami";
+          }
         }
       }
       
@@ -70,17 +76,30 @@ export async function identifyDistrict(address: string, placesData: any, apiKey:
             }
           }
         }
+        
+        // Explicitly check for North Miami in formatted address
+        if (formattedAddress.includes("north miami")) {
+          console.log(`District explicitly identified as North Miami from formatted address`);
+          return "North Miami";
+        }
       }
       
       // Check if we have geometry/location to determine nearest district
       if (placeResult.geometry && placeResult.geometry.location) {
-        // In a real implementation, we would calculate distances to district centers
-        // For now, we'll use a simple approach with North Miami
-        if (placeResult.geometry.location.lat > 25.88 && placeResult.geometry.location.lat < 25.91
-            && placeResult.geometry.location.lng > -80.19 && placeResult.geometry.location.lng < -80.17) {
+        const lat = placeResult.geometry.location.lat;
+        const lng = placeResult.geometry.location.lng;
+        
+        // North Miami coordinates check (more precise)
+        if (lat > 25.88 && lat < 25.91 && lng > -80.19 && lng < -80.17) {
           console.log('Location coordinates indicate North Miami');
           return 'North Miami';
         }
+      }
+      
+      // Check place name explicitly
+      if (placeResult.name && placeResult.name.toLowerCase().includes("north miami")) {
+        console.log(`Place name indicates North Miami`);
+        return "North Miami";
       }
     }
     
@@ -95,6 +114,12 @@ export async function identifyDistrict(address: string, placesData: any, apiKey:
           console.log(`District identified from place name/vicinity: ${district}`);
           return district;
         }
+      }
+      
+      // Final check specifically for North Miami
+      if (combinedText.includes("north miami")) {
+        console.log(`Combined text indicates North Miami`);
+        return "North Miami";
       }
     }
     

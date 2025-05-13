@@ -54,7 +54,8 @@ export function useBusinessAnalysis() {
       
       toast({
         title: "Analisi completata",
-        description: "I risultati sono pronti per la consultazione",
+        description: `I risultati per ${businessInfo.name} a ${result.businessInfo.district} sono pronti`,
+        variant: "default",
       });
       
     } catch (error) {
