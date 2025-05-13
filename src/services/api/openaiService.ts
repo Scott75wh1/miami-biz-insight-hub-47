@@ -76,16 +76,17 @@ export const analyzeTrendsData = async (
   apiKey: string, 
   businessType: string, 
   searchTrends: any[], 
-  growingCategories: any[]
+  growingCategories: any[],
+  district: string = 'Miami Beach'
 ) => {
   if (!apiKey || apiKey === 'demo-key') {
     console.log('Using mock data for trends analysis');
-    return getMockTrendsAnalysis(businessType, searchTrends, growingCategories);
+    return getMockTrendsAnalysis(businessType, searchTrends, growingCategories, district);
   }
   
   try {
     const prompt = `
-      Analizza questi trend di mercato nel settore ${businessType}:
+      Analizza questi trend di mercato nel settore ${businessType} nella zona di ${district}:
       
       Trend di ricerca: ${JSON.stringify(searchTrends)}
       
@@ -98,27 +99,29 @@ export const analyzeTrendsData = async (
       }
     `;
     
-    console.log(`Analyzing trends data with OpenAI for ${businessType}`);
+    console.log(`Analyzing trends data with OpenAI for ${businessType} in ${district}`);
     
     // In a real implementation, we would call the OpenAI API
     // For now, we'll return mock data
-    return getMockTrendsAnalysis(businessType, searchTrends, growingCategories);
+    return getMockTrendsAnalysis(businessType, searchTrends, growingCategories, district);
   } catch (error) {
     console.error('Error analyzing trends data:', error);
-    return getMockTrendsAnalysis(businessType, searchTrends, growingCategories);
+    return getMockTrendsAnalysis(businessType, searchTrends, growingCategories, district);
   }
 };
 
 // Helper function for mock trends analysis recommendations
-function getMockTrendsAnalysis(businessType: string, searchTrends: any[], growingCategories: any[]) {
+function getMockTrendsAnalysis(businessType: string, searchTrends: any[], growingCategories: any[], district: string = 'Miami Beach') {
   let analysis = {
     summary: "",
     recommendations: []
   };
   
+  // Base recommendations by business type
+  let baseAnalysis;
   switch(businessType) {
     case 'restaurant':
-      analysis = {
+      baseAnalysis = {
         summary: "Il mercato della ristorazione a Miami mostra una forte crescita, con particolare interesse verso cucine fusion e opzioni vegane.",
         recommendations: [
           "Considerare l'inclusione di opzioni vegane o plant-based nel menu per attrarre una clientela in crescita",
@@ -128,7 +131,7 @@ function getMockTrendsAnalysis(businessType: string, searchTrends: any[], growin
       };
       break;
     case 'coffee_shop':
-      analysis = {
+      baseAnalysis = {
         summary: "Il settore delle caffetterie sta vivendo una specializzazione, con forte interesse verso cold brew e caffè di nicchia.",
         recommendations: [
           "Differenziarsi offrendo varietà di cold brew e caffè speciali, un trend in forte crescita (+31%)",
@@ -138,7 +141,7 @@ function getMockTrendsAnalysis(businessType: string, searchTrends: any[], growin
       };
       break;
     default:
-      analysis = {
+      baseAnalysis = {
         summary: "Il mercato a Miami mostra un forte interesse verso soluzioni digitali e sostenibili.",
         recommendations: [
           "Integrare una soluzione e-commerce o di presenza digitale per sfruttare la crescita del +24% in questo settore",
@@ -146,6 +149,75 @@ function getMockTrendsAnalysis(businessType: string, searchTrends: any[], growin
           "Analizzare la possibilità di espandersi attraverso modelli di franchising, in crescita del +12%"
         ]
       };
+  }
+  
+  // Modify recommendations based on district
+  switch(district.toLowerCase()) {
+    case 'wynwood':
+      if (businessType === 'restaurant') {
+        analysis = {
+          summary: `Il mercato della ristorazione a ${district} è orientato verso concetti innovativi e fusion, con una forte presenza di food truck.`,
+          recommendations: [
+            "Sviluppare un concetto di ristorazione che incorpori elementi artistici, in linea con l'identità culturale del quartiere",
+            "Considerare un format ibrido tra ristorante e food truck per massimizzare la flessibilità e ridurre i costi iniziali",
+            "Puntare su menu fusion che combinano influenze latine e internazionali, particolarmente ricercati nella zona"
+          ]
+        };
+      } else if (businessType === 'coffee_shop') {
+        analysis = {
+          summary: `Il settore delle caffetterie a ${district} è fortemente orientato verso esperienze artistiche e specialità di nicchia.`,
+          recommendations: [
+            "Creare uno spazio che funzioni anche come galleria d'arte o venue per eventi culturali, sfruttando l'identità artistica del quartiere",
+            "Offrire metodi di estrazione alternativi e caffè di specialità con tostature artigianali locali",
+            "Considerare collaborazioni con artisti locali per packaging e merchandising personalizzato"
+          ]
+        };
+      } else {
+        analysis = {
+          summary: `${district} mostra un forte orientamento verso attività che integrano elementi artistici e creativi.`,
+          recommendations: [
+            "Incorporare elementi artistici e creativi nella strategia di business, in linea con l'identità del quartiere",
+            "Considerare modelli di business pop-up o temporary per testare il mercato con investimenti contenuti",
+            "Sviluppare collaborazioni con il vivace ecosistema artistico locale per aumentare visibilità e clientela"
+          ]
+        };
+      }
+      break;
+      
+    case 'brickell':
+      if (businessType === 'restaurant') {
+        analysis = {
+          summary: `Il mercato della ristorazione a ${district} è orientato verso concetti premium e business dining, con clientela corporate.`,
+          recommendations: [
+            "Sviluppare un'offerta di business lunch efficiente e di qualità per la clientela corporate della zona",
+            "Considerare orari estesi per aperitivi post-lavoro, particolarmente ricercati dai professionisti del quartiere finanziario",
+            "Puntare su un design sofisticato e un servizio impeccabile, elementi molto apprezzati dalla clientela di ${district}"
+          ]
+        };
+      } else if (businessType === 'coffee_shop') {
+        analysis = {
+          summary: `Il settore delle caffetterie a ${district} è orientato verso business café con spazi di lavoro e networking.`,
+          recommendations: [
+            "Creare aree dedicate al lavoro con connessioni veloci e prese elettriche abbondanti per i professionisti locali",
+            "Offrire servizi di prenotazione salette per meeting informali e piccole riunioni di lavoro",
+            "Sviluppare un programma di fidelizzazione specifico per i lavoratori delle aziende circostanti"
+          ]
+        };
+      } else {
+        analysis = {
+          summary: `${district} mostra una forte domanda per servizi e prodotti premium orientati al mondo business e finanziario.`,
+          recommendations: [
+            "Orientare l'offerta verso una clientela corporate con elevata capacità di spesa",
+            "Considerare servizi B2B che rispondano alle esigenze delle numerose aziende presenti nel quartiere",
+            "Puntare su un posizionamento premium con elementi di esclusività e attenzione ai dettagli"
+          ]
+        };
+      }
+      break;
+      
+    case 'miami beach':
+    default:
+      analysis = baseAnalysis;
   }
   
   return analysis;
