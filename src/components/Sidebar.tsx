@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
   className?: string;
@@ -20,6 +21,8 @@ interface SidebarProps {
 
 const Sidebar = ({ className }: SidebarProps) => {
   const [collapsed, setCollapsed] = React.useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <aside className={cn(
@@ -42,8 +45,20 @@ const Sidebar = ({ className }: SidebarProps) => {
       </div>
       
       <nav className="flex-1 p-2 space-y-1">
-        <SidebarItem icon={MapIcon} label="Mappa di Miami" collapsed={collapsed} active />
-        <SidebarItem icon={Users} label="Demografia" collapsed={collapsed} />
+        <SidebarItem 
+          icon={MapIcon} 
+          label="Mappa di Miami" 
+          collapsed={collapsed} 
+          active={location.pathname === '/'} 
+          onClick={() => navigate('/')}
+        />
+        <SidebarItem 
+          icon={Users} 
+          label="Demografia" 
+          collapsed={collapsed}
+          active={location.pathname === '/census'} 
+          onClick={() => navigate('/census')}
+        />
         <SidebarItem icon={ChartBar} label="Trend di Mercato" collapsed={collapsed} />
         <SidebarItem icon={Building} label="Analisi Competitor" collapsed={collapsed} />
         <SidebarItem icon={Search} label="Ricerca Avanzata" collapsed={collapsed} />
@@ -67,9 +82,10 @@ interface SidebarItemProps {
   label: string;
   collapsed: boolean;
   active?: boolean;
+  onClick?: () => void;
 }
 
-const SidebarItem = ({ icon: Icon, label, collapsed, active }: SidebarItemProps) => {
+const SidebarItem = ({ icon: Icon, label, collapsed, active, onClick }: SidebarItemProps) => {
   return (
     <Button
       variant={active ? "secondary" : "ghost"}
@@ -77,6 +93,7 @@ const SidebarItem = ({ icon: Icon, label, collapsed, active }: SidebarItemProps)
         "w-full justify-start",
         collapsed ? "px-2" : "px-3"
       )}
+      onClick={onClick}
     >
       <Icon className={cn("h-5 w-5", active ? "" : "text-muted-foreground")} />
       {!collapsed && <span className="ml-2">{label}</span>}
