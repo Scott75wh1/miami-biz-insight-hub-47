@@ -29,16 +29,11 @@ const TrafficMapDisplay = ({
       googleMapRef.current = new window.google.maps.Map(mapRef.current, {
         center,
         zoom: 13,
-        mapTypeId: window.google.maps.MapTypeId.ROADMAP,
+        mapTypeId: 'roadmap',
         mapTypeControl: true,
         mapTypeControlOptions: {
-          style: window.google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-          mapTypeIds: [
-            window.google.maps.MapTypeId.ROADMAP,
-            window.google.maps.MapTypeId.SATELLITE,
-            window.google.maps.MapTypeId.HYBRID,
-            window.google.maps.MapTypeId.TERRAIN,
-          ],
+          style: 2, // DROPDOWN_MENU in Google Maps API
+          mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'],
         },
       });
 
@@ -47,7 +42,7 @@ const TrafficMapDisplay = ({
         position: center,
         map: googleMapRef.current,
         title: 'Miami',
-        animation: window.google.maps.Animation.DROP,
+        animation: 1, // DROP animation in Google Maps API
       });
 
       // Create traffic layer but don't add it to the map yet
@@ -91,7 +86,7 @@ const TrafficMapDisplay = ({
     const marker = new window.google.maps.Marker({
       position: location,
       map: googleMapRef.current,
-      animation: window.google.maps.Animation.BOUNCE,
+      animation: 2, // BOUNCE animation in Google Maps API
     });
 
     setTimeout(() => {

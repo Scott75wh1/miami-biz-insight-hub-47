@@ -4,7 +4,13 @@ import { useApiKeys } from './useApiKeys';
 import { useToast } from '@/hooks/use-toast';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { performBusinessAnalysis, AnalysisResult, BusinessInfo } from '@/services/businessAnalysisService';
-import type { BusinessFormValues } from '@/components/business/BusinessAnalysisForm';
+
+// Update the BusinessFormValues interface to include businessType
+interface BusinessFormValues {
+  businessName?: string;
+  businessAddress?: string;
+  businessType?: string;
+}
 
 export function useBusinessAnalysis() {
   const { toast } = useToast();
@@ -25,8 +31,8 @@ export function useBusinessAnalysis() {
       });
       
       const businessInfo: BusinessInfo = {
-        name: values.businessName,
-        address: values.businessAddress,
+        name: values.businessName || '',
+        address: values.businessAddress || '',
         district: selectedDistrict,
         // Ensure type is always provided with a default if not available
         type: values.businessType || 'general',
