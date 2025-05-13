@@ -21,6 +21,7 @@ export function useGoogleMaps(): GoogleMapsHookResult {
     const loadGoogleMaps = () => {
       if (window.google && window.google.maps) {
         // Google Maps is already loaded
+        console.log("Google Maps is already loaded");
         setMapLoaded(true);
         return;
       }
@@ -37,7 +38,7 @@ export function useGoogleMaps(): GoogleMapsHookResult {
       // Create the script element if it doesn't exist
       if (!googleMapsScript.current) {
         googleMapsScript.current = document.createElement('script');
-        googleMapsScript.current.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeys.googlePlaces}&libraries=places&loading=async`;
+        googleMapsScript.current.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeys.googlePlaces}&libraries=places&v=weekly`;
         googleMapsScript.current.async = true;
         googleMapsScript.current.defer = true;
         googleMapsScript.current.onload = () => {

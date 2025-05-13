@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useApiKeys } from './useApiKeys';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export function useTrafficData() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -29,6 +29,7 @@ export function useTrafficData() {
 
   return {
     isLoading,
+    setIsLoading,
     isTrafficLayerAvailable,
     showErrorToast,
     showSuccessToast

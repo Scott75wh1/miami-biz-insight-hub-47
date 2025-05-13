@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { MapPin } from 'lucide-react';
 
 interface TrafficMapDisplayProps {
   district: string;
@@ -14,11 +15,16 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district }
 
   // Initialize the map
   useEffect(() => {
-    if (!mapRef.current || map || !window.google || !window.google.maps) {
+    if (!mapRef.current || !window.google || !window.google.maps) {
       return;
     }
 
     try {
+      if (map) {
+        // Map already initialized, just update center
+        return;
+      }
+
       // Default coordinates for the selected district
       let defaultCenter = { lat: 25.7617, lng: -80.1918 }; // Default to Miami
       
@@ -37,7 +43,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district }
       
       // Create the map
       const newMap = new window.google.maps.Map(mapRef.current, {
-        zoom: 13,
+        zoom: 14,
         center: defaultCenter,
         mapTypeId: "roadmap",
         mapTypeControl: true,
@@ -48,6 +54,14 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district }
       // Create TrafficLayer and add it to the map
       const newTrafficLayer = new window.google.maps.TrafficLayer();
       newTrafficLayer.setMap(newMap);
+
+      // Add a marker for the district
+      const marker = new window.google.maps.Marker({
+        position: defaultCenter,
+        map: newMap,
+        title: district,
+        animation: window.google.maps.Animation.DROP
+      });
 
       setMap(newMap);
       setTrafficLayer(newTrafficLayer);
@@ -61,7 +75,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district }
     } catch (error) {
       console.error('Error initializing map:', error);
     }
-  }, [map, district, toast]);
+  }, [district, toast]);
 
   // Update center when district changes
   useEffect(() => {
@@ -70,7 +84,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district }
     }
 
     try {
-      let newCenter = map.getCenter();
+      let newCenter;
       
       // Update center based on district
       if (district === "Miami Beach") {
@@ -83,9 +97,20 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district }
         newCenter = new window.google.maps.LatLng(25.7742, -80.1936);
       } else if (district === "Little Havana") {
         newCenter = new window.google.maps.LatLng(25.7659, -80.2273);
+      } else {
+        // Default to Miami
+        newCenter = new window.google.maps.LatLng(25.7617, -80.1918);
       }
       
       map.setCenter(newCenter);
+      
+      // Add a new marker for the district
+      const marker = new window.google.maps.Marker({
+        position: newCenter,
+        map: map,
+        title: district,
+        animation: window.google.maps.Animation.DROP
+      });
       
       console.log(`Map centered on ${district}`);
     } catch (error) {
@@ -94,7 +119,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district }
   }, [district, map]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       <div ref={mapRef} className="h-full w-full">
         {!district && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 bg-opacity-75 z-10">
@@ -105,10 +130,14 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district }
         )}
       </div>
       
-      <div className="absolute top-2 right-2 bg-white p-2 rounded shadow-md text-sm z-10">
-        <p className="font-medium">Quartiere selezionato:</p>
-        <p>{district}</p>
-      </div>
+      {district && (
+        <div className="absolute top-2 right-2 bg-white p-2 rounded shadow-md text-sm z-10">
+          <p className="font-medium flex items-center">
+            <MapPin className="h-4 w-4 mr-1 text-red-500" />
+            <span>Quartiere: {district}</span>
+          </p>
+        </div>
+      )}
     </div>
   );
 };
