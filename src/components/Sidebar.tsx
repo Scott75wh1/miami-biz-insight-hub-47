@@ -9,7 +9,8 @@ import {
   MessageSquare,
   Map as MapIcon,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Car
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -58,6 +59,13 @@ const Sidebar = ({ className }: SidebarProps) => {
           collapsed={collapsed}
           active={location.pathname === '/census'} 
           onClick={() => navigate('/census')}
+        />
+        <SidebarItem 
+          icon={Car} 
+          label="Analisi Traffico" 
+          collapsed={collapsed}
+          active={location.pathname === '/traffic'} 
+          onClick={() => navigate('/traffic')}
         />
         <SidebarItem icon={ChartBar} label="Trend di Mercato" collapsed={collapsed} />
         <SidebarItem icon={Building} label="Analisi Competitor" collapsed={collapsed} />

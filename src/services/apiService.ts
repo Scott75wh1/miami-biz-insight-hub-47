@@ -7,6 +7,7 @@ import { fetchYelpData } from './api/yelpService';
 import { fetchGoogleTrendsData } from './api/trendsService';
 import { fetchOpenAIAnalysis, analyzeCompetitorReviews, analyzeTrendsData } from './api/openaiService';
 import { fetchCombinedCompetitorData } from './api/competitorService';
+import { fetchTrafficData } from './api/traffic/trafficService';
 
 // Import and re-export types with 'export type' syntax
 import type { CensusDataResponse } from './api/censusService';
@@ -23,6 +24,7 @@ export {
   analyzeCompetitorReviews,
   analyzeTrendsData,
   fetchCombinedCompetitorData,
+  fetchTrafficData,
 };
 
 // Re-export types using 'export type'
