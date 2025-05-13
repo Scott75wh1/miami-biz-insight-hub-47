@@ -1,4 +1,3 @@
-
 /// <reference types="vite/client" />
 
 // Google Maps API type definitions
@@ -31,12 +30,22 @@ declare global {
           HYBRID: string;
           TERRAIN: string;
         };
+        MapTypeControlStyle: {
+          DEFAULT: number;
+          DROPDOWN_MENU: number;
+          HORIZONTAL_BAR: number;
+        };
+        MapMouseEvent: google.maps.MapMouseEvent;
       }
     }
   }
 }
 
 namespace google.maps {
+  interface MapMouseEvent {
+    latLng?: LatLng;
+  }
+
   class Map {
     constructor(mapDiv: Element, opts?: MapOptions);
     setCenter(latLng: LatLng | LatLngLiteral): void;
@@ -46,6 +55,8 @@ namespace google.maps {
     getZoom(): number;
     getCenter(): LatLng;
     getBounds(): LatLngBounds;
+    panTo(latLng: LatLng | LatLngLiteral): void;
+    addListener(event: string, handler: Function): MapsEventListener;
     remove(): void;
   }
 
@@ -240,9 +251,15 @@ namespace google.maps {
     maxZoom?: number;
     mapTypeId?: string;
     mapTypeControl?: boolean;
+    mapTypeControlOptions?: MapTypeControlOptions;
     streetViewControl?: boolean;
     fullscreenControl?: boolean;
     pitch?: number;
+  }
+
+  interface MapTypeControlOptions {
+    style?: number;
+    mapTypeIds?: string[];
   }
 
   interface TrafficLayerOptions {

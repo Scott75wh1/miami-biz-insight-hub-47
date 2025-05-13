@@ -28,9 +28,19 @@ export function useBusinessAnalysis() {
         name: values.businessName,
         address: values.businessAddress,
         district: selectedDistrict,
+        type: values.businessType || 'general', // Ensure type is always provided
       };
       
-      const result = await performBusinessAnalysis(businessInfo, apiKeys);
+      // Convert ApiKeys to Record<string, string> to satisfy type requirement
+      const apiKeysRecord: Record<string, string> = {
+        googlePlaces: apiKeys.googlePlaces,
+        censusGov: apiKeys.censusGov,
+        yelp: apiKeys.yelp,
+        googleTrends: apiKeys.googleTrends,
+        openAI: apiKeys.openAI,
+      };
+      
+      const result = await performBusinessAnalysis(businessInfo, apiKeysRecord);
       
       setAnalysisData(result);
       setAnalysisComplete(true);

@@ -1,55 +1,57 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useTrafficData } from '@/hooks/useTrafficData';
 
 interface TrafficMapDisplayProps {
   isLoaded: boolean;
   error: string | null;
   center?: { lat: number; lng: number };
-  trafficEnabled: boolean;
+  trafficEnabled?: boolean;
 }
 
 const TrafficMapDisplay = ({
   isLoaded,
   error,
   center = { lat: 25.7617, lng: -80.1918 }, // Default to Miami
-  trafficEnabled,
+  trafficEnabled = true,
 }: TrafficMapDisplayProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
+  const { showSuccessToast } = useTrafficData();
 
   useEffect(() => {
-    if (!isLoaded || !mapRef.current) return;
+    if (!isLoaded || !mapRef.current || !window.google) return;
 
     try {
       // Initialize map
-      googleMapRef.current = new google.maps.Map(mapRef.current, {
+      googleMapRef.current = new window.google.maps.Map(mapRef.current, {
         center,
         zoom: 13,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeId: window.google.maps.MapTypeId.ROADMAP,
         mapTypeControl: true,
         mapTypeControlOptions: {
-          style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+          style: window.google.maps.MapTypeControlStyle.DROPDOWN_MENU,
           mapTypeIds: [
-            google.maps.MapTypeId.ROADMAP,
-            google.maps.MapTypeId.SATELLITE,
-            google.maps.MapTypeId.HYBRID,
-            google.maps.MapTypeId.TERRAIN,
+            window.google.maps.MapTypeId.ROADMAP,
+            window.google.maps.MapTypeId.SATELLITE,
+            window.google.maps.MapTypeId.HYBRID,
+            window.google.maps.MapTypeId.TERRAIN,
           ],
         },
       });
 
       // Add a marker for Miami
-      new google.maps.Marker({
+      new window.google.maps.Marker({
         position: center,
         map: googleMapRef.current,
         title: 'Miami',
-        animation: google.maps.Animation.DROP,
+        animation: window.google.maps.Animation.DROP,
       });
 
       // Create traffic layer but don't add it to the map yet
-      trafficLayerRef.current = new google.maps.TrafficLayer();
+      trafficLayerRef.current = new window.google.maps.TrafficLayer();
       
       // Set initial traffic layer visibility
       if (trafficEnabled && googleMapRef.current) {
@@ -64,10 +66,12 @@ const TrafficMapDisplay = ({
           addMarker(event.latLng);
         }
       });
+
+      showSuccessToast("La mappa è stata caricata correttamente");
     } catch (error) {
       console.error("Error initializing map:", error);
     }
-  }, [isLoaded, center]);
+  }, [isLoaded, center, trafficEnabled, showSuccessToast]);
 
   // Update traffic layer when trafficEnabled changes
   useEffect(() => {
@@ -84,10 +88,10 @@ const TrafficMapDisplay = ({
   const addMarker = (location: google.maps.LatLng) => {
     if (!googleMapRef.current) return;
 
-    const marker = new google.maps.Marker({
+    const marker = new window.google.maps.Marker({
       position: location,
       map: googleMapRef.current,
-      animation: google.maps.Animation.BOUNCE,
+      animation: window.google.maps.Animation.BOUNCE,
     });
 
     setTimeout(() => {
@@ -95,9 +99,7 @@ const TrafficMapDisplay = ({
     }, 2000);
 
     // Pan to the marker location
-    if (googleMapRef.current) {
-      googleMapRef.current.panTo(location);
-    }
+    googleMapRef.current.panTo(location);
   };
 
   if (error) {
