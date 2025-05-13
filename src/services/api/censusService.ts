@@ -9,8 +9,8 @@ import {
   getMockDataForLocation
 } from './census/apiUtils';
 
-// Re-export the CensusDataResponse interface
-export { CensusDataResponse } from './census/types';
+// Re-export the CensusDataResponse interface with the correct 'export type' syntax
+export type { CensusDataResponse } from './census/types';
 
 export const fetchCensusData = async (apiKey: string, location: string = 'Miami') => {
   const logIndex = logCensusApiCall('fetchCensusData', { location, apiKey: apiKey ? 'provided' : 'not-provided' });
