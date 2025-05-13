@@ -34,8 +34,8 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
         defaultCenter = { lat: 25.7602, lng: -80.1959 };
       }
       
-      // Create the map
-      const newMap = new google.maps.Map(mapRef.current, {
+      // Create the map - making sure we're instantiating it correctly
+      const newMap = new window.google.maps.Map(mapRef.current, {
         zoom: 13,
         center: defaultCenter,
         mapTypeId: "roadmap",
@@ -45,7 +45,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       });
 
       // Create TrafficLayer and add it to the map
-      const newTrafficLayer = new google.maps.TrafficLayer();
+      const newTrafficLayer = new window.google.maps.TrafficLayer();
       newTrafficLayer.setMap(newMap);
 
       setMap(newMap);
@@ -68,11 +68,11 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       
       // Update center based on district
       if (district === "Miami Beach") {
-        newCenter = new google.maps.LatLng(25.790654, -80.1300455);
+        newCenter = new window.google.maps.LatLng(25.790654, -80.1300455);
       } else if (district === "Wynwood") {
-        newCenter = new google.maps.LatLng(25.8049, -80.1937);
+        newCenter = new window.google.maps.LatLng(25.8049, -80.1937);
       } else if (district === "Brickell") {
-        newCenter = new google.maps.LatLng(25.7602, -80.1959);
+        newCenter = new window.google.maps.LatLng(25.7602, -80.1959);
       }
       
       map.setCenter(newCenter);
@@ -95,10 +95,10 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
     }
 
     try {
-      const geocoder = new google.maps.Geocoder();
+      const geocoder = new window.google.maps.Geocoder();
       
       geocoder.geocode({ address: destination }, (results, status) => {
-        if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
+        if (status === window.google.maps.GeocoderStatus.OK && results && results[0]) {
           const location = results[0].geometry.location;
           
           // Set the current timestamp
@@ -118,15 +118,15 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
           map.setZoom(15);
           
           // Create a new marker
-          const newMarker = new google.maps.Marker({
+          const newMarker = new window.google.maps.Marker({
             position: location,
             map: map,
             title: destination,
-            animation: google.maps.Animation.DROP
+            animation: window.google.maps.Animation.DROP
           });
           
           // Create an info window with the timestamp
-          const infoWindow = new google.maps.InfoWindow({
+          const infoWindow = new window.google.maps.InfoWindow({
             content: `
               <div>
                 <h4 style="margin:0;padding:0;font-weight:bold;">${destination}</h4>
@@ -135,13 +135,16 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
             `
           });
           
-          // Open the info window on click
-          newMarker.addListener('click', () => {
-            infoWindow.open(map, newMarker);
+          // Open the info window on click - fix the type issues by using correct event listener
+          newMarker.addListener('click', function() {
+            infoWindow.open(map, this);
           });
           
-          // Open info window initially
-          infoWindow.open(map, newMarker);
+          // Open info window initially - fix the type issues
+          infoWindow.open({
+            map: map,
+            anchor: newMarker
+          });
           
           setSearchMarker(newMarker);
           
@@ -166,7 +169,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
         variant: "destructive",
       });
     }
-  }, [destination, map, toast]);
+  }, [destination, map, toast, searchMarker]);
 
   return (
     <div className="relative">
