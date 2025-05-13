@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps';
-import { TrafficMapDisplay } from './TrafficMapDisplay';
+import TrafficMapDisplay from './TrafficMapDisplay';
 import { TrafficMapLoading } from './TrafficMapLoading';
 import { TrafficMapError } from './TrafficMapError';
 

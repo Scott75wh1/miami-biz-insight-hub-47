@@ -11,12 +11,7 @@ interface District {
 }
 
 interface TrafficMapDisplayProps {
-  isLoaded: boolean;
-  mapInstance: google.maps.Map | null;
   district?: string;
-  setMapInstance: (map: google.maps.Map) => void;
-  errorMessage?: string;
-  onDistrictChange?: (district: string) => void;
 }
 
 const districtCoordinates: Record<string, { lat: number; lng: number }> = {
@@ -30,15 +25,9 @@ const districtCoordinates: Record<string, { lat: number; lng: number }> = {
   'Design District': { lat: 25.8136, lng: -80.1953 }
 };
 
-const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ 
-  isLoaded, 
-  mapInstance, 
-  district = 'Miami Beach',
-  setMapInstance, 
-  errorMessage,
-  onDistrictChange
-}) => {
+const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district = 'Miami Beach' }) => {
   const mapRef = useRef<HTMLDivElement>(null);
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
   const { toast } = useToast();
@@ -47,7 +36,7 @@ const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({
 
   // Initialize map when component mounts
   useEffect(() => {
-    if (!isLoaded || !window.google || mapInstance || !mapRef.current) return;
+    if (!window.google || mapInstance || !mapRef.current) return;
 
     try {
       const mapOptions = {
@@ -56,7 +45,7 @@ const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({
         mapTypeControl: true,
         fullscreenControl: true,
         streetViewControl: true,
-        mapTypeId: window.google.maps.MapTypeId.ROADMAP
+        mapTypeId: google.maps.MapTypeId.ROADMAP
       };
       
       const map = new window.google.maps.Map(mapRef.current, mapOptions);
@@ -71,7 +60,7 @@ const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({
         position: districtCoordinates[currentDistrict] || { lat: 25.790654, lng: -80.130045 },
         map: map,
         title: currentDistrict,
-        animation: window.google.maps.Animation.DROP
+        animation: google.maps.Animation.DROP
       });
       markerRef.current = marker;
       
@@ -101,7 +90,7 @@ const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({
         variant: "destructive",
       });
     }
-  }, [isLoaded, mapInstance, setMapInstance, currentDistrict, toast]);
+  }, [mapInstance, currentDistrict, toast]);
 
   // Update map when district changes
   useEffect(() => {
@@ -111,7 +100,7 @@ const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({
     
     // Update marker position with animation
     markerRef.current.setPosition(newCoords);
-    markerRef.current.setAnimation(window.google.maps.Animation.DROP);
+    markerRef.current.setAnimation(google.maps.Animation.DROP);
     markerRef.current.setTitle(currentDistrict);
     
     // Center map on new district
@@ -125,23 +114,6 @@ const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({
       setCurrentDistrict(district);
     }
   }, [district]);
-
-  if (errorMessage) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-slate-50 text-red-500 p-4 rounded-md">
-        <p>{errorMessage}</p>
-      </div>
-    );
-  }
-
-  if (!isLoaded) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-slate-50 p-4 rounded-md">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-        <p className="ml-2">Caricamento mappa traffico...</p>
-      </div>
-    );
-  }
 
   return (
     <div ref={mapRef} className="h-full w-full rounded-md overflow-hidden" />
