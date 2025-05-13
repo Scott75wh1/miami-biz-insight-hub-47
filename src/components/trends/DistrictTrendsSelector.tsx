@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from '@/components/ui/button';
-import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
+import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 
 interface DistrictTrendsSelectorProps {
   selectedDistrict: string;
@@ -32,23 +32,25 @@ const DistrictTrendsSelector = ({ selectedDistrict, onChange }: DistrictTrendsSe
       </PopoverTrigger>
       <PopoverContent className="w-[180px] p-0">
         <Command>
-          <CommandGroup>
-            {districts.map((district) => (
-              <CommandItem
-                key={district}
-                value={district}
-                onSelect={() => {
-                  onChange(district);
-                }}
-                className="text-xs"
-              >
-                <Check
-                  className={`mr-2 h-4 w-4 ${selectedDistrict === district ? "opacity-100" : "opacity-0"}`}
-                />
-                {district}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          <CommandList>
+            <CommandGroup>
+              {districts.map((district) => (
+                <CommandItem
+                  key={district}
+                  value={district}
+                  onSelect={() => {
+                    onChange(district);
+                  }}
+                  className="text-xs"
+                >
+                  <Check
+                    className={`mr-2 h-4 w-4 ${selectedDistrict === district ? "opacity-100" : "opacity-0"}`}
+                  />
+                  {district}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>

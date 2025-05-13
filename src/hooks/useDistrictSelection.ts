@@ -15,8 +15,11 @@ export function useDistrictSelection({ defaultDistrict = "Miami Beach" }: UseDis
     }
   };
 
+  // Ensure districts is always an array, even if MIAMI_DISTRICTS is undefined for some reason
+  const districts = MIAMI_DISTRICTS || ["Miami Beach", "Wynwood", "Brickell"];
+
   return {
-    districts: MIAMI_DISTRICTS,
+    districts,
     selectedDistrict,
     handleDistrictChange
   };
