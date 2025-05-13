@@ -10,19 +10,31 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { useToast } from '@/components/ui/use-toast';
 
 interface TrafficControlsProps {
-  onAnalyzeTraffic: (destination: string) => void;
+  onAnalyzeTraffic: (destination: string, transportType: string) => void;
   isLoading: boolean;
 }
 
 export const TrafficControls: React.FC<TrafficControlsProps> = ({ onAnalyzeTraffic, isLoading }) => {
   const [destination, setDestination] = useState('');
   const [transportType, setTransportType] = useState('driving');
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAnalyzeTraffic(destination);
+    
+    if (!destination.trim()) {
+      toast({
+        title: "Indirizzo richiesto",
+        description: "Per favore inserisci un indirizzo di destinazione",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    onAnalyzeTraffic(destination, transportType);
   };
 
   return (

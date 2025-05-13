@@ -1,5 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface TrafficMapDisplayProps {
   district: string;
@@ -10,6 +11,9 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [trafficLayer, setTrafficLayer] = useState<google.maps.TrafficLayer | null>(null);
+  const [searchMarker, setSearchMarker] = useState<google.maps.Marker | null>(null);
+  const [searchTime, setSearchTime] = useState<string>('');
+  const { toast } = useToast();
 
   // Initialize the map
   useEffect(() => {
@@ -34,7 +38,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       const newMap = new google.maps.Map(mapRef.current, {
         zoom: 13,
         center: defaultCenter,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeId: "roadmap",
         mapTypeControl: true,
         streetViewControl: true,
         fullscreenControl: true,
@@ -53,7 +57,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
     }
   }, [map, district]);
 
-  // Update center when district or destination changes
+  // Update center when district changes
   useEffect(() => {
     if (!map || !window.google || !window.google.maps) {
       return;
@@ -71,24 +75,115 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
         newCenter = new google.maps.LatLng(25.7602, -80.1959);
       }
       
-      // If we have a destination, we could geocode it here to get coordinates
-      // For now just focusing on the district
-
       map.setCenter(newCenter);
       
       console.log(`Map centered on ${district}`);
     } catch (error) {
       console.error('Error updating map center:', error);
     }
-  }, [district, destination, map]);
+  }, [district, map]);
+
+  // Handle destination search
+  useEffect(() => {
+    if (!map || !destination || !window.google || !window.google.maps) {
+      return;
+    }
+
+    // Remove previous marker if exists
+    if (searchMarker) {
+      searchMarker.setMap(null);
+    }
+
+    try {
+      const geocoder = new google.maps.Geocoder();
+      
+      geocoder.geocode({ address: destination }, (results, status) => {
+        if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
+          const location = results[0].geometry.location;
+          
+          // Set the current timestamp
+          const now = new Date();
+          const formattedTime = now.toLocaleString('it-IT', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+          setSearchTime(formattedTime);
+          
+          // Center and zoom the map
+          map.setCenter(location);
+          map.setZoom(15);
+          
+          // Create a new marker
+          const newMarker = new google.maps.Marker({
+            position: location,
+            map: map,
+            title: destination,
+            animation: google.maps.Animation.DROP
+          });
+          
+          // Create an info window with the timestamp
+          const infoWindow = new google.maps.InfoWindow({
+            content: `
+              <div>
+                <h4 style="margin:0;padding:0;font-weight:bold;">${destination}</h4>
+                <p style="margin:5px 0 0;padding:0;font-size:0.9em;">Analisi traffico: ${formattedTime}</p>
+              </div>
+            `
+          });
+          
+          // Open the info window on click
+          newMarker.addListener('click', () => {
+            infoWindow.open(map, newMarker);
+          });
+          
+          // Open info window initially
+          infoWindow.open(map, newMarker);
+          
+          setSearchMarker(newMarker);
+          
+          toast({
+            title: "Indirizzo trovato",
+            description: `Visualizzazione traffico per: ${destination}`,
+          });
+        } else {
+          console.error('Geocode error:', status);
+          toast({
+            title: "Indirizzo non trovato",
+            description: "Impossibile trovare l'indirizzo specificato.",
+            variant: "destructive",
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Error in address search:', error);
+      toast({
+        title: "Errore nella ricerca",
+        description: "Si è verificato un errore durante la ricerca dell'indirizzo.",
+        variant: "destructive",
+      });
+    }
+  }, [destination, map, toast]);
 
   return (
-    <div ref={mapRef} className="h-full w-full">
-      {!district && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 bg-opacity-75 z-10">
-          <p className="text-lg font-medium text-gray-700">
-            Seleziona un quartiere per visualizzare il traffico
-          </p>
+    <div className="relative">
+      <div ref={mapRef} className="h-full w-full">
+        {!district && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 bg-opacity-75 z-10">
+            <p className="text-lg font-medium text-gray-700">
+              Seleziona un quartiere per visualizzare il traffico
+            </p>
+          </div>
+        )}
+      </div>
+      
+      {searchTime && (
+        <div className="absolute top-2 right-2 bg-white p-2 rounded shadow-md text-sm z-10">
+          <p className="font-medium">Ultima ricerca:</p>
+          <p>{searchTime}</p>
         </div>
       )}
     </div>
