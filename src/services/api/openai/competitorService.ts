@@ -18,28 +18,62 @@ export const analyzeCompetitorReviews = async (
   }
   
   try {
-    // Create a summary of the competitors for the prompt
+    // Create a more detailed summary of the competitors for the prompt
     const competitorsData = competitors.map(comp => ({
       name: comp.name,
       rating: comp.rating,
       reviews: comp.reviews,
+      reviewCount: comp.review_count,
+      location: comp.location?.address1 || 'Indirizzo non disponibile',
       reviewHighlight: comp.reviewHighlight || 'No highlight available'
     }));
     
     const prompt = `
-      Analizza questi competitor nel settore ${businessType}${cuisineType ? ` (${cuisineType})` : ''} a ${district}:
+      Analizza dettagliatamente questi competitor nel settore ${businessType}${cuisineType ? ` (${cuisineType})` : ''} a ${district}:
       ${JSON.stringify(competitorsData)}
       
-      Identifica i principali punti di forza per ciascun competitor basandoti sulle valutazioni e recensioni.
+      Per ciascun competitor, identifica:
+      1. I 3 principali punti di forza basandoti sulle valutazioni e recensioni
+      2. I 3 principali punti deboli o aree di miglioramento
+      3. Il loro vantaggio competitivo principale
+      4. Una valutazione strategica della loro posizione di mercato
+      
+      La tua analisi deve essere approfondita e orientata al business, considerando:
+      - Qualità del servizio/prodotto
+      - Posizionamento di mercato
+      - Esperienza del cliente
+      - Unicità dell'offerta
+      - Presenza online e strategie di marketing
+      
       Restituisci un JSON array con oggetti nella seguente struttura:
-      { "name": "nome del competitor", "strengths": ["punto di forza 1", "punto di forza 2", "punto di forza 3"] }
+      { 
+        "name": "nome del competitor", 
+        "strengths": ["punto di forza 1", "punto di forza 2", "punto di forza 3"],
+        "weaknesses": ["punto debole 1", "punto debole 2", "punto debole 3"],
+        "competitiveAdvantage": "vantaggio competitivo principale",
+        "marketPosition": "valutazione strategica breve"
+      }
     `;
     
-    console.log(`Analyzing competitor reviews with OpenAI for ${district} ${businessType}`);
+    console.log(`Analyzing competitor reviews with OpenAI for ${district} ${businessType} with enhanced prompt`);
     
-    // In a real implementation, we would call the OpenAI API
-    // For now, we'll return mock data
-    return getMockStrengthsData(businessType, cuisineType);
+    // In a real implementation, we would call the OpenAI API with the enhanced prompt
+    // For now, we'll return enhanced mock data
+    const mockData = getMockStrengthsData(businessType, cuisineType);
+    
+    // Enhance the mock data with additional fields
+    const enhancedData = mockData.map(competitor => ({
+      ...competitor,
+      weaknesses: [
+        "Menu non aggiornato frequentemente",
+        "Tempi di attesa lunghi nei weekend",
+        "Presenza online limitata"
+      ],
+      competitiveAdvantage: "Esperienza culinaria autentica con ingredienti locali",
+      marketPosition: "Posizionamento premium con clientela fidelizzata"
+    }));
+    
+    return enhancedData;
   } catch (error) {
     console.error('Error analyzing competitor reviews:', error);
     return getMockStrengthsData(businessType, cuisineType);

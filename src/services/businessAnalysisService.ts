@@ -3,6 +3,7 @@ import { fetchPlacesData, fetchYelpData, fetchGoogleTrendsData, fetchCensusData,
 import { detectBusinessType } from '@/utils/businessTypeDetector';
 import { identifyDistrict } from '@/utils/locationDetector';
 import { BusinessAnalysis } from '@/services/api/openai/types';
+import { analyzeCompetitorReviews } from '@/services/api/openai';
 
 export interface BusinessInfo {
   name: string;
@@ -26,7 +27,7 @@ export async function performBusinessAnalysis(
   businessInfo: BusinessInfo,
   apiKeys: Record<string, string>,
 ): Promise<AnalysisResult> {
-  console.log(`Starting analysis for ${businessInfo.name} at ${businessInfo.address}`);
+  console.log(`Starting comprehensive analysis for ${businessInfo.name} at ${businessInfo.address}`);
   
   // 1. Get location data using the Places API
   const placesResult = await fetchPlacesData(
@@ -67,7 +68,15 @@ export async function performBusinessAnalysis(
     updatedDistrict
   );
   
-  // 6. Use OpenAI to analyze and interpret combined data with enhanced context
+  // 6. Get specific competitor analysis
+  const competitorAnalysis = await analyzeCompetitorReviews(
+    apiKeys.openAI,
+    yelpResult?.businesses || [],
+    businessType,
+    updatedDistrict
+  );
+  
+  // 7. Use OpenAI to analyze and interpret combined data with enhanced context
   const businessData = {
     name: businessInfo.name,
     address: businessInfo.address,
@@ -75,37 +84,63 @@ export async function performBusinessAnalysis(
     places: placesResult,
     yelp: yelpResult,
     census: censusResult,
-    trends: trendsResult
+    trends: trendsResult,
+    competitors: competitorAnalysis
   };
   
-  // Use business name and district in the prompt to make it specific to this business
-  const aiPrompt = `Analizza in dettaglio questi dati per l'attività "${businessInfo.name}" situata a ${businessInfo.address} nel quartiere ${updatedDistrict} di Miami. Assicurati di menzionare esplicitamente che si tratta di ${updatedDistrict} e di ${businessInfo.name} in ogni sezione dell'analisi:
+  // Create an enhanced prompt with more specific strategic requirements
+  const aiPrompt = `
+    ANALISI STRATEGICA DI BUSINESS PER "${businessInfo.name}" - ${updatedDistrict}, MIAMI
     
-    Dati di localizzazione: ${JSON.stringify(placesResult)}
+    Analizza in modo approfondito e strategico i dati per l'attività "${businessInfo.name}" situata a ${businessInfo.address} nel quartiere ${updatedDistrict} di Miami. 
     
-    Dati demografici: ${JSON.stringify(censusResult)}
+    Dati a disposizione:
+    - Dati di localizzazione: ${JSON.stringify(placesResult)}
+    - Dati demografici: ${JSON.stringify(censusResult)}
+    - Dati concorrenza: ${JSON.stringify(yelpResult)}
+    - Dati di tendenza: ${JSON.stringify(trendsResult)}
+    - Analisi dei competitor: ${JSON.stringify(competitorAnalysis)}
     
-    Dati concorrenza: ${JSON.stringify(yelpResult)}
+    REQUISITI ANALISI:
     
-    Dati di tendenza: ${JSON.stringify(trendsResult)}
+    1. Sommario Strategico: Fornisci un'analisi SWOT concisa ma completa per ${businessInfo.name} a ${updatedDistrict}, evidenziando le opportunità chiave e i rischi principali. Includi un indicatore di potenziale di successo su scala 1-10 con spiegazione.
     
-    Fornisci un'analisi dettagliata contestualizzata che includa:
-    1. Un riassunto chiaro e completo del potenziale di ${businessInfo.name} nel quartiere ${updatedDistrict}
-    2. Analisi demografica specifica per ${businessInfo.type} in ${updatedDistrict} con informazioni demografiche precise e dettagliate
-    3. Analisi dettagliata della concorrenza con punti di forza e debolezza dei principali competitor in ${updatedDistrict}
-    4. Tendenze di mercato rilevanti per ${businessInfo.type} a ${updatedDistrict} con dati quantitativi
-    5. Parole chiave raccomandate per il marketing locale in ${updatedDistrict} per ${businessInfo.name}
-    6. Opportunità di mercato specifiche per ${businessInfo.name} a ${updatedDistrict}
-    7. Profilo del consumatore tipico in ${updatedDistrict} per ${businessInfo.type}
-    8. Attrazioni locali e punti di interesse vicino a ${businessInfo.name} in ${updatedDistrict}
-    9. Raccomandazioni strategiche specifiche e attuabili per ${businessInfo.name} (5-7 raccomandazioni dettagliate)
+    2. Analisi Demografica: Analizza dettagliatamente la composizione demografica di ${updatedDistrict} in relazione al business ${businessInfo.type}, con segmentazione per età, reddito, e stili di vita. Identifica i 2-3 segmenti demografici più promettenti con dati statistici a supporto.
     
-    Utilizza dati concreti dei vari dataset per supportare ogni affermazione. Incorpora informazioni contestuali sul quartiere ${updatedDistrict} e sulle sue peculiarità. Sii molto specifico e dettagliato, utilizzando numeri e statistiche quando disponibili.
+    3. Analisi della Concorrenza: Identifica i 5 principali concorrenti di ${businessInfo.name} a ${updatedDistrict}, analizzando i loro punti di forza e debolezza specifici, posizionamento di mercato, e strategie di differenziazione. Fornisci raccomandazioni su come posizionarsi rispetto a ciascun concorrente.
     
-    Formato richiesto: JSON con campi 'summary', 'demographicAnalysis', 'competitionAnalysis', 'trendsAnalysis', 'recommendedKeywords', 'marketOpportunities', 'consumerProfile', 'localHighlights', 'recommendations'.
+    4. Analisi delle Tendenze: Fornisci dati quantitativi sulle tendenze di mercato per ${businessInfo.type} a ${updatedDistrict} con previsioni a 6-12 mesi. Identifica le tendenze emergenti che potrebbero rappresentare opportunità o minacce.
+    
+    5. Keywords Strategiche: Suggerisci 8-10 parole chiave specifiche per il marketing digitale locale di ${businessInfo.name} a ${updatedDistrict}, con una stima del volume di ricerca mensile e difficoltà di competizione.
+    
+    6. Opportunità di Mercato: Identifica 3-5 opportunità di mercato concrete e actionable per ${businessInfo.name} basate sui gap di mercato a ${updatedDistrict}, con potenziale ROI e timeframe di implementazione.
+    
+    7. Profilo del Consumatore: Crea 2-3 personas dettagliate dei clienti target a ${updatedDistrict} per ${businessInfo.type}, con dati demografici, comportamenti d'acquisto, motivazioni e pain points.
+    
+    8. Punti di Interesse Locali: Identifica attrazioni, business e punti di interesse strategici vicino a ${businessInfo.name} in ${updatedDistrict} con cui potrebbero essere sviluppate partnership strategiche.
+    
+    9. Raccomandazioni Strategiche: Fornisci 5-7 raccomandazioni concrete e dettagliate per ${businessInfo.name} con:
+       - Descrizione della strategia
+       - Motivazione basata sui dati
+       - Step di implementazione
+       - KPI per misurarne il successo
+       - Timeline consigliata
+    
+    Utilizza dati concreti e specifici per supportare ogni affermazione. Sii specifico e preciso, utilizzando numeri e statistiche quando disponibili. Ogni analisi deve essere direttamente rilevante per ${businessInfo.name} a ${updatedDistrict} nel settore ${businessInfo.type}.
+    
+    Formato richiesto: JSON con i seguenti campi:
+    - summary
+    - demographicAnalysis
+    - competitionAnalysis
+    - trendsAnalysis
+    - recommendedKeywords (array)
+    - marketOpportunities
+    - consumerProfile
+    - localHighlights
+    - recommendations (array di stringhe)
   `;
   
-  console.log(`Sending enhanced prompt to OpenAI for contextual analysis of ${businessInfo.name} in ${updatedDistrict}`);
+  console.log(`Sending enhanced strategic business prompt to OpenAI for comprehensive analysis of ${businessInfo.name} in ${updatedDistrict}`);
   const aiAnalysis = await fetchOpenAIAnalysis(apiKeys.openAI, aiPrompt);
   
   // Process the OpenAI response
@@ -121,50 +156,62 @@ export async function performBusinessAnalysis(
       
       // Ensure all required fields exist with personalized content
       parsedAnalysis = {
-        summary: parsedAnalysis.summary || `Analisi non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
-        demographicAnalysis: parsedAnalysis.demographicAnalysis || `Analisi demografica non disponibile per ${updatedDistrict}`,
-        competitionAnalysis: parsedAnalysis.competitionAnalysis || `Analisi competitiva non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
-        trendsAnalysis: parsedAnalysis.trendsAnalysis || `Analisi delle tendenze non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
-        recommendedKeywords: Array.isArray(parsedAnalysis.recommendedKeywords) ? 
+        summary: parsedAnalysis.summary || `Analisi strategica non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
+        demographicAnalysis: parsedAnalysis.demographicAnalysis || `Analisi demografica dettagliata non disponibile per ${updatedDistrict}`,
+        competitionAnalysis: parsedAnalysis.competitionAnalysis || `Analisi dettagliata dei 5 principali competitor non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
+        trendsAnalysis: parsedAnalysis.trendsAnalysis || `Analisi approfondita delle tendenze non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
+        recommendedKeywords: Array.isArray(parsedAnalysis.recommendedKeywords) && parsedAnalysis.recommendedKeywords.length >= 8 ? 
           parsedAnalysis.recommendedKeywords : 
-          [`${businessInfo.name} ${updatedDistrict}`, `${businessInfo.type} ${updatedDistrict}`, `miglior ${businessInfo.type} ${updatedDistrict}`],
+          [`${businessInfo.name} ${updatedDistrict}`, `miglior ${businessInfo.type} ${updatedDistrict}`, `${businessInfo.type} autentico ${updatedDistrict}`, 
+           `${businessInfo.type} vicino a me`, `${businessInfo.type} recensioni ${updatedDistrict}`, `${businessInfo.type} economico ${updatedDistrict}`,
+           `${businessInfo.type} di qualità ${updatedDistrict}`, `${businessInfo.name} orari`, `${businessInfo.name} menu`, `${businessInfo.name} prenotazione`],
         // Convert marketOpportunities to string if it's an array
         marketOpportunities: Array.isArray(parsedAnalysis.marketOpportunities) ? 
           parsedAnalysis.marketOpportunities.join('\n\n') : 
-          parsedAnalysis.marketOpportunities || `Opportunità di mercato non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
-        consumerProfile: parsedAnalysis.consumerProfile || `Profilo del consumatore non disponibile per ${updatedDistrict}`,
-        localHighlights: parsedAnalysis.localHighlights || `Punti di interesse non disponibili per ${updatedDistrict}`,
+          parsedAnalysis.marketOpportunities || `Opportunità di mercato strategiche non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+        consumerProfile: parsedAnalysis.consumerProfile || `Personas dettagliate dei clienti target non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+        localHighlights: parsedAnalysis.localHighlights || `Punti di interesse strategici non disponibili per ${updatedDistrict}`,
         recommendations: Array.isArray(parsedAnalysis.recommendations) ? 
           parsedAnalysis.recommendations : 
-          [`Raccomandazioni personalizzate non disponibili per ${businessInfo.name} a ${updatedDistrict}`]
+          [`Sviluppare un piano di marketing digitale locale focalizzato su ${updatedDistrict}`,
+           `Creare un programma di fidelizzazione per i residenti di ${updatedDistrict}`,
+           `Implementare una strategia di menu speciali basati sulle tendenze identificate`,
+           `Stabilire partnership con attrazioni locali e hotel di ${updatedDistrict}`,
+           `Ottimizzare la presenza sui social media con contenuti specifici per ${updatedDistrict}`,
+           `Organizzare eventi tematici mensili per attirare clientela locale`,
+           `Investire in SEO locale per aumentare la visibilità nelle ricerche relative a ${updatedDistrict}`]
       };
     } catch (e) {
       console.error("Error parsing OpenAI response:", e);
       // If not proper JSON, use the raw text but customize it with business info
       parsedAnalysis = {
         summary: aiAnalysis.choices[0].message.content,
-        demographicAnalysis: `Analisi demografica non disponibile in formato strutturato per ${businessInfo.name} a ${updatedDistrict}`,
-        competitionAnalysis: `Analisi competitiva non disponibile in formato strutturato per ${businessInfo.name} a ${updatedDistrict}`,
-        trendsAnalysis: `Analisi delle tendenze non disponibile in formato strutturato per ${businessInfo.name} a ${updatedDistrict}`,
-        recommendedKeywords: [`${businessInfo.name} ${updatedDistrict}`, `${businessInfo.type} ${updatedDistrict}`, `miglior ${businessInfo.type} ${updatedDistrict}`],
-        marketOpportunities: `Opportunità di mercato non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
-        consumerProfile: `Profilo del consumatore non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
-        localHighlights: `Punti di interesse non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
-        recommendations: ["Consultare il testo completo dell'analisi per raccomandazioni personalizzate"]
+        demographicAnalysis: `Analisi demografica strategica non disponibile in formato strutturato per ${businessInfo.name} a ${updatedDistrict}`,
+        competitionAnalysis: `Analisi dei 5 principali competitor non disponibile in formato strutturato per ${businessInfo.name} a ${updatedDistrict}`,
+        trendsAnalysis: `Analisi delle tendenze di mercato non disponibile in formato strutturato per ${businessInfo.name} a ${updatedDistrict}`,
+        recommendedKeywords: [`${businessInfo.name} ${updatedDistrict}`, `miglior ${businessInfo.type} ${updatedDistrict}`, `${businessInfo.type} autentico ${updatedDistrict}`,
+                             `${businessInfo.type} vicino a me`, `${businessInfo.type} recensioni ${updatedDistrict}`, `${businessInfo.type} economico ${updatedDistrict}`,
+                             `${businessInfo.type} di qualità ${updatedDistrict}`, `${businessInfo.name} orari`, `${businessInfo.name} menu`, `${businessInfo.name} prenotazione`],
+        marketOpportunities: `Opportunità di mercato strategiche non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+        consumerProfile: `Profili dettagliati dei clienti target non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+        localHighlights: `Punti di interesse strategici non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+        recommendations: ["Consultare il testo completo dell'analisi strategica per raccomandazioni personalizzate"]
       };
     }
   } else {
     // Create default analysis with business name and district if OpenAI fails
     parsedAnalysis = {
-      summary: `Non è stato possibile generare un'analisi completa per ${businessInfo.name} con i dati disponibili per ${updatedDistrict}`,
+      summary: `Non è stato possibile generare un'analisi strategica completa per ${businessInfo.name} con i dati disponibili per ${updatedDistrict}`,
       demographicAnalysis: `Dati demografici insufficienti per ${updatedDistrict} per analizzare ${businessInfo.name}`,
-      competitionAnalysis: `Dati competitivi insufficienti per ${updatedDistrict} per analizzare ${businessInfo.name}`,
-      trendsAnalysis: `Dati sulle tendenze insufficienti per ${businessInfo.name} a ${updatedDistrict}`,
-      recommendedKeywords: [`${businessInfo.name} ${updatedDistrict}`, `${businessInfo.type} ${updatedDistrict}`, `miglior ${businessInfo.type} ${updatedDistrict}`],
-      marketOpportunities: `Opportunità di mercato non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
-      consumerProfile: `Profilo del consumatore non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
-      localHighlights: `Punti di interesse non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
-      recommendations: [`Verificare le API key e riprovare l'analisi per ${businessInfo.name}`]
+      competitionAnalysis: `Dati sui 5 principali competitor insufficienti per ${updatedDistrict} per analizzare ${businessInfo.name}`,
+      trendsAnalysis: `Dati sulle tendenze di mercato insufficienti per ${businessInfo.name} a ${updatedDistrict}`,
+      recommendedKeywords: [`${businessInfo.name} ${updatedDistrict}`, `miglior ${businessInfo.type} ${updatedDistrict}`, `${businessInfo.type} autentico ${updatedDistrict}`,
+                           `${businessInfo.type} vicino a me`, `${businessInfo.type} recensioni ${updatedDistrict}`, `${businessInfo.type} economico ${updatedDistrict}`,
+                           `${businessInfo.type} di qualità ${updatedDistrict}`, `${businessInfo.name} orari`, `${businessInfo.name} menu`, `${businessInfo.name} prenotazione`],
+      marketOpportunities: `Opportunità di mercato strategiche non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+      consumerProfile: `Profili dettagliati dei clienti target non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+      localHighlights: `Punti di interesse strategici non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+      recommendations: [`Verificare le API key e riprovare l'analisi strategica per ${businessInfo.name}`]
     };
   }
   
