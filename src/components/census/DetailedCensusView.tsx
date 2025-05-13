@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Chart, Database, Users, Home, Briefcase, GraduationCap } from 'lucide-react';
+import { ChartBar, Database, Users, Home, Briefcase, GraduationCap } from 'lucide-react';
 import { CensusDataResponse, fetchDistrictCensusData } from '@/services/api/censusService';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useApiKeys } from '@/hooks/useApiKeys';
@@ -110,7 +109,7 @@ const DetailedCensusView = () => {
                 <span className="hidden sm:inline">Economia</span>
               </TabsTrigger>
               <TabsTrigger value="overview">
-                <Chart className="h-4 w-4 mr-1" />
+                <ChartBar className="h-4 w-4 mr-1" />
                 <span className="hidden sm:inline">Sintesi</span>
               </TabsTrigger>
             </TabsList>
