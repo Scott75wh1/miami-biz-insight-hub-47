@@ -1,128 +1,129 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-
-// Define Maps types more explicitly to help TypeScript
-declare global {
-  interface Window {
-    google: {
-      maps: {
-        Map: typeof google.maps.Map;
-        Marker: typeof google.maps.Marker;
-        TrafficLayer: typeof google.maps.TrafficLayer;
-        MapTypeId: {
-          ROADMAP: google.maps.MapTypeId;
-          SATELLITE: google.maps.MapTypeId;
-          HYBRID: google.maps.MapTypeId;
-          TERRAIN: google.maps.MapTypeId;
-        };
-        Animation: {
-          DROP: google.maps.Animation.DROP;
-          BOUNCE: google.maps.Animation.BOUNCE;
-        };
-      };
-    };
-  }
-}
 
 interface TrafficMapDisplayProps {
-  district?: string;
+  isLoaded: boolean;
+  error: string | null;
+  center?: { lat: number; lng: number };
+  trafficEnabled: boolean;
 }
 
-const districtCoordinates: Record<string, { lat: number; lng: number }> = {
-  'Brickell': { lat: 25.7617, lng: -80.1918 },
-  'Downtown': { lat: 25.7742, lng: -80.1936 },
-  'Wynwood': { lat: 25.8049, lng: -80.1985 },
-  'Miami Beach': { lat: 25.790654, lng: -80.130045 },
-  'Little Havana': { lat: 25.7742, lng: -80.2194 },
-  'Coconut Grove': { lat: 25.7313, lng: -80.2455 },
-  'Design District': { lat: 25.8136, lng: -80.1953 }
-};
-
-const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district = 'Miami Beach' }) => {
+const TrafficMapDisplay = ({
+  isLoaded,
+  error,
+  center = { lat: 25.7617, lng: -80.1918 }, // Default to Miami
+  trafficEnabled,
+}: TrafficMapDisplayProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.Marker | null>(null);
+  const googleMapRef = useRef<google.maps.Map | null>(null);
   const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
-  const { toast } = useToast();
-  
-  const currentDistrict = district || 'Miami Beach';
 
-  // Initialize map when component mounts
   useEffect(() => {
-    if (!window.google || mapInstance || !mapRef.current) return;
+    if (!isLoaded || !mapRef.current) return;
 
     try {
-      const mapOptions = {
-        center: districtCoordinates[currentDistrict] || { lat: 25.790654, lng: -80.130045 },
-        zoom: 14,
+      // Initialize map
+      googleMapRef.current = new google.maps.Map(mapRef.current, {
+        center,
+        zoom: 13,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
         mapTypeControl: true,
-        fullscreenControl: true,
-        streetViewControl: true,
-        mapTypeId: window.google.maps.MapTypeId.ROADMAP
-      };
-      
-      const map = new window.google.maps.Map(mapRef.current, mapOptions);
-      setMapInstance(map);
-      
-      // Add traffic layer
-      const trafficLayer = new window.google.maps.TrafficLayer();
-      trafficLayer.setMap(map);
-      trafficLayerRef.current = trafficLayer;
-      
-      // Add marker for the district
-      const marker = new window.google.maps.Marker({
-        position: districtCoordinates[currentDistrict] || { lat: 25.790654, lng: -80.130045 },
-        map: map,
-        title: currentDistrict,
-        animation: window.google.maps.Animation.DROP
+        mapTypeControlOptions: {
+          style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+          mapTypeIds: [
+            google.maps.MapTypeId.ROADMAP,
+            google.maps.MapTypeId.SATELLITE,
+            google.maps.MapTypeId.HYBRID,
+            google.maps.MapTypeId.TERRAIN,
+          ],
+        },
       });
-      markerRef.current = marker;
+
+      // Add a marker for Miami
+      new google.maps.Marker({
+        position: center,
+        map: googleMapRef.current,
+        title: 'Miami',
+        animation: google.maps.Animation.DROP,
+      });
+
+      // Create traffic layer but don't add it to the map yet
+      trafficLayerRef.current = new google.maps.TrafficLayer();
       
-      // Notify when map is ready
-      map.addListener('tilesloaded', () => {
-        if (map.getZoom() !== undefined) {
-          toast({
-            title: "Mappa Traffico Caricata",
-            description: `Visualizzazione del traffico per ${currentDistrict}`,
-          });
+      // Set initial traffic layer visibility
+      if (trafficEnabled && googleMapRef.current) {
+        trafficLayerRef.current.setMap(googleMapRef.current);
+      } else if (trafficLayerRef.current) {
+        trafficLayerRef.current.setMap(null);
+      }
+
+      // Add event listener for map click
+      googleMapRef.current.addListener('click', (event: google.maps.MapMouseEvent) => {
+        if (event.latLng && googleMapRef.current) {
+          addMarker(event.latLng);
         }
       });
     } catch (error) {
       console.error("Error initializing map:", error);
-      toast({
-        title: "Errore Mappa",
-        description: "Impossibile inizializzare la mappa del traffico",
-        variant: "destructive",
-      });
     }
-  }, [mapInstance, currentDistrict, toast]);
+  }, [isLoaded, center]);
 
-  // Update map when district changes
+  // Update traffic layer when trafficEnabled changes
   useEffect(() => {
-    if (!mapInstance || !markerRef.current || district === currentDistrict) return;
-    
-    const newCoords = districtCoordinates[district] || districtCoordinates['Miami Beach'];
-    
-    // Update marker position with animation
-    markerRef.current.setPosition(newCoords);
-    markerRef.current.setAnimation(window.google.maps.Animation.DROP);
-    markerRef.current.setTitle(district);
-    
-    // Center map on new district
-    mapInstance.setCenter(newCoords);
-    
-    // Show toast for district change
-    toast({
-      title: "Cambio Zona",
-      description: `Visualizzazione del traffico per ${district}`,
-      variant: "default",
+    if (!isLoaded || !trafficLayerRef.current) return;
+
+    if (trafficEnabled && googleMapRef.current) {
+      trafficLayerRef.current.setMap(googleMapRef.current);
+    } else {
+      trafficLayerRef.current.setMap(null);
+    }
+  }, [trafficEnabled, isLoaded]);
+
+  // Function to add marker on map click
+  const addMarker = (location: google.maps.LatLng) => {
+    if (!googleMapRef.current) return;
+
+    const marker = new google.maps.Marker({
+      position: location,
+      map: googleMapRef.current,
+      animation: google.maps.Animation.BOUNCE,
     });
-  }, [district, mapInstance, toast]);
+
+    setTimeout(() => {
+      marker.setAnimation(null);
+    }, 2000);
+
+    // Pan to the marker location
+    if (googleMapRef.current) {
+      googleMapRef.current.panTo(location);
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 bg-gray-100 rounded-lg p-6 text-center">
+        <p className="text-red-500 font-medium mb-2">Errore nella mappa</p>
+        <p className="text-gray-700">{error}</p>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 bg-gray-50 rounded-lg">
+        <Loader2 className="h-8 w-8 text-primary animate-spin mb-4" />
+        <p className="text-muted-foreground">Caricamento mappa in corso...</p>
+      </div>
+    );
+  }
 
   return (
-    <div ref={mapRef} className="h-full w-full rounded-md overflow-hidden" />
+    <div 
+      ref={mapRef} 
+      className="w-full h-[600px] rounded-lg shadow-md"
+      style={{ minHeight: "400px" }}
+    />
   );
 };
 
