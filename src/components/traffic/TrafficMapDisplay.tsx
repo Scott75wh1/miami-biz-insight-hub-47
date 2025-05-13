@@ -35,7 +35,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       }
       
       // Create the map - making sure we're instantiating it correctly
-      const newMap = new window.google.maps.Map(mapRef.current, {
+      const newMap = new google.maps.Map(mapRef.current, {
         zoom: 13,
         center: defaultCenter,
         mapTypeId: "roadmap",
@@ -45,7 +45,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       });
 
       // Create TrafficLayer and add it to the map
-      const newTrafficLayer = new window.google.maps.TrafficLayer();
+      const newTrafficLayer = new google.maps.TrafficLayer();
       newTrafficLayer.setMap(newMap);
 
       setMap(newMap);
@@ -68,11 +68,11 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       
       // Update center based on district
       if (district === "Miami Beach") {
-        newCenter = new window.google.maps.LatLng(25.790654, -80.1300455);
+        newCenter = new google.maps.LatLng(25.790654, -80.1300455);
       } else if (district === "Wynwood") {
-        newCenter = new window.google.maps.LatLng(25.8049, -80.1937);
+        newCenter = new google.maps.LatLng(25.8049, -80.1937);
       } else if (district === "Brickell") {
-        newCenter = new window.google.maps.LatLng(25.7602, -80.1959);
+        newCenter = new google.maps.LatLng(25.7602, -80.1959);
       }
       
       map.setCenter(newCenter);
@@ -95,11 +95,10 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
     }
 
     try {
-      const geocoder = new window.google.maps.Geocoder();
+      const geocoder = new google.maps.Geocoder();
       
       geocoder.geocode({ address: destination }, (results, status) => {
-        // Fixed: Use full path to GeocoderStatus
-        if (status === window.google.maps.GeocoderStatus.OK && results && results[0]) {
+        if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
           const location = results[0].geometry.location;
           
           // Set the current timestamp
@@ -118,16 +117,15 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
           map.setCenter(location);
           map.setZoom(15);
           
-          // Fixed: Use full path to Animation
-          const newMarker = new window.google.maps.Marker({
+          const newMarker = new google.maps.Marker({
             position: location,
             map: map,
             title: destination,
-            animation: window.google.maps.Animation.DROP
+            animation: google.maps.Animation.DROP
           });
           
           // Create an info window with the timestamp
-          const infoWindow = new window.google.maps.InfoWindow({
+          const infoWindow = new google.maps.InfoWindow({
             content: `
               <div>
                 <h4 style="margin:0;padding:0;font-weight:bold;">${destination}</h4>
