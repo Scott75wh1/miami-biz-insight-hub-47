@@ -21,8 +21,10 @@ export function useBusinessAnalysis() {
   const [analysisData, setAnalysisData] = useState<AnalysisResult | null>(null);
 
   const startAnalysis = async (values: BusinessFormValues) => {
-    setIsAnalyzing(true);
+    // Reset previous analysis data before starting a new one
+    setAnalysisData(null);
     setAnalysisComplete(false);
+    setIsAnalyzing(true);
     
     try {
       toast({
@@ -65,6 +67,10 @@ export function useBusinessAnalysis() {
         description: "Si è verificato un errore durante l'analisi. Riprova più tardi.",
         variant: "destructive",
       });
+      
+      // Reset analysis state on error
+      setAnalysisComplete(false);
+      setAnalysisData(null);
     } finally {
       setIsAnalyzing(false);
     }

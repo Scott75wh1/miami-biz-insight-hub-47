@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Building } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Layout from '@/components/Layout';
@@ -9,6 +9,13 @@ import { useBusinessAnalysis } from '@/hooks/useBusinessAnalysis';
 
 const MyBusinessPage = () => {
   const { isAnalyzing, analysisComplete, analysisData, startAnalysis } = useBusinessAnalysis();
+
+  // Aggiungiamo un log per debugging
+  useEffect(() => {
+    if (analysisComplete && analysisData) {
+      console.log('Nuovi dati di analisi ricevuti:', analysisData);
+    }
+  }, [analysisComplete, analysisData]);
 
   return (
     <Layout>
@@ -35,6 +42,7 @@ const MyBusinessPage = () => {
         
         {analysisComplete && analysisData && (
           <BusinessAnalysisResults 
+            key={analysisData.businessInfo.name + '-' + analysisData.businessInfo.address} 
             data={{
               businessInfo: {
                 ...analysisData.businessInfo,
