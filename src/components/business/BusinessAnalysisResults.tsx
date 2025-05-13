@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Building, TrendingUp, Users, Search, MessageSquare, MapPin, Info, Award, User, Map, Tag, Lightbulb } from 'lucide-react';
 import { formatNumber } from '@/components/census/utils/CensusUtils';
+import { BusinessAnalysis } from '@/services/api/openai/types';
 
 interface BusinessAnalysisResultsProps {
   data: {
@@ -15,17 +15,7 @@ interface BusinessAnalysisResultsProps {
       district: string;
       type: string;
     };
-    analysis: {
-      summary: string;
-      demographicAnalysis: string;
-      competitionAnalysis: string;
-      trendsAnalysis: string;
-      recommendedKeywords?: string[];
-      marketOpportunities?: string;
-      consumerProfile?: string;
-      localHighlights?: string;
-      recommendations: string[];
-    };
+    analysis: BusinessAnalysis;
     rawData?: any;
   };
 }

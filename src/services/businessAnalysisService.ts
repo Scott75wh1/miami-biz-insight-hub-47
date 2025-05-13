@@ -1,7 +1,7 @@
-
 import { fetchPlacesData, fetchYelpData, fetchGoogleTrendsData, fetchCensusData, fetchOpenAIAnalysis } from '@/services/apiService';
 import { detectBusinessType } from '@/utils/businessTypeDetector';
 import { identifyDistrict } from '@/utils/locationDetector';
+import { BusinessAnalysis } from '@/services/api/openai/types';
 
 export interface BusinessInfo {
   name: string;
@@ -18,17 +18,7 @@ export interface AnalysisResult {
     census: any;
     trends: any;
   };
-  analysis: {
-    summary: string;
-    demographicAnalysis: string;
-    competitionAnalysis: string;
-    trendsAnalysis: string;
-    recommendedKeywords?: string[];
-    marketOpportunities?: string[];
-    consumerProfile?: string;
-    localHighlights?: string;
-    recommendations: string[];
-  };
+  analysis: BusinessAnalysis; // Use the defined interface
 }
 
 export async function performBusinessAnalysis(
@@ -118,7 +108,7 @@ export async function performBusinessAnalysis(
   const aiAnalysis = await fetchOpenAIAnalysis(apiKeys.openAI, aiPrompt);
   
   // Process the OpenAI response
-  let parsedAnalysis;
+  let parsedAnalysis: BusinessAnalysis;
   if (aiAnalysis && aiAnalysis.choices && aiAnalysis.choices[0]) {
     try {
       // Attempt to parse as JSON if the response is formatted correctly
@@ -128,7 +118,7 @@ export async function performBusinessAnalysis(
       const jsonString = jsonMatch ? jsonMatch[0] : content;
       parsedAnalysis = JSON.parse(jsonString);
       
-      // Ensure all required fields exist
+      // Ensure all required fields exist and convert marketOpportunities to string if it's an array
       parsedAnalysis = {
         summary: parsedAnalysis.summary || `Analisi non disponibile per ${updatedDistrict}`,
         demographicAnalysis: parsedAnalysis.demographicAnalysis || `Analisi demografica non disponibile per ${updatedDistrict}`,
@@ -137,7 +127,10 @@ export async function performBusinessAnalysis(
         recommendedKeywords: Array.isArray(parsedAnalysis.recommendedKeywords) ? 
           parsedAnalysis.recommendedKeywords : 
           [`${businessInfo.type} ${updatedDistrict}`, `${businessInfo.name} ${updatedDistrict}`],
-        marketOpportunities: parsedAnalysis.marketOpportunities || `Opportunità di mercato non disponibili per ${updatedDistrict}`,
+        // Convert marketOpportunities to string if it's an array
+        marketOpportunities: Array.isArray(parsedAnalysis.marketOpportunities) ? 
+          parsedAnalysis.marketOpportunities.join('\n\n') : 
+          parsedAnalysis.marketOpportunities || `Opportunità di mercato non disponibili per ${updatedDistrict}`,
         consumerProfile: parsedAnalysis.consumerProfile || `Profilo del consumatore non disponibile per ${updatedDistrict}`,
         localHighlights: parsedAnalysis.localHighlights || `Punti di interesse non disponibili per ${updatedDistrict}`,
         recommendations: Array.isArray(parsedAnalysis.recommendations) ? 
