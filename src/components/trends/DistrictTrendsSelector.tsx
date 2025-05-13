@@ -10,13 +10,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 
-interface DistrictTrendsSelectorProps {
-  selectedDistrict: string;
-  onChange: (district: string) => void;
-}
-
-const DistrictTrendsSelector = ({ selectedDistrict, onChange }: DistrictTrendsSelectorProps) => {
-  const { districts } = useDistrictSelection();
+const DistrictTrendsSelector = () => {
+  const { districts, selectedDistrict, handleDistrictChange } = useDistrictSelection();
   
   return (
     <Popover>
@@ -39,7 +34,7 @@ const DistrictTrendsSelector = ({ selectedDistrict, onChange }: DistrictTrendsSe
                   key={district}
                   value={district}
                   onSelect={() => {
-                    onChange(district);
+                    handleDistrictChange(district);
                   }}
                   className="text-xs"
                 >
