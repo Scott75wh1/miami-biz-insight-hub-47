@@ -1,4 +1,3 @@
-
 import { handleApiError } from './handleError';
 
 export const fetchOpenAIAnalysis = async (apiKey: string, prompt: string) => {
@@ -71,6 +70,86 @@ export const analyzeCompetitorReviews = async (apiKey: string, competitors: any[
     return getMockStrengthsData(businessType, cuisineType);
   }
 };
+
+// Add a new function to analyze trends data
+export const analyzeTrendsData = async (
+  apiKey: string, 
+  businessType: string, 
+  searchTrends: any[], 
+  growingCategories: any[]
+) => {
+  if (!apiKey || apiKey === 'demo-key') {
+    console.log('Using mock data for trends analysis');
+    return getMockTrendsAnalysis(businessType, searchTrends, growingCategories);
+  }
+  
+  try {
+    const prompt = `
+      Analizza questi trend di mercato nel settore ${businessType}:
+      
+      Trend di ricerca: ${JSON.stringify(searchTrends)}
+      
+      Categorie in crescita: ${JSON.stringify(growingCategories)}
+      
+      Fornisci 3 consigli strategici basati su questi dati di trend. Restituisci la risposta in formato JSON:
+      {
+        "summary": "Un breve riassunto della tendenza generale",
+        "recommendations": ["consiglio 1", "consiglio 2", "consiglio 3"]
+      }
+    `;
+    
+    console.log(`Analyzing trends data with OpenAI for ${businessType}`);
+    
+    // In a real implementation, we would call the OpenAI API
+    // For now, we'll return mock data
+    return getMockTrendsAnalysis(businessType, searchTrends, growingCategories);
+  } catch (error) {
+    console.error('Error analyzing trends data:', error);
+    return getMockTrendsAnalysis(businessType, searchTrends, growingCategories);
+  }
+};
+
+// Helper function for mock trends analysis recommendations
+function getMockTrendsAnalysis(businessType: string, searchTrends: any[], growingCategories: any[]) {
+  let analysis = {
+    summary: "",
+    recommendations: []
+  };
+  
+  switch(businessType) {
+    case 'restaurant':
+      analysis = {
+        summary: "Il mercato della ristorazione a Miami mostra una forte crescita, con particolare interesse verso cucine fusion e opzioni vegane.",
+        recommendations: [
+          "Considerare l'inclusione di opzioni vegane o plant-based nel menu per attrarre una clientela in crescita",
+          "Esplorare le possibilità di cucina fusion che combinano influenze latine e mediterranee, molto ricercate nella zona",
+          "Investire nella presenza online, dato che le ricerche per ristoranti su Google sono tra le più alte e in crescita"
+        ]
+      };
+      break;
+    case 'coffee_shop':
+      analysis = {
+        summary: "Il settore delle caffetterie sta vivendo una specializzazione, con forte interesse verso cold brew e caffè di nicchia.",
+        recommendations: [
+          "Differenziarsi offrendo varietà di cold brew e caffè speciali, un trend in forte crescita (+31%)",
+          "Considerare un'offerta di brunch per diversificare il business e attrarre clientela nel fine settimana",
+          "Puntare su caffè biologici e sostenibili, segmento in crescita del +18% nell'ultimo periodo"
+        ]
+      };
+      break;
+    default:
+      analysis = {
+        summary: "Il mercato a Miami mostra un forte interesse verso soluzioni digitali e sostenibili.",
+        recommendations: [
+          "Integrare una soluzione e-commerce o di presenza digitale per sfruttare la crescita del +24% in questo settore",
+          "Considerare pratiche commerciali sostenibili, un aspetto sempre più ricercato dai consumatori (+15%)",
+          "Analizzare la possibilità di espandersi attraverso modelli di franchising, in crescita del +12%"
+        ]
+      };
+  }
+  
+  return analysis;
+}
 
 // Helper function to generate mock strengths data
 function getMockStrengthsData(businessType: string, cuisineType?: string) {

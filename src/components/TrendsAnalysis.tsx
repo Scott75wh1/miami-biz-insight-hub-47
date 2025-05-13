@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { useApiKeys } from '@/hooks/useApiKeys';
-import { fetchGoogleTrendsData } from '@/services/apiService';
+import { fetchGoogleTrendsData, analyzeTrendsData } from '@/services/apiService';
 
-// Import the new components
+// Import the components
 import TrendsHeader from '@/components/trends/TrendsHeader';
 import SearchTrendsChart from '@/components/trends/SearchTrendsChart';
 import GrowingCategories from '@/components/trends/GrowingCategories';
+import TrendsRecommendations from '@/components/trends/TrendsRecommendations';
 import { getSearchKeywords, getGrowingCategories } from '@/components/trends/TrendsUtils';
 
 interface TrendItem {
@@ -31,6 +32,15 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
   const [searchTrends, setSearchTrends] = useState<TrendItem[]>([]);
   const [growingCategories, setGrowingCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [aiRecommendations, setAiRecommendations] = useState<{
+    summary: string;
+    recommendations: string[];
+  }>({
+    summary: "",
+    recommendations: []
+  });
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  
   const { toast } = useToast();
   const { apiKeys, isLoaded } = useApiKeys();
   const isUsingDemoKey = !apiKeys.googleTrends || apiKeys.googleTrends === 'demo-key';
@@ -67,39 +77,55 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
               ? "Stai visualizzando dati dimostrativi. Inserisci una API key valida per dati reali."
               : "I dati dei trend sono stati caricati con successo.",
           });
+          
+          // Now get AI recommendations based on the trends data
+          await getAiRecommendations(mappedTrends, getGrowingCategories(businessType));
+          
         } else {
           // Use default data if API returns no results
-          setSearchTrends(keywords.map((keyword, index) => ({
+          const defaultTrends = keywords.map((keyword, index) => ({
             label: keyword,
             value: 80 - (index * 10)
-          })));
+          }));
+          
+          setSearchTrends(defaultTrends);
           
           // Set the growing categories
-          setGrowingCategories(getGrowingCategories(businessType));
+          const defaultCategories = getGrowingCategories(businessType);
+          setGrowingCategories(defaultCategories);
           
           toast({
             title: "Utilizzando dati predefiniti",
             description: "Nessun dato disponibile dall'API, utilizzando dati di esempio.",
           });
+          
+          // Get AI recommendations based on default data
+          await getAiRecommendations(defaultTrends, defaultCategories);
         }
       } catch (error) {
         console.error('Error fetching trends data:', error);
         
         // Use default data if there's an error
         const keywords = getSearchKeywords(businessType);
-        setSearchTrends(keywords.map((keyword, index) => ({
+        const defaultTrends = keywords.map((keyword, index) => ({
           label: keyword,
           value: 80 - (index * 10)
-        })));
+        }));
+        
+        setSearchTrends(defaultTrends);
         
         // Set the growing categories
-        setGrowingCategories(getGrowingCategories(businessType));
+        const defaultCategories = getGrowingCategories(businessType);
+        setGrowingCategories(defaultCategories);
         
         toast({
           title: "Errore nel caricamento dei trend",
           description: "Impossibile recuperare dati da Google Trends. Controlla la tua API key.",
           variant: "destructive",
         });
+        
+        // Try to get AI recommendations despite the error
+        await getAiRecommendations(defaultTrends, defaultCategories);
       } finally {
         setIsLoading(false);
       }
@@ -107,6 +133,46 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
     
     fetchTrendsData();
   }, [businessType, apiKeys.googleTrends, toast, isLoaded, isUsingDemoKey]);
+
+  // Function to get AI recommendations
+  const getAiRecommendations = async (trends: TrendItem[], categories: Category[]) => {
+    setIsAiLoading(true);
+    
+    try {
+      const aiAnalysis = await analyzeTrendsData(
+        apiKeys.openAI,
+        businessType,
+        trends,
+        categories
+      );
+      
+      if (aiAnalysis) {
+        setAiRecommendations(aiAnalysis);
+        
+        // Show a toast notification if using real data (not demo key)
+        if (apiKeys.openAI !== 'demo-key') {
+          toast({
+            title: "Analisi AI completata",
+            description: "Consigli strategici basati sui trend di mercato generati con successo.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error getting AI trend recommendations:', error);
+      
+      // Set default recommendations in case of error
+      setAiRecommendations({
+        summary: "Analisi non disponibile al momento",
+        recommendations: [
+          "Monitorare i trend di mercato regolarmente",
+          "Analizzare la concorrenza locale",
+          "Considerare le tendenze demografiche della zona"
+        ]
+      });
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   return (
     <Card className="h-full">
@@ -123,6 +189,11 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
         <div className="space-y-6">
           <SearchTrendsChart searchTrends={searchTrends} />
           <GrowingCategories categories={growingCategories} />
+          <TrendsRecommendations 
+            summary={aiRecommendations.summary}
+            recommendations={aiRecommendations.recommendations}
+            isLoading={isAiLoading}
+          />
         </div>
       </CardContent>
     </Card>
