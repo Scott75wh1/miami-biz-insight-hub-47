@@ -1,8 +1,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useApiKeys } from '@/hooks/useApiKeys';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { TrafficRouteData } from '@/services/api/traffic/types';
+import { Button } from '@/components/ui/button';
+import { SettingsDialog } from '@/components/SettingsDialog';
 
 interface TrafficMapProps {
   district: string;
@@ -15,6 +17,7 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, t
   const [mapLoaded, setMapLoaded] = useState(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
   const { apiKeys } = useApiKeys();
   
   // Declare types for Google Maps script
@@ -29,18 +32,28 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, t
         return;
       }
 
+      // Reset previous errors
+      setMapError(null);
+
+      // Check if using demo key
+      if (!apiKeys.googlePlaces || apiKeys.googlePlaces === 'demo-key') {
+        setMapError("È necessaria una API key valida di Google Maps. Per favore, configura una chiave API nelle impostazioni.");
+        return;
+      }
+
       // Create the script element if it doesn't exist
       if (!googleMapsScript.current) {
         googleMapsScript.current = document.createElement('script');
-        googleMapsScript.current.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeys.googlePlaces}&libraries=places`;
+        googleMapsScript.current.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeys.googlePlaces}&libraries=places&loading=async`;
         googleMapsScript.current.async = true;
         googleMapsScript.current.defer = true;
         googleMapsScript.current.onload = () => {
-          console.log('Google Maps script loaded');
+          console.log('Google Maps script loaded successfully');
           setMapLoaded(true);
         };
         googleMapsScript.current.onerror = (e) => {
           console.error('Error loading Google Maps script:', e);
+          setMapError("Impossibile caricare Google Maps. Verifica che la chiave API sia corretta.");
         };
         document.head.appendChild(googleMapsScript.current);
       }
@@ -58,38 +71,41 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, t
 
   // Initialize the map
   useEffect(() => {
-    if (mapLoaded && mapRef.current && !map && window.google && window.google.maps) {
-      try {
-        // Miami coordinates as default
-        const miamiCoords = { lat: 25.7617, lng: -80.1918 };
-        
-        // Create the map
-        const newMap = new google.maps.Map(mapRef.current, {
-          zoom: 12,
-          center: miamiCoords,
-          mapTypeId: google.maps.MapTypeId.ROADMAP,
-          mapTypeControl: true,
-          streetViewControl: true,
-          fullscreenControl: true,
-        });
+    if (!mapLoaded || !mapRef.current || map || !window.google || !window.google.maps) {
+      return;
+    }
 
-        // Create the directions renderer
-        const newDirectionsRenderer = new google.maps.DirectionsRenderer({
-          map: newMap,
-          suppressMarkers: false,
-          polylineOptions: {
-            strokeColor: '#3b82f6',
-            strokeWeight: 5,
-          },
-        });
+    try {
+      // Miami coordinates as default
+      const miamiCoords = { lat: 25.7617, lng: -80.1918 };
+      
+      // Create the map
+      const newMap = new google.maps.Map(mapRef.current, {
+        zoom: 12,
+        center: miamiCoords,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: true,
+        streetViewControl: true,
+        fullscreenControl: true,
+      });
 
-        setMap(newMap);
-        setDirectionsRenderer(newDirectionsRenderer);
-        
-        console.log('Map initialized');
-      } catch (error) {
-        console.error('Error initializing map:', error);
-      }
+      // Create the directions renderer
+      const newDirectionsRenderer = new google.maps.DirectionsRenderer({
+        map: newMap,
+        suppressMarkers: false,
+        polylineOptions: {
+          strokeColor: '#3b82f6',
+          strokeWeight: 5,
+        },
+      });
+
+      setMap(newMap);
+      setDirectionsRenderer(newDirectionsRenderer);
+      
+      console.log('Map initialized successfully');
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      setMapError("Errore durante l'inizializzazione della mappa. Ricarica la pagina o verifica la configurazione.");
     }
   }, [mapLoaded, map]);
 
@@ -101,7 +117,7 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, t
 
     try {
       // Convert encoded polyline to directions result
-      const directionsResult: google.maps.DirectionsResult = {
+      const directionsResult = {
         routes: trafficData.routes.map(route => ({
           bounds: new google.maps.LatLngBounds(
             new google.maps.LatLng(route.bounds.southwest.lat, route.bounds.southwest.lng),
@@ -149,8 +165,29 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, t
       console.log('Traffic route displayed on map');
     } catch (error) {
       console.error('Error displaying traffic route:', error);
+      setMapError("Errore durante la visualizzazione del percorso. Riprova più tardi.");
     }
   }, [trafficData, map, directionsRenderer]);
+
+  if (mapError) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center bg-gray-50 p-8 text-center">
+        <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
+        <h3 className="text-xl font-semibold mb-2">Errore di caricamento della mappa</h3>
+        <p className="text-muted-foreground mb-6">{mapError}</p>
+        <div className="flex gap-4">
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Ricarica pagina
+          </Button>
+          <SettingsDialog />
+        </div>
+        <p className="text-xs text-muted-foreground mt-4">
+          È necessaria una chiave API valida di Google Maps per visualizzare la mappa.
+          Vai su Impostazioni per configurare la tua chiave API.
+        </p>
+      </div>
+    );
+  }
 
   if (!mapLoaded) {
     return (
