@@ -1,5 +1,5 @@
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, createContext, useContext, ReactNode } from 'react';
 import { MIAMI_DISTRICTS } from '@/components/competitor/constants';
 
 interface DistrictSelectionContextType {
@@ -8,11 +8,19 @@ interface DistrictSelectionContextType {
   handleDistrictChange: (district: string) => void;
 }
 
+interface DistrictSelectionProviderProps {
+  children: ReactNode;
+  defaultDistrict?: string;
+}
+
 // Create context
 const DistrictSelectionContext = createContext<DistrictSelectionContextType | undefined>(undefined);
 
 // Provider component
-export function DistrictSelectionProvider({ children, defaultDistrict = "Miami Beach" }) {
+export function DistrictSelectionProvider({ 
+  children, 
+  defaultDistrict = "Miami Beach" 
+}: DistrictSelectionProviderProps) {
   const [selectedDistrict, setSelectedDistrict] = useState<string>(defaultDistrict);
   
   const handleDistrictChange = (district: string) => {
