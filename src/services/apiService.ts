@@ -1,8 +1,9 @@
 
+
 // Main API service file that exports all API functions
 import { handleApiError } from './api/handleError';
 import { fetchPlacesData } from './api/placesService';
-import { fetchCensusData } from './api/censusService';
+import { fetchCensusData, fetchDistrictCensusData } from './api/censusService';
 import { fetchYelpData } from './api/yelpService';
 import { fetchGoogleTrendsData } from './api/trendsService';
 import { fetchOpenAIAnalysis, analyzeCompetitorReviews, analyzeTrendsData } from './api/openaiService';
@@ -13,6 +14,7 @@ export {
   handleApiError,
   fetchPlacesData,
   fetchCensusData,
+  fetchDistrictCensusData,
   fetchYelpData,
   fetchGoogleTrendsData,
   fetchOpenAIAnalysis,
@@ -20,3 +22,4 @@ export {
   analyzeTrendsData,
   fetchCombinedCompetitorData
 };
+
