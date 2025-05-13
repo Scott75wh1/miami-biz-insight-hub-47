@@ -98,6 +98,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       const geocoder = new window.google.maps.Geocoder();
       
       geocoder.geocode({ address: destination }, (results, status) => {
+        // Fix 1: Access GeocoderStatus through window.google.maps
         if (status === window.google.maps.GeocoderStatus.OK && results && results[0]) {
           const location = results[0].geometry.location;
           
@@ -117,7 +118,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
           map.setCenter(location);
           map.setZoom(15);
           
-          // Create a new marker
+          // Fix 2: Access Animation through window.google.maps
           const newMarker = new window.google.maps.Marker({
             position: location,
             map: map,
@@ -135,12 +136,15 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
             `
           });
           
-          // Open the info window on click - fix the type issues by using correct event listener
+          // Open the info window on click
           newMarker.addListener('click', function() {
-            infoWindow.open(map, this);
+            infoWindow.open({
+              map: map,
+              anchor: newMarker
+            });
           });
           
-          // Open info window initially - fix the type issues
+          // Open info window initially
           infoWindow.open({
             map: map,
             anchor: newMarker
