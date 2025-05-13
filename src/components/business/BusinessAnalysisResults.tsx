@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Building, TrendingUp, Users, Search, MessageSquare } from 'lucide-react';
+import { Building, TrendingUp, Users, Search, MessageSquare, MapPin } from 'lucide-react';
 
 interface BusinessAnalysisResultsProps {
   data: {
@@ -40,11 +40,19 @@ const BusinessAnalysisResults: React.FC<BusinessAnalysisResultsProps> = ({ data 
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl">{data.businessInfo.name}</CardTitle>
-              <CardDescription className="mt-1">{data.businessInfo.address}</CardDescription>
+              <CardDescription className="mt-1 flex items-center">
+                <MapPin className="mr-1 h-4 w-4" />
+                {data.businessInfo.address}
+              </CardDescription>
             </div>
-            <Badge variant="outline" className="ml-2">
-              {formatBusinessType(data.businessInfo.type)}
-            </Badge>
+            <div className="flex flex-col items-end gap-2">
+              <Badge variant="outline" className="ml-2">
+                {formatBusinessType(data.businessInfo.type)}
+              </Badge>
+              <Badge variant="secondary" className="ml-2">
+                {data.businessInfo.district}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -102,7 +110,7 @@ const BusinessAnalysisResults: React.FC<BusinessAnalysisResultsProps> = ({ data 
                 <p>{data.analysis.competitionAnalysis}</p>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Basato sui dati di competitor simili nell'area selezionata
+                Basato sui dati di competitor simili nell'area {data.businessInfo.district}
               </p>
             </TabsContent>
             
@@ -115,7 +123,7 @@ const BusinessAnalysisResults: React.FC<BusinessAnalysisResultsProps> = ({ data 
                 <p>{data.analysis.trendsAnalysis}</p>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Basato sui dati di Google Trends per il settore {formatBusinessType(data.businessInfo.type)}
+                Basato sui dati di Google Trends per il settore {formatBusinessType(data.businessInfo.type)} a {data.businessInfo.district}
               </p>
             </TabsContent>
           </Tabs>

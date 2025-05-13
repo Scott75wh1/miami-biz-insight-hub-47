@@ -1,11 +1,13 @@
+
 import { fetchPlacesData, fetchYelpData, fetchGoogleTrendsData, fetchCensusData, fetchOpenAIAnalysis } from '@/services/apiService';
 import { detectBusinessType } from '@/utils/businessTypeDetector';
+import { identifyDistrict } from '@/utils/locationDetector';
 
 export interface BusinessInfo {
   name: string;
   address: string;
   district: string;
-  type: string; // Changed from optional to required
+  type: string;
 }
 
 export interface AnalysisResult {
@@ -29,47 +31,62 @@ export async function performBusinessAnalysis(
   businessInfo: BusinessInfo,
   apiKeys: Record<string, string>,
 ): Promise<AnalysisResult> {
+  console.log(`Starting analysis for ${businessInfo.name} at ${businessInfo.address}`);
+  
   // 1. Get location data using the Places API
   const placesResult = await fetchPlacesData(
     `${businessInfo.name} ${businessInfo.address}`, 
     apiKeys.googlePlaces
   );
   
-  // 2. Get Yelp data for business name
+  // 2. Identify the correct district based on the address and location data
+  const detectedDistrict = await identifyDistrict(
+    businessInfo.address, 
+    placesResult, 
+    apiKeys.googlePlaces
+  );
+  
+  // Update the district if we detected a different one
+  const updatedDistrict = detectedDistrict || businessInfo.district;
+  console.log(`Detected district: ${updatedDistrict} (Original: ${businessInfo.district})`);
+  
+  // 3. Get Yelp data for business name in the identified district
   const yelpResult = await fetchYelpData(
     businessInfo.name,
     apiKeys.yelp,
-    businessInfo.district
+    updatedDistrict
   );
   
-  // 3. Get demographic data for the location
+  // 4. Get demographic data for the location
   const censusResult = await fetchCensusData(
-    businessInfo.district,
+    updatedDistrict,
     apiKeys.censusGov
   );
   
-  // 4. Get Google Trends data for business type
+  // 5. Get Google Trends data for business type
   const businessType = businessInfo.type;
   const trendsResult = await fetchGoogleTrendsData(
     apiKeys.googleTrends,
-    [businessType, businessInfo.name, `${businessType} ${businessInfo.district}`],
+    [businessType, businessInfo.name, `${businessType} ${updatedDistrict}`],
     "US-FL-528",
-    businessInfo.district
+    updatedDistrict
   );
   
-  // 5. Use OpenAI to analyze and interpret combined data
+  // 6. Use OpenAI to analyze and interpret combined data with enhanced context
   const businessData = {
     name: businessInfo.name,
     address: businessInfo.address,
-    district: businessInfo.district,
+    district: updatedDistrict,
     places: placesResult,
     yelp: yelpResult,
     census: censusResult,
     trends: trendsResult
   };
   
-  // Create a structured prompt for OpenAI to generate JSON
-  const aiPrompt = `Analizza questi dati per l'attività "${businessInfo.name}" situata a ${businessInfo.address} nel quartiere ${businessInfo.district}:
+  // Create a structured prompt for OpenAI to generate a more detailed and contextual analysis
+  const aiPrompt = `Analizza in dettaglio questi dati per l'attività "${businessInfo.name}" situata a ${businessInfo.address} nel quartiere ${updatedDistrict} di Miami:
+    
+    Dati di localizzazione: ${JSON.stringify(placesResult)}
     
     Dati demografici: ${JSON.stringify(censusResult)}
     
@@ -77,15 +94,19 @@ export async function performBusinessAnalysis(
     
     Dati di tendenza: ${JSON.stringify(trendsResult)}
     
-    Fornisci una analisi dettagliata ma concisa che includa:
-    1. Potenziale demografico dell'area per questo tipo di attività
-    2. Analisi della concorrenza (3-5 punti principali)
-    3. Tendenze di mercato rilevanti
-    4. Raccomandazioni specifiche (3-5)
+    Fornisci un'analisi dettagliata contestualizzata che includa:
+    1. Un riassunto chiaro e completo del potenziale dell'attività nel quartiere ${updatedDistrict}
+    2. Analisi demografica specifica per questo tipo di attività (${businessInfo.type}) in questa zona
+    3. Analisi dettagliata della concorrenza con punti di forza e debolezza
+    4. Tendenze di mercato rilevanti per ${businessInfo.type} a ${updatedDistrict}
+    5. Raccomandazioni strategiche specifiche e attuabili (3-5)
+    
+    Utilizza dati concreti dei vari dataset per supportare ogni affermazione. Incorpora informazioni contestuali sul quartiere ${updatedDistrict} e sulle sue peculiarità. 
     
     Formato richiesto: JSON con campi 'summary', 'demographicAnalysis', 'competitionAnalysis', 'trendsAnalysis', 'recommendations'.
   `;
   
+  console.log(`Sending enhanced prompt to OpenAI for contextual analysis of ${businessInfo.name} in ${updatedDistrict}`);
   const aiAnalysis = await fetchOpenAIAnalysis(apiKeys.openAI, aiPrompt);
   
   // Process the OpenAI response
@@ -135,7 +156,7 @@ export async function performBusinessAnalysis(
     businessInfo: {
       name: businessInfo.name,
       address: businessInfo.address,
-      district: businessInfo.district,
+      district: updatedDistrict, // Use the detected district
       type: businessType
     },
     rawData: {

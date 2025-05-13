@@ -7,7 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, MapPin } from 'lucide-react';
+import { Loader2, MapPin, Store } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formSchema = z.object({
   businessName: z.string().min(3, {
@@ -16,6 +17,7 @@ const formSchema = z.object({
   businessAddress: z.string().min(5, {
     message: "L'indirizzo deve essere completo",
   }),
+  businessType: z.string().optional(),
 });
 
 export type BusinessFormValues = z.infer<typeof formSchema>;
@@ -31,8 +33,17 @@ const BusinessAnalysisForm = ({ isAnalyzing, onSubmit }: BusinessAnalysisFormPro
     defaultValues: {
       businessName: "",
       businessAddress: "",
+      businessType: "restaurant",
     },
   });
+
+  const businessTypes = [
+    { id: 'restaurant', name: 'Ristoranti' },
+    { id: 'coffee_shop', name: 'Caffetterie' },
+    { id: 'retail', name: 'Negozi al dettaglio' },
+    { id: 'tech', name: 'Aziende Tech' },
+    { id: 'fitness', name: 'Palestre e Fitness' },
+  ];
 
   return (
     <Form {...form}>
@@ -75,6 +86,37 @@ const BusinessAnalysisForm = ({ isAnalyzing, onSubmit }: BusinessAnalysisFormPro
               </FormControl>
               <FormDescription>
                 Inserisci l'indirizzo completo della tua attività
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="businessType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tipo di Attività</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <div className="flex items-center">
+                      <Store className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <SelectValue placeholder="Seleziona il tipo di attività" />
+                    </div>
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {businessTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Seleziona la categoria della tua attività
               </FormDescription>
               <FormMessage />
             </FormItem>
