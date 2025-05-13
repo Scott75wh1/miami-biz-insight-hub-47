@@ -2,6 +2,7 @@
 import React from 'react';
 import { CensusDataResponse } from '@/services/api/censusService';
 import { StatBox, ProgressItem, formatNumber } from '../utils/CensusUtils';
+import { Car, Building, Route, MapPin } from 'lucide-react';
 
 interface DemographicsTabProps {
   censusData: CensusDataResponse;
@@ -45,7 +46,7 @@ const DemographicsTab: React.FC<DemographicsTabProps> = ({ censusData }) => {
 
       <h4 className="font-semibold mb-3">Distribuzione Etnica</h4>
       {censusData.demographics?.race_distribution && (
-        <div className="space-y-3">
+        <div className="space-y-3 mb-6">
           <ProgressItem 
             label="Bianchi" 
             value={censusData.demographics.race_distribution.white} 
@@ -72,6 +73,68 @@ const DemographicsTab: React.FC<DemographicsTabProps> = ({ censusData }) => {
             color="bg-purple-400" 
           />
         </div>
+      )}
+
+      {censusData.demographics?.commute?.work_location && (
+        <>
+          <div className="flex items-center mb-3">
+            <Building className="mr-2 h-5 w-5 text-muted-foreground" />
+            <h4 className="font-semibold">Origin-Destination (OD) del lavoro</h4>
+          </div>
+          <div className="space-y-3 mb-6">
+            <ProgressItem 
+              label="All'interno del distretto" 
+              value={censusData.demographics.commute.work_location.within_district} 
+              color="bg-green-500" 
+            />
+            <ProgressItem 
+              label="Altri distretti della città" 
+              value={censusData.demographics.commute.work_location.other_district} 
+              color="bg-blue-500" 
+            />
+            <ProgressItem 
+              label="Fuori città" 
+              value={censusData.demographics.commute.work_location.outside_city} 
+              color="bg-amber-500" 
+            />
+          </div>
+        </>
+      )}
+
+      {censusData.demographics?.commute?.transportation_mode && (
+        <>
+          <div className="flex items-center mb-3">
+            <Route className="mr-2 h-5 w-5 text-muted-foreground" />
+            <h4 className="font-semibold">Modalità di trasporto casa-lavoro</h4>
+          </div>
+          <div className="space-y-3">
+            <ProgressItem 
+              label="Automobile" 
+              value={censusData.demographics.commute.transportation_mode.car} 
+              color="bg-gray-500" 
+            />
+            <ProgressItem 
+              label="Trasporto pubblico" 
+              value={censusData.demographics.commute.transportation_mode.public_transport} 
+              color="bg-blue-500" 
+            />
+            <ProgressItem 
+              label="A piedi" 
+              value={censusData.demographics.commute.transportation_mode.walking} 
+              color="bg-green-500" 
+            />
+            <ProgressItem 
+              label="Bicicletta" 
+              value={censusData.demographics.commute.transportation_mode.bicycle} 
+              color="bg-orange-400" 
+            />
+            <ProgressItem 
+              label="Lavoro da casa" 
+              value={censusData.demographics.commute.transportation_mode.work_from_home} 
+              color="bg-purple-400" 
+            />
+          </div>
+        </>
       )}
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { handleApiError } from './handleError';
 import { fetchWithProxy } from './proxyService';
 import { apiLogger } from '../logService';
@@ -39,6 +40,20 @@ export interface CensusDataResponse {
       poverty_rate: number;
       business_count: number;
       median_rent: number;
+    };
+    commute?: {
+      work_location?: {
+        within_district: number;
+        other_district: number;
+        outside_city: number;
+      };
+      transportation_mode?: {
+        car: number;
+        public_transport: number;
+        walking: number;
+        bicycle: number;
+        work_from_home: number;
+      };
     };
   };
 }
@@ -82,6 +97,20 @@ const DISTRICT_CENSUS_DATA: Record<string, CensusDataResponse> = {
         poverty_rate: 18.2,
         business_count: 5843,
         median_rent: 1780
+      },
+      commute: {
+        work_location: {
+          within_district: 35,
+          other_district: 45,
+          outside_city: 20
+        },
+        transportation_mode: {
+          car: 42,
+          public_transport: 30,
+          walking: 15,
+          bicycle: 5,
+          work_from_home: 8
+        }
       }
     }
   },
@@ -122,6 +151,20 @@ const DISTRICT_CENSUS_DATA: Record<string, CensusDataResponse> = {
         poverty_rate: 8.4,
         business_count: 3845,
         median_rent: 2450
+      },
+      commute: {
+        work_location: {
+          within_district: 45,
+          other_district: 40,
+          outside_city: 15
+        },
+        transportation_mode: {
+          car: 38,
+          public_transport: 25,
+          walking: 20,
+          bicycle: 7,
+          work_from_home: 10
+        }
       }
     }
   },
@@ -162,6 +205,20 @@ const DISTRICT_CENSUS_DATA: Record<string, CensusDataResponse> = {
         poverty_rate: 19.6,
         business_count: 1248,
         median_rent: 1950
+      },
+      commute: {
+        work_location: {
+          within_district: 30,
+          other_district: 48,
+          outside_city: 22
+        },
+        transportation_mode: {
+          car: 40,
+          public_transport: 20,
+          walking: 25,
+          bicycle: 10,
+          work_from_home: 5
+        }
       }
     }
   },
@@ -202,6 +259,20 @@ const DISTRICT_CENSUS_DATA: Record<string, CensusDataResponse> = {
         poverty_rate: 28.4,
         business_count: 2130,
         median_rent: 1260
+      },
+      commute: {
+        work_location: {
+          within_district: 55,
+          other_district: 35,
+          outside_city: 10
+        },
+        transportation_mode: {
+          car: 50,
+          public_transport: 35,
+          walking: 10,
+          bicycle: 3,
+          work_from_home: 2
+        }
       }
     }
   },
@@ -242,6 +313,20 @@ const DISTRICT_CENSUS_DATA: Record<string, CensusDataResponse> = {
         poverty_rate: 14.8,
         business_count: 6230,
         median_rent: 1840
+      },
+      commute: {
+        work_location: {
+          within_district: 42,
+          other_district: 38,
+          outside_city: 20
+        },
+        transportation_mode: {
+          car: 45,
+          public_transport: 28,
+          walking: 15,
+          bicycle: 8,
+          work_from_home: 4
+        }
       }
     }
   }
