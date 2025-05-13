@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
+import { useApiKeys } from './useApiKeys';
 import { useToast } from '@/hooks/use-toast';
-import { useApiKeys } from '@/hooks/useApiKeys';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { performBusinessAnalysis, AnalysisResult, BusinessInfo } from '@/services/businessAnalysisService';
 import type { BusinessFormValues } from '@/components/business/BusinessAnalysisForm';
@@ -28,7 +28,8 @@ export function useBusinessAnalysis() {
         name: values.businessName,
         address: values.businessAddress,
         district: selectedDistrict,
-        type: values.businessType || 'general', // Ensure type is always provided
+        // Ensure type is always provided with a default if not available
+        type: values.businessType || 'general',
       };
       
       // Convert ApiKeys to Record<string, string> to satisfy type requirement

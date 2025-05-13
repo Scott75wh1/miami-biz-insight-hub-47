@@ -1,13 +1,11 @@
-
 import { fetchPlacesData, fetchYelpData, fetchGoogleTrendsData, fetchCensusData, fetchOpenAIAnalysis } from '@/services/apiService';
 import { detectBusinessType } from '@/utils/businessTypeDetector';
-import { useToast } from "@/hooks/use-toast";
 
 export interface BusinessInfo {
   name: string;
   address: string;
   district: string;
-  type?: string;
+  type: string; // Changed from optional to required
 }
 
 export interface AnalysisResult {
@@ -51,7 +49,7 @@ export async function performBusinessAnalysis(
   );
   
   // 4. Get Google Trends data for business type
-  const businessType = businessInfo.type || detectBusinessType(businessInfo.name);
+  const businessType = businessInfo.type;
   const trendsResult = await fetchGoogleTrendsData(
     apiKeys.googleTrends,
     [businessType, businessInfo.name, `${businessType} ${businessInfo.district}`],

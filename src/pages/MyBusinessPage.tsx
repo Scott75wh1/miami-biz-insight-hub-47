@@ -34,7 +34,17 @@ const MyBusinessPage = () => {
         </Card>
         
         {analysisComplete && analysisData && (
-          <BusinessAnalysisResults data={analysisData} />
+          <BusinessAnalysisResults 
+            data={{
+              businessInfo: {
+                ...analysisData.businessInfo,
+                // Ensure type is always provided with a default if not available
+                type: analysisData.businessInfo.type || 'general'
+              },
+              analysis: analysisData.analysis,
+              rawData: analysisData.rawData
+            }} 
+          />
         )}
       </div>
     </Layout>

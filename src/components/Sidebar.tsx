@@ -9,8 +9,8 @@ import {
   MessageSquare,
   Map as MapIcon,
   ChevronLeft,
-  ChevronRight,
-  Car
+  ChevronRight
+  // Car removed as we're suspending the Traffic page
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -60,13 +60,14 @@ const Sidebar = ({ className }: SidebarProps) => {
           active={location.pathname === '/census'} 
           onClick={() => navigate('/census')}
         />
+        {/* Traffic page temporarily removed
         <SidebarItem 
           icon={Car} 
           label="Analisi Traffico" 
           collapsed={collapsed}
           active={location.pathname === '/traffic'} 
           onClick={() => navigate('/traffic')}
-        />
+        /> */}
         <SidebarItem 
           icon={Building} 
           label="La mia Attività" 
