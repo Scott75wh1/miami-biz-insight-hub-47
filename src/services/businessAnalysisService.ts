@@ -1,3 +1,4 @@
+
 import { fetchPlacesData, fetchYelpData, fetchGoogleTrendsData, fetchCensusData, fetchOpenAIAnalysis } from '@/services/apiService';
 import { detectBusinessType } from '@/utils/businessTypeDetector';
 import { identifyDistrict } from '@/utils/locationDetector';
@@ -77,8 +78,8 @@ export async function performBusinessAnalysis(
     trends: trendsResult
   };
   
-  // Create a structured prompt for OpenAI to generate a more detailed and contextual analysis
-  const aiPrompt = `Analizza in dettaglio questi dati per l'attività "${businessInfo.name}" situata a ${businessInfo.address} nel quartiere ${updatedDistrict} di Miami. Assicurati di menzionare esplicitamente che si tratta di ${updatedDistrict} in ogni sezione dell'analisi:
+  // Use business name and district in the prompt to make it specific to this business
+  const aiPrompt = `Analizza in dettaglio questi dati per l'attività "${businessInfo.name}" situata a ${businessInfo.address} nel quartiere ${updatedDistrict} di Miami. Assicurati di menzionare esplicitamente che si tratta di ${updatedDistrict} e di ${businessInfo.name} in ogni sezione dell'analisi:
     
     Dati di localizzazione: ${JSON.stringify(placesResult)}
     
@@ -89,15 +90,15 @@ export async function performBusinessAnalysis(
     Dati di tendenza: ${JSON.stringify(trendsResult)}
     
     Fornisci un'analisi dettagliata contestualizzata che includa:
-    1. Un riassunto chiaro e completo del potenziale dell'attività nel quartiere ${updatedDistrict}
+    1. Un riassunto chiaro e completo del potenziale di ${businessInfo.name} nel quartiere ${updatedDistrict}
     2. Analisi demografica specifica per ${businessInfo.type} in ${updatedDistrict} con informazioni demografiche precise e dettagliate
     3. Analisi dettagliata della concorrenza con punti di forza e debolezza dei principali competitor in ${updatedDistrict}
     4. Tendenze di mercato rilevanti per ${businessInfo.type} a ${updatedDistrict} con dati quantitativi
-    5. Parole chiave raccomandate per il marketing locale in ${updatedDistrict}
-    6. Opportunità di mercato specifiche per ${updatedDistrict}
+    5. Parole chiave raccomandate per il marketing locale in ${updatedDistrict} per ${businessInfo.name}
+    6. Opportunità di mercato specifiche per ${businessInfo.name} a ${updatedDistrict}
     7. Profilo del consumatore tipico in ${updatedDistrict} per ${businessInfo.type}
-    8. Attrazioni locali e punti di interesse vicino al business in ${updatedDistrict}
-    9. Raccomandazioni strategiche specifiche e attuabili (5-7 raccomandazioni dettagliate)
+    8. Attrazioni locali e punti di interesse vicino a ${businessInfo.name} in ${updatedDistrict}
+    9. Raccomandazioni strategiche specifiche e attuabili per ${businessInfo.name} (5-7 raccomandazioni dettagliate)
     
     Utilizza dati concreti dei vari dataset per supportare ogni affermazione. Incorpora informazioni contestuali sul quartiere ${updatedDistrict} e sulle sue peculiarità. Sii molto specifico e dettagliato, utilizzando numeri e statistiche quando disponibili.
     
@@ -118,51 +119,52 @@ export async function performBusinessAnalysis(
       const jsonString = jsonMatch ? jsonMatch[0] : content;
       parsedAnalysis = JSON.parse(jsonString);
       
-      // Ensure all required fields exist and convert marketOpportunities to string if it's an array
+      // Ensure all required fields exist with personalized content
       parsedAnalysis = {
-        summary: parsedAnalysis.summary || `Analisi non disponibile per ${updatedDistrict}`,
+        summary: parsedAnalysis.summary || `Analisi non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
         demographicAnalysis: parsedAnalysis.demographicAnalysis || `Analisi demografica non disponibile per ${updatedDistrict}`,
-        competitionAnalysis: parsedAnalysis.competitionAnalysis || `Analisi competitiva non disponibile per ${updatedDistrict}`,
-        trendsAnalysis: parsedAnalysis.trendsAnalysis || `Analisi delle tendenze non disponibile per ${updatedDistrict}`,
+        competitionAnalysis: parsedAnalysis.competitionAnalysis || `Analisi competitiva non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
+        trendsAnalysis: parsedAnalysis.trendsAnalysis || `Analisi delle tendenze non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
         recommendedKeywords: Array.isArray(parsedAnalysis.recommendedKeywords) ? 
           parsedAnalysis.recommendedKeywords : 
-          [`${businessInfo.type} ${updatedDistrict}`, `${businessInfo.name} ${updatedDistrict}`],
+          [`${businessInfo.name} ${updatedDistrict}`, `${businessInfo.type} ${updatedDistrict}`, `miglior ${businessInfo.type} ${updatedDistrict}`],
         // Convert marketOpportunities to string if it's an array
         marketOpportunities: Array.isArray(parsedAnalysis.marketOpportunities) ? 
           parsedAnalysis.marketOpportunities.join('\n\n') : 
-          parsedAnalysis.marketOpportunities || `Opportunità di mercato non disponibili per ${updatedDistrict}`,
+          parsedAnalysis.marketOpportunities || `Opportunità di mercato non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
         consumerProfile: parsedAnalysis.consumerProfile || `Profilo del consumatore non disponibile per ${updatedDistrict}`,
         localHighlights: parsedAnalysis.localHighlights || `Punti di interesse non disponibili per ${updatedDistrict}`,
         recommendations: Array.isArray(parsedAnalysis.recommendations) ? 
           parsedAnalysis.recommendations : 
-          [`Raccomandazioni non disponibili per ${updatedDistrict}`]
+          [`Raccomandazioni personalizzate non disponibili per ${businessInfo.name} a ${updatedDistrict}`]
       };
     } catch (e) {
       console.error("Error parsing OpenAI response:", e);
-      // If not proper JSON, use the raw text
+      // If not proper JSON, use the raw text but customize it with business info
       parsedAnalysis = {
         summary: aiAnalysis.choices[0].message.content,
-        demographicAnalysis: `Analisi demografica non disponibile in formato strutturato per ${updatedDistrict}`,
-        competitionAnalysis: `Analisi competitiva non disponibile in formato strutturato per ${updatedDistrict}`,
-        trendsAnalysis: `Analisi delle tendenze non disponibile in formato strutturato per ${updatedDistrict}`,
-        recommendedKeywords: [`${businessInfo.type} ${updatedDistrict}`, `${businessInfo.name} ${updatedDistrict}`],
-        marketOpportunities: `Opportunità di mercato non disponibili per ${updatedDistrict}`,
-        consumerProfile: `Profilo del consumatore non disponibile per ${updatedDistrict}`,
-        localHighlights: `Punti di interesse non disponibili per ${updatedDistrict}`,
-        recommendations: ["Consultare il testo completo dell'analisi"]
+        demographicAnalysis: `Analisi demografica non disponibile in formato strutturato per ${businessInfo.name} a ${updatedDistrict}`,
+        competitionAnalysis: `Analisi competitiva non disponibile in formato strutturato per ${businessInfo.name} a ${updatedDistrict}`,
+        trendsAnalysis: `Analisi delle tendenze non disponibile in formato strutturato per ${businessInfo.name} a ${updatedDistrict}`,
+        recommendedKeywords: [`${businessInfo.name} ${updatedDistrict}`, `${businessInfo.type} ${updatedDistrict}`, `miglior ${businessInfo.type} ${updatedDistrict}`],
+        marketOpportunities: `Opportunità di mercato non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+        consumerProfile: `Profilo del consumatore non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
+        localHighlights: `Punti di interesse non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+        recommendations: ["Consultare il testo completo dell'analisi per raccomandazioni personalizzate"]
       };
     }
   } else {
+    // Create default analysis with business name and district if OpenAI fails
     parsedAnalysis = {
-      summary: `Non è stato possibile generare un'analisi completa con i dati disponibili per ${updatedDistrict}`,
-      demographicAnalysis: `Dati demografici insufficienti per ${updatedDistrict}`,
-      competitionAnalysis: `Dati competitivi insufficienti per ${updatedDistrict}`,
-      trendsAnalysis: `Dati sulle tendenze insufficienti per ${updatedDistrict}`,
-      recommendedKeywords: [`${businessInfo.type} ${updatedDistrict}`, `${businessInfo.name} ${updatedDistrict}`],
-      marketOpportunities: `Opportunità di mercato non disponibili per ${updatedDistrict}`,
-      consumerProfile: `Profilo del consumatore non disponibile per ${updatedDistrict}`,
-      localHighlights: `Punti di interesse non disponibili per ${updatedDistrict}`,
-      recommendations: ["Verificare le API key e riprovare l'analisi"]
+      summary: `Non è stato possibile generare un'analisi completa per ${businessInfo.name} con i dati disponibili per ${updatedDistrict}`,
+      demographicAnalysis: `Dati demografici insufficienti per ${updatedDistrict} per analizzare ${businessInfo.name}`,
+      competitionAnalysis: `Dati competitivi insufficienti per ${updatedDistrict} per analizzare ${businessInfo.name}`,
+      trendsAnalysis: `Dati sulle tendenze insufficienti per ${businessInfo.name} a ${updatedDistrict}`,
+      recommendedKeywords: [`${businessInfo.name} ${updatedDistrict}`, `${businessInfo.type} ${updatedDistrict}`, `miglior ${businessInfo.type} ${updatedDistrict}`],
+      marketOpportunities: `Opportunità di mercato non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+      consumerProfile: `Profilo del consumatore non disponibile per ${businessInfo.name} a ${updatedDistrict}`,
+      localHighlights: `Punti di interesse non disponibili per ${businessInfo.name} a ${updatedDistrict}`,
+      recommendations: [`Verificare le API key e riprovare l'analisi per ${businessInfo.name}`]
     };
   }
   

@@ -42,7 +42,7 @@ const MyBusinessPage = () => {
         
         {analysisComplete && analysisData && (
           <BusinessAnalysisResults 
-            key={analysisData.businessInfo.name + '-' + analysisData.businessInfo.address} 
+            key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${Date.now()}`} 
             data={{
               businessInfo: {
                 ...analysisData.businessInfo,
