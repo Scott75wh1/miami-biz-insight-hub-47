@@ -13,6 +13,8 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
   const [trafficLayer, setTrafficLayer] = useState<google.maps.TrafficLayer | null>(null);
   const [searchMarker, setSearchMarker] = useState<google.maps.Marker | null>(null);
   const [searchTime, setSearchTime] = useState<string>('');
+  const [isMapInitialized, setIsMapInitialized] = useState<boolean>(false);
+  const [lastSearchedDestination, setLastSearchedDestination] = useState<string>('');
   const { toast } = useToast();
 
   // Initialize the map
@@ -34,8 +36,8 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
         defaultCenter = { lat: 25.7602, lng: -80.1959 };
       }
       
-      // Create the map - making sure we're instantiating it correctly
-      const newMap = new google.maps.Map(mapRef.current, {
+      // Create the map
+      const newMap = new window.google.maps.Map(mapRef.current, {
         zoom: 13,
         center: defaultCenter,
         mapTypeId: "roadmap",
@@ -45,11 +47,12 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       });
 
       // Create TrafficLayer and add it to the map
-      const newTrafficLayer = new google.maps.TrafficLayer();
+      const newTrafficLayer = new window.google.maps.TrafficLayer();
       newTrafficLayer.setMap(newMap);
 
       setMap(newMap);
       setTrafficLayer(newTrafficLayer);
+      setIsMapInitialized(true);
       
       console.log('Map initialized successfully with TrafficLayer');
     } catch (error) {
@@ -68,11 +71,11 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       
       // Update center based on district
       if (district === "Miami Beach") {
-        newCenter = new google.maps.LatLng(25.790654, -80.1300455);
+        newCenter = new window.google.maps.LatLng(25.790654, -80.1300455);
       } else if (district === "Wynwood") {
-        newCenter = new google.maps.LatLng(25.8049, -80.1937);
+        newCenter = new window.google.maps.LatLng(25.8049, -80.1937);
       } else if (district === "Brickell") {
-        newCenter = new google.maps.LatLng(25.7602, -80.1959);
+        newCenter = new window.google.maps.LatLng(25.7602, -80.1959);
       }
       
       map.setCenter(newCenter);
@@ -85,9 +88,18 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
 
   // Handle destination search
   useEffect(() => {
-    if (!map || !destination || !window.google || !window.google.maps) {
+    // Return early if any condition is not met
+    if (!map || !destination || !window.google || !window.google.maps || !isMapInitialized) {
       return;
     }
+
+    // Prevent infinite loop by checking if we've already searched this destination
+    if (destination === lastSearchedDestination) {
+      return;
+    }
+
+    // Set this destination as the last searched one
+    setLastSearchedDestination(destination);
 
     // Remove previous marker if exists
     if (searchMarker) {
@@ -95,10 +107,10 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
     }
 
     try {
-      const geocoder = new google.maps.Geocoder();
+      const geocoder = new window.google.maps.Geocoder();
       
       geocoder.geocode({ address: destination }, (results, status) => {
-        if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
+        if (status === window.google.maps.GeocoderStatus.OK && results && results[0]) {
           const location = results[0].geometry.location;
           
           // Set the current timestamp
@@ -117,15 +129,15 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
           map.setCenter(location);
           map.setZoom(15);
           
-          const newMarker = new google.maps.Marker({
+          const newMarker = new window.google.maps.Marker({
             position: location,
             map: map,
             title: destination,
-            animation: google.maps.Animation.DROP
+            animation: window.google.maps.Animation.DROP
           });
           
           // Create an info window with the timestamp
-          const infoWindow = new google.maps.InfoWindow({
+          const infoWindow = new window.google.maps.InfoWindow({
             content: `
               <div>
                 <h4 style="margin:0;padding:0;font-weight:bold;">${destination}</h4>
@@ -171,7 +183,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
         variant: "destructive",
       });
     }
-  }, [destination, map, toast, searchMarker]);
+  }, [destination, map, toast, searchMarker, isMapInitialized, lastSearchedDestination]);
 
   return (
     <div className="relative">
