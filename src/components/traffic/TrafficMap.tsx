@@ -16,59 +16,90 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, t
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
   const { apiKeys } = useApiKeys();
+  
+  // Declare types for Google Maps script
+  const googleMapsScript = useRef<HTMLScriptElement | null>(null);
 
   // Load the Google Maps script
   useEffect(() => {
     const loadGoogleMaps = () => {
-      if (!window.google || !window.google.maps) {
-        const googleMapsScript = document.createElement('script');
-        googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeys.googlePlaces}&libraries=places`;
-        googleMapsScript.async = true;
-        googleMapsScript.defer = true;
-        googleMapsScript.onload = () => setMapLoaded(true);
-        document.head.appendChild(googleMapsScript);
-      } else {
+      if (window.google && window.google.maps) {
+        // Google Maps is already loaded
         setMapLoaded(true);
+        return;
+      }
+
+      // Create the script element if it doesn't exist
+      if (!googleMapsScript.current) {
+        googleMapsScript.current = document.createElement('script');
+        googleMapsScript.current.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeys.googlePlaces}&libraries=places`;
+        googleMapsScript.current.async = true;
+        googleMapsScript.current.defer = true;
+        googleMapsScript.current.onload = () => {
+          console.log('Google Maps script loaded');
+          setMapLoaded(true);
+        };
+        googleMapsScript.current.onerror = (e) => {
+          console.error('Error loading Google Maps script:', e);
+        };
+        document.head.appendChild(googleMapsScript.current);
       }
     };
 
     loadGoogleMaps();
+
+    // Cleanup function
+    return () => {
+      if (googleMapsScript.current && document.head.contains(googleMapsScript.current)) {
+        document.head.removeChild(googleMapsScript.current);
+      }
+    };
   }, [apiKeys.googlePlaces]);
 
   // Initialize the map
   useEffect(() => {
-    if (mapLoaded && mapRef.current && !map) {
-      // Miami coordinates as default
-      const miamiCoords = { lat: 25.7617, lng: -80.1918 };
-      
-      // Create the map
-      const newMap = new google.maps.Map(mapRef.current, {
-        zoom: 12,
-        center: miamiCoords,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        mapTypeControl: true,
-        streetViewControl: true,
-        fullscreenControl: true,
-      });
+    if (mapLoaded && mapRef.current && !map && window.google && window.google.maps) {
+      try {
+        // Miami coordinates as default
+        const miamiCoords = { lat: 25.7617, lng: -80.1918 };
+        
+        // Create the map
+        const newMap = new google.maps.Map(mapRef.current, {
+          zoom: 12,
+          center: miamiCoords,
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          mapTypeControl: true,
+          streetViewControl: true,
+          fullscreenControl: true,
+        });
 
-      // Create the directions renderer
-      const newDirectionsRenderer = new google.maps.DirectionsRenderer({
-        map: newMap,
-        suppressMarkers: false,
-        polylineOptions: {
-          strokeColor: '#3b82f6',
-          strokeWeight: 5,
-        },
-      });
+        // Create the directions renderer
+        const newDirectionsRenderer = new google.maps.DirectionsRenderer({
+          map: newMap,
+          suppressMarkers: false,
+          polylineOptions: {
+            strokeColor: '#3b82f6',
+            strokeWeight: 5,
+          },
+        });
 
-      setMap(newMap);
-      setDirectionsRenderer(newDirectionsRenderer);
+        setMap(newMap);
+        setDirectionsRenderer(newDirectionsRenderer);
+        
+        console.log('Map initialized');
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
     }
   }, [mapLoaded, map]);
 
   // Update the directions when traffic data changes
   useEffect(() => {
-    if (map && directionsRenderer && trafficData && trafficData.routes) {
+    if (!map || !directionsRenderer || !trafficData || !trafficData.routes || !window.google || !window.google.maps) {
+      return;
+    }
+
+    try {
       // Convert encoded polyline to directions result
       const directionsResult: google.maps.DirectionsResult = {
         routes: trafficData.routes.map(route => ({
@@ -91,12 +122,15 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, t
               start_location: new google.maps.LatLng(step.start_location.lat, step.start_location.lng),
               instructions: step.html_instructions,
               travel_mode: step.travel_mode as google.maps.TravelMode,
+              path: [], // Add an empty path array to satisfy the type
             })),
           })),
-          overview_path: route.overview_polyline.points.split('').map((_, i, arr) => {
-            // This is a simplified representation since Google Maps API uses a complex algorithm
-            // to decode polyline points
-            return new google.maps.LatLng(0, 0); 
+          overview_path: Array.from({ length: 10 }).map((_, i) => {
+            // Create dummy path points based on the bounds
+            return new google.maps.LatLng(
+              route.bounds.southwest.lat + (route.bounds.northeast.lat - route.bounds.southwest.lat) * (i / 10),
+              route.bounds.southwest.lng + (route.bounds.northeast.lng - route.bounds.southwest.lng) * (i / 10)
+            );
           }),
           overview_polyline: { points: route.overview_polyline.points },
           warnings: route.warnings,
@@ -111,6 +145,10 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, t
       if (directionsResult.routes[0]?.bounds) {
         map.fitBounds(directionsResult.routes[0].bounds);
       }
+      
+      console.log('Traffic route displayed on map');
+    } catch (error) {
+      console.error('Error displaying traffic route:', error);
     }
   }, [trafficData, map, directionsRenderer]);
 
