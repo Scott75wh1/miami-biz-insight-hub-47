@@ -1,64 +1,47 @@
 
 import React, { useState } from 'react';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
-import { Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { TrafficMap } from '@/components/traffic/TrafficMap';
-import { TrafficControls } from '@/components/traffic/TrafficControls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/components/ui/use-toast';
-import { useTrafficData } from '@/hooks/useTrafficData';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 const TrafficPage = () => {
   const { selectedDistrict } = useDistrictSelection();
   const [destination, setDestination] = useState<string>("");
-  const { trafficData, isLoading, fetchTrafficRoutes } = useTrafficData();
-
-  const handleAnalyzeTraffic = (destination: string) => {
-    if (!destination.trim()) {
-      toast({
-        title: "Destinazione richiesta",
-        description: "Inserisci una destinazione per analizzare il traffico",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setDestination(destination);
-    fetchTrafficRoutes(selectedDistrict, destination);
-  };
 
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6">
-        <h1 className="text-3xl font-bold mb-6">Analisi del Traffico - {selectedDistrict}</h1>
+        <h1 className="text-3xl font-bold mb-6">Traffico in tempo reale - {selectedDistrict}</h1>
+        
+        <Alert className="mb-6">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Informazione sul traffico</AlertTitle>
+          <AlertDescription>
+            La mappa mostra il traffico in tempo reale a {selectedDistrict}. I colori sulla mappa indicano le condizioni del traffico:
+            <ul className="mt-2 list-disc pl-5">
+              <li><span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span> Verde: Traffico scorrevole</li>
+              <li><span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-2"></span> Giallo: Traffico moderato</li>
+              <li><span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span> Rosso: Traffico intenso</li>
+              <li><span className="inline-block w-3 h-3 bg-red-900 rounded-full mr-2"></span> Rosso scuro: Traffico molto congestionato</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
         
         <div className="grid grid-cols-1 gap-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle>
                 <span>Mappa del Traffico</span>
-                {isLoading && (
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                    <span>Analisi in corso...</span>
-                  </div>
-                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
-                <TrafficControls 
-                  onAnalyzeTraffic={handleAnalyzeTraffic} 
-                  isLoading={isLoading}
-                />
-              </div>
-              
               <div className="h-[600px] w-full rounded-md overflow-hidden border">
                 <TrafficMap 
                   district={selectedDistrict} 
                   destination={destination}
-                  trafficData={trafficData}
                 />
               </div>
             </CardContent>

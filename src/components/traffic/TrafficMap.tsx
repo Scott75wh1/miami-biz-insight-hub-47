@@ -2,21 +2,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { Loader2, AlertTriangle } from 'lucide-react';
-import { TrafficRouteData } from '@/services/api/traffic/types';
 import { Button } from '@/components/ui/button';
 import { SettingsDialog } from '@/components/SettingsDialog';
 
 interface TrafficMapProps {
   district: string;
   destination: string;
-  trafficData: TrafficRouteData | null;
 }
 
-export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, trafficData }) => {
+export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
+  const [trafficLayer, setTrafficLayer] = useState<google.maps.TrafficLayer | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const { apiKeys } = useApiKeys();
   
@@ -76,98 +74,70 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, t
     }
 
     try {
-      // Miami coordinates as default
-      const miamiCoords = { lat: 25.7617, lng: -80.1918 };
+      // Default coordinates for the selected district
+      let defaultCenter = { lat: 25.7617, lng: -80.1918 }; // Default to Miami
+      
+      // Set center based on district if available
+      if (district === "Miami Beach") {
+        defaultCenter = { lat: 25.790654, lng: -80.1300455 };
+      } else if (district === "Wynwood") {
+        defaultCenter = { lat: 25.8049, lng: -80.1937 };
+      } else if (district === "Brickell") {
+        defaultCenter = { lat: 25.7602, lng: -80.1959 };
+      }
       
       // Create the map
       const newMap = new google.maps.Map(mapRef.current, {
-        zoom: 12,
-        center: miamiCoords,
+        zoom: 13,
+        center: defaultCenter,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         mapTypeControl: true,
         streetViewControl: true,
         fullscreenControl: true,
       });
 
-      // Create the directions renderer
-      const newDirectionsRenderer = new google.maps.DirectionsRenderer({
-        map: newMap,
-        suppressMarkers: false,
-        polylineOptions: {
-          strokeColor: '#3b82f6',
-          strokeWeight: 5,
-        },
-      });
+      // Create TrafficLayer and add it to the map
+      const newTrafficLayer = new google.maps.TrafficLayer();
+      newTrafficLayer.setMap(newMap);
 
       setMap(newMap);
-      setDirectionsRenderer(newDirectionsRenderer);
+      setTrafficLayer(newTrafficLayer);
       
-      console.log('Map initialized successfully');
+      console.log('Map initialized successfully with TrafficLayer');
     } catch (error) {
       console.error('Error initializing map:', error);
       setMapError("Errore durante l'inizializzazione della mappa. Ricarica la pagina o verifica la configurazione.");
     }
-  }, [mapLoaded, map]);
+  }, [mapLoaded, map, district]);
 
-  // Update the directions when traffic data changes
+  // Update center when district or destination changes
   useEffect(() => {
-    if (!map || !directionsRenderer || !trafficData || !trafficData.routes || !window.google || !window.google.maps) {
+    if (!map || !window.google || !window.google.maps) {
       return;
     }
 
     try {
-      // Convert encoded polyline to directions result
-      const directionsResult = {
-        routes: trafficData.routes.map(route => ({
-          bounds: new google.maps.LatLngBounds(
-            new google.maps.LatLng(route.bounds.southwest.lat, route.bounds.southwest.lng),
-            new google.maps.LatLng(route.bounds.northeast.lat, route.bounds.northeast.lng),
-          ),
-          legs: route.legs.map(leg => ({
-            distance: { text: leg.distance.text, value: leg.distance.value },
-            duration: { text: leg.duration.text, value: leg.duration.value },
-            duration_in_traffic: { text: leg.duration_in_traffic.text, value: leg.duration_in_traffic.value },
-            end_address: leg.end_address,
-            start_address: leg.start_address,
-            end_location: new google.maps.LatLng(leg.end_location.lat, leg.end_location.lng),
-            start_location: new google.maps.LatLng(leg.start_location.lat, leg.start_location.lng),
-            steps: leg.steps.map(step => ({
-              distance: { text: step.distance.text, value: step.distance.value },
-              duration: { text: step.duration.text, value: step.duration.value },
-              end_location: new google.maps.LatLng(step.end_location.lat, step.end_location.lng),
-              start_location: new google.maps.LatLng(step.start_location.lat, step.start_location.lng),
-              instructions: step.html_instructions,
-              travel_mode: step.travel_mode as google.maps.TravelMode,
-              path: [], // Add an empty path array to satisfy the type
-            })),
-          })),
-          overview_path: Array.from({ length: 10 }).map((_, i) => {
-            // Create dummy path points based on the bounds
-            return new google.maps.LatLng(
-              route.bounds.southwest.lat + (route.bounds.northeast.lat - route.bounds.southwest.lat) * (i / 10),
-              route.bounds.southwest.lng + (route.bounds.northeast.lng - route.bounds.southwest.lng) * (i / 10)
-            );
-          }),
-          overview_polyline: { points: route.overview_polyline.points },
-          warnings: route.warnings,
-          waypoint_order: route.waypoint_order,
-        })),
-        request: {} as any,
-      };
-
-      directionsRenderer.setDirections(directionsResult);
+      let newCenter = map.getCenter();
       
-      // Fit the map to the bounds of the route
-      if (directionsResult.routes[0]?.bounds) {
-        map.fitBounds(directionsResult.routes[0].bounds);
+      // Update center based on district
+      if (district === "Miami Beach") {
+        newCenter = new google.maps.LatLng(25.790654, -80.1300455);
+      } else if (district === "Wynwood") {
+        newCenter = new google.maps.LatLng(25.8049, -80.1937);
+      } else if (district === "Brickell") {
+        newCenter = new google.maps.LatLng(25.7602, -80.1959);
       }
       
-      console.log('Traffic route displayed on map');
+      // If we have a destination, we could geocode it here to get coordinates
+      // For now just focusing on the district
+
+      map.setCenter(newCenter);
+      
+      console.log(`Map centered on ${district}`);
     } catch (error) {
-      console.error('Error displaying traffic route:', error);
-      setMapError("Errore durante la visualizzazione del percorso. Riprova più tardi.");
+      console.error('Error updating map center:', error);
     }
-  }, [trafficData, map, directionsRenderer]);
+  }, [district, destination, map]);
 
   if (mapError) {
     return (
@@ -200,10 +170,10 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({ district, destination, t
 
   return (
     <div ref={mapRef} className="h-full w-full">
-      {!district && !destination && (
+      {!district && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 bg-opacity-75 z-10">
           <p className="text-lg font-medium text-gray-700">
-            Seleziona un quartiere e una destinazione per visualizzare il traffico
+            Seleziona un quartiere per visualizzare il traffico
           </p>
         </div>
       )}

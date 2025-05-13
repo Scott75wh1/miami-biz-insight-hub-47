@@ -21,6 +21,18 @@ declare namespace google {
       remove(): void;
     }
 
+    class TrafficLayer {
+      constructor(opts?: TrafficLayerOptions);
+      setMap(map: Map | null): void;
+      getMap(): Map | null;
+      setOptions(options: TrafficLayerOptions): void;
+    }
+
+    interface TrafficLayerOptions {
+      autoRefresh?: boolean;
+      map?: Map;
+    }
+
     class LatLng {
       constructor(lat: number, lng: number);
       lat(): number;
