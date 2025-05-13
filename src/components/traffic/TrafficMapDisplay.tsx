@@ -98,7 +98,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
       const geocoder = new window.google.maps.Geocoder();
       
       geocoder.geocode({ address: destination }, (results, status) => {
-        // Fix 1: Access GeocoderStatus through window.google.maps
+        // Fixed: Use full path to GeocoderStatus
         if (status === window.google.maps.GeocoderStatus.OK && results && results[0]) {
           const location = results[0].geometry.location;
           
@@ -118,7 +118,7 @@ export const TrafficMapDisplay: React.FC<TrafficMapDisplayProps> = ({ district, 
           map.setCenter(location);
           map.setZoom(15);
           
-          // Fix 2: Access Animation through window.google.maps
+          // Fixed: Use full path to Animation
           const newMarker = new window.google.maps.Marker({
             position: location,
             map: map,
