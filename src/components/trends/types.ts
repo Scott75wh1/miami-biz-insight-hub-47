@@ -22,5 +22,5 @@ export interface TrendsContextType {
   isLoading: boolean;
   isAiLoading: boolean;
   isUsingDemoKey: boolean;
-  fetchTrendsData: (businessType: string, district: string) => Promise<void>;
+  fetchTrendsData: (businessType: string | import('@/components/BusinessTypeSelector').BusinessType, district: string) => Promise<void>;
 }

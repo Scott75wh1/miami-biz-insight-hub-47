@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getSearchKeywords, getGrowingCategories } from '@/components/trends/TrendsUtils';
 import { TrendsContextType, TrendItem, Category, AIRecommendation } from './types';
 import { analyzeTrendsData } from '@/services/apiService';
+import { BusinessType } from '@/components/BusinessTypeSelector';
 
 export const TrendsContext = createContext<TrendsContextType | undefined>(undefined);
 
@@ -28,14 +29,14 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     trends: TrendItem[], 
     categories: Category[], 
     district: string, 
-    businessType: string
+    businessType: BusinessType | string
   ) => {
     setIsAiLoading(true);
     
     try {
       const aiAnalysis = await analyzeTrendsData(
         apiKeys.openAI,
-        businessType,
+        businessType as string,
         trends,
         categories,
         district
@@ -70,14 +71,14 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   // Function to fetch trends data
-  const fetchTrendsData = async (businessType: string, district: string) => {
+  const fetchTrendsData = async (businessType: BusinessType | string, district: string) => {
     if (!isLoaded) return;
     
     setIsLoading(true);
     
     try {
       // Get keywords based on business type and selected district
-      const keywords = getSearchKeywords(businessType, district);
+      const keywords = getSearchKeywords(businessType as BusinessType, district);
       
       // Fetch trends data from Google Trends API
       const data = await fetchGoogleTrendsData(apiKeys.googleTrends, keywords, 'US-FL-528', district);
@@ -92,7 +93,7 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setSearchTrends(mappedTrends);
         
         // Set the growing categories based on business type and district
-        setGrowingCategories(getGrowingCategories(businessType, district));
+        setGrowingCategories(getGrowingCategories(businessType as BusinessType, district));
         
         const messageType = isUsingDemoKey ? "Dati dimostrativi di trend caricati" : "Dati reali dei trend caricati";
         toast({
@@ -103,7 +104,7 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         });
         
         // Now get AI recommendations based on the trends data and district
-        await getAiRecommendations(mappedTrends, getGrowingCategories(businessType, district), district, businessType);
+        await getAiRecommendations(mappedTrends, getGrowingCategories(businessType as BusinessType, district), district, businessType);
         
       } else {
         // Use default data if API returns no results
@@ -115,7 +116,7 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setSearchTrends(defaultTrends);
         
         // Set the growing categories based on business type and district
-        const defaultCategories = getGrowingCategories(businessType, district);
+        const defaultCategories = getGrowingCategories(businessType as BusinessType, district);
         setGrowingCategories(defaultCategories);
         
         toast({
@@ -130,7 +131,7 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       console.error('Error fetching trends data:', error);
       
       // Use default data if there's an error
-      const keywords = getSearchKeywords(businessType, district);
+      const keywords = getSearchKeywords(businessType as BusinessType, district);
       const defaultTrends = keywords.map((keyword, index) => ({
         label: keyword,
         value: 80 - (index * 10)
@@ -139,7 +140,7 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setSearchTrends(defaultTrends);
       
       // Set the growing categories based on business type and district
-      const defaultCategories = getGrowingCategories(businessType, district);
+      const defaultCategories = getGrowingCategories(businessType as BusinessType, district);
       setGrowingCategories(defaultCategories);
       
       toast({
