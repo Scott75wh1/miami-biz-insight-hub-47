@@ -1,9 +1,12 @@
+
 import * as React from "react"
 import {
   Toast,
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
+
+console.log("Loading src/hooks/use-toast.ts");
 
 const TOAST_LIMIT = 100
 const TOAST_REMOVE_DELAY = 1000000

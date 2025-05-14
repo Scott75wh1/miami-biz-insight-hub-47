@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,6 +36,13 @@ const BusinessAnalysisForm = ({ isAnalyzing, onSubmit }: BusinessAnalysisFormPro
       businessType: "restaurant",
     },
   });
+  
+  const { toast } = useToast();
+  
+  // Aggiungiamo un useEffect per verificare se useToast è caricato correttamente
+  useEffect(() => {
+    console.log("BusinessAnalysisForm rendered, toast available:", !!toast);
+  }, [toast]);
 
   const businessTypes = [
     { id: 'restaurant', name: 'Ristoranti' },
