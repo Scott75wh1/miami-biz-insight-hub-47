@@ -1,9 +1,9 @@
 
 import * as React from "react";
 import { createContext, useContext } from "react";
-import { toast as sonnerToast, type ToastT } from "sonner";
+import { toast as sonnerToast, Toast as SonnerToast } from "sonner";
 
-type ToastProps = React.ComponentProps<typeof ToastT>;
+type ToastProps = React.ComponentProps<typeof SonnerToast>;
 type ToastActionElement = React.ReactElement<unknown>;
 
 type ToastOptions = {
@@ -14,32 +14,55 @@ type ToastOptions = {
   duration?: number;
 };
 
+interface Toast extends ToastOptions {
+  id: string | number;
+}
+
 type ToastContextType = {
   toast: (opts: ToastOptions) => void;
   dismiss: (id: number | string) => void;
+  toasts: Toast[];
 };
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   console.log("Toast provider rendered");
+  
+  // State to track active toasts
+  const [toasts, setToasts] = React.useState<Toast[]>([]);
 
   const toast = React.useCallback(
     ({ title, description, variant, action, ...props }: ToastOptions) => {
-      return sonnerToast(title, {
+      const id = sonnerToast(title, {
         description,
         action,
         ...props,
+        onDismiss: (id) => {
+          setToasts((prev) => prev.filter((toast) => toast.id !== id));
+        },
       });
+      
+      // Add toast to our local state
+      setToasts((prev) => [
+        ...prev,
+        { id, title, description, variant, action, ...props },
+      ]);
+      
+      return id;
     },
     []
   );
 
   const dismiss = React.useCallback((toastId: number | string) => {
     sonnerToast.dismiss(toastId);
+    setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
   }, []);
 
-  const value = React.useMemo(() => ({ toast, dismiss }), [toast, dismiss]);
+  const value = React.useMemo(
+    () => ({ toast, dismiss, toasts }),
+    [toast, dismiss, toasts]
+  );
 
   return (
     <ToastContext.Provider value={value}>{children}</ToastContext.Provider>
@@ -62,6 +85,7 @@ export function useToast() {
         });
       },
       dismiss: (id: number | string) => sonnerToast.dismiss(id),
+      toasts: [] as Toast[],
     };
   }
 
@@ -76,4 +100,3 @@ export const toast = (opts: ToastOptions) => {
     action: opts.action,
   });
 };
-
