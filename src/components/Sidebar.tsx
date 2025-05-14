@@ -87,16 +87,22 @@ const Sidebar = ({ className }: SidebarProps) => {
           icon={ChartBar} 
           label="Trend di Mercato" 
           collapsed={collapsed}
+          active={location.pathname === '/market-trends'} 
+          onClick={() => navigate('/market-trends')}
         />
         <SidebarItem 
           icon={BarChart4} 
           label="Analisi Competitiva" 
           collapsed={collapsed}
+          active={location.pathname === '/competitor-analysis'} 
+          onClick={() => navigate('/competitor-analysis')}
         />
         <SidebarItem 
           icon={MessageSquare} 
           label="Assistente AI" 
           collapsed={collapsed}
+          active={location.pathname === '/ai-assistant'} 
+          onClick={() => navigate('/ai-assistant')}
         />
       </nav>
       
