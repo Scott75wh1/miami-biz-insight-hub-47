@@ -11,6 +11,9 @@ import CensusDetail from "./pages/CensusDetail";
 import MyBusinessPage from "./pages/MyBusinessPage";
 import DataExplorerPage from "./pages/DataExplorerPage";
 import NotFound from "./pages/NotFound";
+import MarketTrendsPage from "./pages/MarketTrendsPage";
+import CompetitorAnalysisPage from "./pages/CompetitorAnalysisPage";
+import AIAssistantPage from "./pages/AIAssistantPage";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +28,9 @@ const App = () => (
               <Route path="/census" element={<CensusDetail />} />
               <Route path="/my-business" element={<MyBusinessPage />} />
               <Route path="/explore" element={<DataExplorerPage />} />
+              <Route path="/market-trends" element={<MarketTrendsPage />} />
+              <Route path="/competitor-analysis" element={<CompetitorAnalysisPage />} />
+              <Route path="/ai-assistant" element={<AIAssistantPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
