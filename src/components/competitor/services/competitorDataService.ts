@@ -3,7 +3,7 @@ import { BusinessType } from '@/components/BusinessTypeSelector';
 import { fetchCombinedCompetitorData } from '@/services/apiService';
 import { CompetitorStrength } from '@/services/api/openai';
 import { Competitor } from '../types';
-import defaultCompetitors from '../utils/defaultCompetitorsUtil';
+import * as defaultCompetitors from '../utils/defaultCompetitorsUtil';
 import { useApiKeys } from '@/hooks/useApiKeys';
 
 export const getCompetitorsByDistrict = async (
@@ -54,4 +54,14 @@ export const getCompetitorsByDistrict = async (
     // Fallback to default data
     return defaultCompetitors.getDefaultCompetitors(district, businessType as BusinessType);
   }
+};
+
+// Added this function to fix the missing loadCompetitorData reference in useCompetitorData.ts
+export const loadCompetitorData = async (
+  businessType: BusinessType | string,
+  district: string,
+  apiKeys: ReturnType<typeof useApiKeys>['apiKeys'],
+  cuisineType?: string
+): Promise<Competitor[]> => {
+  return getCompetitorsByDistrict(district, businessType, apiKeys, cuisineType);
 };

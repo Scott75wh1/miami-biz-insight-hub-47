@@ -10,7 +10,7 @@ import TrendsHeader from '@/components/trends/TrendsHeader';
 import TrendsTabSelector from '@/components/trends/TrendsTabSelector';
 import TrendsTabContent from '@/components/trends/TrendsTabContent';
 import DistrictTrendsSelector from '@/components/trends/DistrictTrendsSelector';
-import { TrendsProvider } from '@/components/trends/TrendsContext';
+import { TrendsProvider, useTrendsData } from '@/components/trends/TrendsContext';
 
 interface TrendsAnalysisProps {
   businessType: BusinessType;
@@ -74,7 +74,7 @@ const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
 
 // Wrapper component for TrendsHeader that gets data from context
 const TrendsHeaderWrapper: React.FC<{ businessType: BusinessType }> = ({ businessType }) => {
-  const { isLoading, isUsingDemoKey } = useTrends();
+  const { isLoading, isUsingDemoKey } = useTrendsData();
   
   return (
     <TrendsHeader 
@@ -97,7 +97,7 @@ const TrendsTabsContent: React.FC<{
   businessType,
   districtUpdateTime,
 }) => {
-  const { fetchTrendsData } = useTrends();
+  const { fetchTrendsData } = useTrendsData();
   
   // Update data when business type or selected district changes
   useEffect(() => {
@@ -121,21 +121,6 @@ const TrendsTabsContent: React.FC<{
       </TabsContent>
     </Tabs>
   );
-};
-
-// Custom hook to use trends context
-const useTrends = () => {
-  const { 
-    isLoading, 
-    isUsingDemoKey,
-    fetchTrendsData
-  } = useTrendsData();
-  
-  return { 
-    isLoading, 
-    isUsingDemoKey,
-    fetchTrendsData
-  };
 };
 
 export default TrendsAnalysis;
