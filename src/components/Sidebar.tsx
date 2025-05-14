@@ -66,7 +66,7 @@ const Sidebar = ({ className }: SidebarProps) => {
           icon={Database} 
           label="Dati del Censimento" 
           collapsed={collapsed}
-          active={location.pathname === '/census'} 
+          active={location.pathname.startsWith('/census')} 
           onClick={() => navigate('/census')}
         />
         <SidebarItem 
@@ -80,8 +80,8 @@ const Sidebar = ({ className }: SidebarProps) => {
           icon={Search} 
           label="Esplora Dati" 
           collapsed={collapsed} 
-          active={location.pathname === '/explore'} 
-          onClick={() => navigate('/explore')}
+          active={location.pathname === '/data-explorer'} 
+          onClick={() => navigate('/data-explorer')}
         />
         <SidebarItem 
           icon={ChartBar} 
