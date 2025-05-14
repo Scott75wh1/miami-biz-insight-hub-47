@@ -37,8 +37,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         description,
         action,
         ...props,
-        onDismiss: (id) => {
-          setToasts((prev) => prev.filter((toast) => toast.id !== id));
+        onDismiss: (toastId) => {
+          setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
         },
       });
       
