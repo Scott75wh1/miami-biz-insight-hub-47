@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
@@ -18,15 +18,17 @@ const MarketTrendsContent = () => {
   const { searchTrends, growingCategories, aiRecommendations, isLoading, isAiLoading, fetchTrendsData, isUsingDemoKey } = useTrendsData();
   const [businessType, setBusinessType] = useState<BusinessType>('restaurant');
 
-  useEffect(() => {
-    fetchTrendsData(businessType, selectedDistrict);
-  }, [businessType, selectedDistrict, fetchTrendsData]);
+  // Memoize business type change handler to prevent unnecessary renders
+  const handleTypeChange = useCallback((type: BusinessType) => {
+    setBusinessType(type);
+    fetchTrendsData(type, selectedDistrict);
+  }, [selectedDistrict, fetchTrendsData]);
 
   return (
     <div className="space-y-6">
       <BusinessTypeSelector 
         selectedType={businessType}
-        onTypeChange={(type) => setBusinessType(type)}
+        onTypeChange={handleTypeChange}
       />
       
       <Card className="shadow-md">

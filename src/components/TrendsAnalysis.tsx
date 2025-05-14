@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
@@ -100,9 +100,16 @@ const TrendsTabsContent: React.FC<{
   const { fetchTrendsData } = useTrendsData();
   
   // Update data when business type or selected district changes
-  useEffect(() => {
+  // Memoize fetchTrendsData call to prevent infinite loop
+  const fetchData = useCallback(() => {
     fetchTrendsData(businessType, selectedDistrict);
-  }, [businessType, selectedDistrict, districtUpdateTime, fetchTrendsData]);
+  }, [businessType, selectedDistrict, fetchTrendsData]);
+  
+  // Only trigger data fetch on mount and when key dependencies actually change
+  useEffect(() => {
+    fetchData();
+    // districtUpdateTime is a good dependency as it only changes when district actually changes
+  }, [districtUpdateTime, businessType, fetchData]);
   
   return (
     <Tabs value={selectedTab} className="w-full">

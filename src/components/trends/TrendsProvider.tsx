@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { fetchGoogleTrendsData } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
@@ -19,17 +19,18 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     recommendations: []
   });
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [lastFetchParams, setLastFetchParams] = useState<{businessType: string, district: string} | null>(null);
   
   const { toast } = useToast();
   const { apiKeys, isLoaded } = useApiKeys();
   const isUsingDemoKey = !apiKeys.googleTrends || apiKeys.googleTrends === 'demo-key';
 
   // Function to get AI recommendations
-  const getAiRecommendations = async (
+  const getAiRecommendations = useCallback(async (
     trends: TrendItem[], 
     categories: Category[], 
     district: string, 
-    businessType: BusinessType | string
+    businessType: string | BusinessType
   ) => {
     setIsAiLoading(true);
     
@@ -68,13 +69,23 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     } finally {
       setIsAiLoading(false);
     }
-  };
+  }, [apiKeys.openAI, toast]);
 
   // Function to fetch trends data
-  const fetchTrendsData = async (businessType: BusinessType | string, district: string) => {
+  const fetchTrendsData = useCallback(async (businessType: string | BusinessType, district: string) => {
     if (!isLoaded) return;
     
+    // Prevent duplicate fetches with the same parameters
+    if (lastFetchParams && 
+        lastFetchParams.businessType === businessType && 
+        lastFetchParams.district === district) {
+      console.log("Skipping duplicate fetch for:", businessType, district);
+      return;
+    }
+    
+    // Set loading state and update last fetch params
     setIsLoading(true);
+    setLastFetchParams({ businessType, district });
     
     try {
       // Get keywords based on business type and selected district
@@ -154,7 +165,7 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isLoaded, apiKeys.googleTrends, toast, getAiRecommendations, isUsingDemoKey]);
 
   return (
     <TrendsContext.Provider
