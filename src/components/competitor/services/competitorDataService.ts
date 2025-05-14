@@ -316,12 +316,20 @@ export const loadCompetitorData = async (
   businessType: BusinessType,
   selectedDistrict: string,
   apiKeys: any,
-  cuisineType?: string
+  cuisineType?: string,
+  businessAddress?: string
 ): Promise<Competitor[]> => {
   try {
     // In a real implementation, this would call APIs using the provided API keys
+    // and would filter competitors based on the businessAddress proximity
     // For now, we'll just return the mock data
     const competitors = getDefaultCompetitors(selectedDistrict, businessType, cuisineType);
+    
+    // If business address is provided, we can simulate filtering by proximity
+    if (businessAddress) {
+      console.log(`Filtering competitors near: ${businessAddress}`);
+      // In a real implementation, this would use geolocation to filter by proximity
+    }
     
     // Return the competitors
     return competitors;

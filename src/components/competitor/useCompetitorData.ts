@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { Competitor } from './types';
@@ -46,6 +45,7 @@ export const useCompetitorData = (
       }).id;
       
       // Use the service to load and enhance competitor data
+      // Fixed here: Passing only 4 arguments instead of 5, according to the function signature
       const competitorData = await loadCompetitorData(
         businessType, 
         selectedDistrict, 
