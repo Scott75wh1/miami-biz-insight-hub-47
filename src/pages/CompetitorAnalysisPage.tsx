@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import BusinessTypeSelector, { BusinessType } from '@/components/BusinessTypeSelector';
-import CuisineTypeSelector from '@/components/restaurant/CuisineTypeSelector';
+import { CuisineTypeSelector } from '@/components/restaurant/CuisineTypeSelector';
 import CompetitorAnalysis from '@/components/CompetitorAnalysis';
 import { useCuisineSelection } from '@/hooks/useCuisineSelection';
 
@@ -13,7 +13,7 @@ const CompetitorAnalysisPage = () => {
   const { selectedDistrict } = useDistrictSelection();
   const { apiKeys } = useApiKeys();
   const [businessType, setBusinessType] = useState<BusinessType>('restaurant');
-  const { selectedCuisine, setCuisineType } = useCuisineSelection();
+  const { selectedCuisine, handleCuisineChange } = useCuisineSelection();
   
   const showCuisineSelector = businessType === 'restaurant';
 
@@ -35,8 +35,8 @@ const CompetitorAnalysisPage = () => {
               </CardHeader>
               <CardContent>
                 <CuisineTypeSelector 
-                  selectedType={selectedCuisine} 
-                  onTypeChange={setCuisineType}
+                  selectedCuisine={selectedCuisine} 
+                  onCuisineChange={handleCuisineChange}
                 />
               </CardContent>
             </Card>
