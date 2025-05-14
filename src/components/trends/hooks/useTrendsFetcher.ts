@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { fetchGoogleTrendsData } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
-import { getSearchKeywords, getGrowingCategories } from '@/components/trends/TrendsUtils';
+import { getSearchKeywords, getGrowingCategories } from '@/components/trends/utils';
 import { TrendItem, Category } from '../types';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { apiLogger } from '@/services/logService';

@@ -1,14 +1,8 @@
 
-export interface TrendItem {
-  label: string;
-  value: number;
-}
+// Re-export the types from utils to maintain consistency
+import { TrendItem, Category } from './utils';
 
-export interface Category {
-  name: string;
-  growth: string;
-  color: string;
-}
+export { TrendItem, Category };
 
 export interface AIRecommendation {
   summary: string;
