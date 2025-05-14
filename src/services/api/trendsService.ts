@@ -48,8 +48,8 @@ export const fetchGoogleTrendsData = async (apiKey: string, keywords: string[], 
     // Add an empty trends array to match the expected structure
     return {
       ...errorResponse,
-      trends: [],
-      district: district
+      trends: [], // Include trends property in error response
+      district: district 
     };
   }
 };

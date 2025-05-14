@@ -1,79 +1,57 @@
 
 import { BusinessType } from '@/components/BusinessTypeSelector';
-import { Competitor } from '../CompetitorCard';
-import { fetchCombinedCompetitorData, analyzeCompetitorReviews } from '@/services/apiService';
-import { getDefaultCompetitors } from '../utils/defaultCompetitorsUtil';
+import { fetchCombinedCompetitorData } from '@/services/apiService';
+import { CompetitorStrength } from '@/services/api/openai';
+import { Competitor } from '../types';
+import defaultCompetitors from '../utils/defaultCompetitorsUtil';
+import { useApiKeys } from '@/hooks/useApiKeys';
 
-/**
- * Service for loading competitor data and performing AI analysis
- */
-export const loadCompetitorData = async (
-  businessType: BusinessType,
-  selectedDistrict: string,
-  apiKeys: any,
+export const getCompetitorsByDistrict = async (
+  district: string, 
+  businessType: BusinessType | string,
+  apiKeys: ReturnType<typeof useApiKeys>['apiKeys'],
   cuisineType?: string
 ): Promise<Competitor[]> => {
-  
-  // Normalizza il nome del distretto per gestire "North Miami" correttamente
-  const normalizedDistrict = selectedDistrict.toLowerCase().includes('north miami') ? 'North Miami' : selectedDistrict;
-  
-  console.log(`Loading competitor data for ${businessType} in ${normalizedDistrict} ${cuisineType ? `(${cuisineType})` : ''}`);
-  
+  console.log(`Fetching competitors for ${district}, business type: ${businessType}`);
+
   try {
-    // Use the combined data function with normalized district name
-    const combinedData = await fetchCombinedCompetitorData(
+    // First try to get real competitor data from the APIs
+    const data = await fetchCombinedCompetitorData(
       businessType, 
-      normalizedDistrict,
+      district, 
       apiKeys,
       cuisineType
     );
     
-    // Variable to hold the competitor data
-    let competitorData: Competitor[] = [];
+    // Check if we have valid data with businesses
+    const hasBusinesses = data && 'businesses' in data && Array.isArray(data.businesses);
     
-    if (combinedData && combinedData.length > 0) {
-      competitorData = combinedData;
-      console.log(`Using real competitor data from API: ${combinedData.length} items`);
-    } else {
-      // Use default data if API returns no results
-      competitorData = getDefaultCompetitors(businessType, normalizedDistrict, cuisineType);
-      console.log(`Using default competitor data for ${normalizedDistrict}`);
+    if (hasBusinesses && data.businesses.length > 0) {
+      console.log(`Returning ${data.businesses.length} real competitors for ${district}`);
+      
+      // Transform API response to match Competitor interface
+      return data.businesses.map((business: any) => ({
+        id: `${business.name.replace(/\s+/g, '-').toLowerCase()}-${Math.floor(Math.random() * 1000)}`,
+        name: business.name,
+        type: business.type || 'Business',
+        rating: business.rating || 0,
+        reviewCount: business.reviews || 0,
+        district: district,
+        priceLevel: business.priceLevel || '$$',
+        strengths: [],
+        sentiments: business.sentiments || { positive: 60, neutral: 30, negative: 10 },
+        reviewHighlight: business.reviewHighlight || null
+      }));
     }
     
-    // Get strengths analysis from OpenAI
-    console.log(`Analyzing competitor strengths with AI for ${normalizedDistrict}...`);
+    // If no real data, return default competitors
+    console.log(`No competitor data from API, using defaults for ${district}`);
+    return defaultCompetitors.getDefaultCompetitors(district, businessType as BusinessType);
     
-    const strengthsAnalysis = await analyzeCompetitorReviews(
-      apiKeys.openAI,
-      competitorData,
-      businessType,
-      normalizedDistrict,
-      cuisineType
-    );
-    
-    console.log("Strengths analysis completed:", strengthsAnalysis?.length || 0);
-    
-    // Merge strengths data with competitor data
-    const enhancedCompetitors = competitorData.map(competitor => {
-      const strengthsData = strengthsAnalysis.find(item => 
-        (item.name && competitor.name && 
-        (item.name.toLowerCase().includes(competitor.name.toLowerCase().split(' ')[0]) || 
-        competitor.name.toLowerCase().includes(item.name.toLowerCase().split(' ')[0])))
-      );
-      
-      return {
-        ...competitor,
-        strengths: strengthsData?.strengths || [],
-        district: normalizedDistrict // Aggiungiamo esplicitamente il distretto
-      };
-    });
-    
-    console.log(`Enhanced ${enhancedCompetitors.length} competitors with strengths data`);
-    return enhancedCompetitors;
   } catch (error) {
-    console.error(`Error fetching competitor data for ${normalizedDistrict}:`, error);
+    console.error('Error fetching competitors:', error);
     
-    // Use default data if there's an error
-    return getDefaultCompetitors(businessType, normalizedDistrict, cuisineType);
+    // Fallback to default data
+    return defaultCompetitors.getDefaultCompetitors(district, businessType as BusinessType);
   }
 };

@@ -6,7 +6,7 @@ import { ApiErrorResponse } from './openai/types';
 
 // Define response types
 export interface CompetitorDataResponse {
-  businesses?: any[];
+  businesses: any[];
   [key: string]: any;
 }
 
@@ -64,7 +64,10 @@ export const fetchCombinedCompetitorData = async (businessType: string, district
     console.log("Yelp data fetched:", yelpData?.businesses ? yelpData.businesses.length : 0);
     
     // If we have both sets of data, combine them based on similar names
-    if (placesData?.results && yelpData?.businesses) {
+    const hasPlacesData = placesData && 'results' in placesData && Array.isArray(placesData.results);
+    const hasYelpData = yelpData && 'businesses' in yelpData && Array.isArray(yelpData.businesses);
+    
+    if (hasPlacesData && hasYelpData) {
       const combinedResults = placesData.results.map((place: any) => {
         // Try to find matching business in Yelp data by name similarity
         const yelpMatch = yelpData.businesses.find((business: any) => 
@@ -138,11 +141,12 @@ export const fetchCombinedCompetitorData = async (businessType: string, district
     console.log(`Failed to get combined data for ${normalizedDistrict}, returning empty array`);
     return { businesses: [] };
   } catch (error) {
+    console.error('Error in fetchCombinedCompetitorData:', error);
     const errorResponse = handleApiError(error, 'Competitor Data') as ApiErrorResponse;
     // Add an empty businesses array to match the expected structure
     return {
       ...errorResponse,
-      businesses: []
+      businesses: [] // Make sure businesses property exists even in error case
     };
   }
 };

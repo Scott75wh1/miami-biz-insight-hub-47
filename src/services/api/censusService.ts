@@ -59,9 +59,6 @@ export const fetchDistrictCensusData = async (apiKey: string, district: string):
       median_age: 0,
       median_income: 0,
       households: 0,
-      error: errorResponse.error,
-      errorMessage: errorResponse.message,
-      // Include other required properties
       total_housing_units: 0,
       district: district,
       location_name: district,
@@ -72,7 +69,9 @@ export const fetchDistrictCensusData = async (apiKey: string, district: string):
       housing: {
         median_home_value: 0,
         median_rent: 0
-      }
+      },
+      // Add extra properties to handle error display without type errors
+      errorMessage: errorResponse.message
     };
   }
 };
