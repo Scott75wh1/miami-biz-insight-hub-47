@@ -22,11 +22,11 @@ export const BusinessMainContent: React.FC<BusinessMainContentProps> = ({
   analysisData
 }) => {
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Analisi Personalizzata</CardTitle>
-          <CardDescription>
+    <div className="space-y-4 sm:space-y-6">
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-lg sm:text-xl">Analisi Personalizzata</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Inserisci i dati della tua attività per ottenere un'analisi completa basata sui dati raccolti.
           </CardDescription>
         </CardHeader>

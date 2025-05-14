@@ -20,7 +20,7 @@ export const BusinessSidebar: React.FC<BusinessSidebarProps> = ({
   selectedDistrict
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <ApiStatusCard />
       <PreviousAnalysesCard previousAnalyses={previousAnalyses} />
       <MarketTrendsCard isAnalyzing={isAnalyzing} selectedDistrict={selectedDistrict} />

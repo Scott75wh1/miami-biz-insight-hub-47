@@ -14,19 +14,19 @@ export const MarketTrendsCard: React.FC<MarketTrendsCardProps> = ({
 }) => {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Tendenze di Mercato</CardTitle>
+      <CardHeader className="pb-2 sm:pb-4">
+        <CardTitle className="text-sm sm:text-base">Tendenze di Mercato</CardTitle>
       </CardHeader>
       <CardContent>
         {isAnalyzing ? (
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-2/3" />
+          <div className="space-y-1.5 sm:space-y-2">
+            <Skeleton className="h-3 sm:h-4 w-full" />
+            <Skeleton className="h-3 sm:h-4 w-3/4" />
+            <Skeleton className="h-3 sm:h-4 w-5/6" />
+            <Skeleton className="h-3 sm:h-4 w-2/3" />
           </div>
         ) : (
-          <div className="space-y-2 text-sm">
+          <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
             <p>• Crescita del settore ristorazione: <span className="text-green-600">+12%</span></p>
             <p>• Nuove aperture in {selectedDistrict}: <span>28</span></p>
             <p>• Chiusure nell'ultimo trimestre: <span className="text-red-600">14</span></p>

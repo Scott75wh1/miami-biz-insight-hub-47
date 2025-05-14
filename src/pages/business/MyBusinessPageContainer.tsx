@@ -5,6 +5,7 @@ import { useBusinessAnalysis } from '@/hooks/useBusinessAnalysis';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useDataCollection } from '@/hooks/useDataCollection';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { BusinessPageHeader } from './BusinessPageHeader';
 import { BusinessMainContent } from './BusinessMainContent';
 import { BusinessSidebar } from './BusinessSidebar';
@@ -14,6 +15,7 @@ const MyBusinessPageContainer: React.FC = () => {
   const { selectedDistrict } = useDistrictSelection();
   const { dataState, refreshData } = useDataCollection();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Aggiungiamo uno state per forzare il re-render quando cambia il distretto
   const [districtUpdateTime, setDistrictUpdateTime] = useState<number>(Date.now());
@@ -58,7 +60,7 @@ const MyBusinessPageContainer: React.FC = () => {
 
   return (
     <Layout>
-      <div className="container py-6">
+      <div className="container py-4 sm:py-6 px-3 sm:px-6">
         <BusinessPageHeader 
           selectedDistrict={selectedDistrict}
           analysisComplete={analysisComplete}
@@ -67,7 +69,15 @@ const MyBusinessPageContainer: React.FC = () => {
           handleExportData={handleExportData}
         />
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
+          {isMobile && (
+            <BusinessSidebar 
+              previousAnalyses={previousAnalyses}
+              isAnalyzing={isAnalyzing}
+              selectedDistrict={selectedDistrict}
+            />
+          )}
+          
           <div className="lg:col-span-2">
             <BusinessMainContent 
               selectedDistrict={selectedDistrict}
@@ -79,11 +89,13 @@ const MyBusinessPageContainer: React.FC = () => {
             />
           </div>
           
-          <BusinessSidebar 
-            previousAnalyses={previousAnalyses}
-            isAnalyzing={isAnalyzing}
-            selectedDistrict={selectedDistrict}
-          />
+          {!isMobile && (
+            <BusinessSidebar 
+              previousAnalyses={previousAnalyses}
+              isAnalyzing={isAnalyzing}
+              selectedDistrict={selectedDistrict}
+            />
+          )}
         </div>
       </div>
     </Layout>
