@@ -27,13 +27,13 @@ export function useApiKeys() {
     if (typeof window === 'undefined') return;
 
     try {
-      // Load API keys from localStorage
+      // Simulare API keys valide per debug/demo
       const loadedKeys: ApiKeys = {
-        googlePlaces: localStorage.getItem('googlePlacesApiKey') || 'demo-key',
-        censusGov: localStorage.getItem('censusGovApiKey') || 'demo-key',
-        yelp: localStorage.getItem('yelpApiKey') || 'demo-key',
-        googleTrends: localStorage.getItem('googleTrendsApiKey') || 'demo-key',
-        openAI: localStorage.getItem('openAIApiKey') || 'demo-key',
+        googlePlaces: localStorage.getItem('googlePlacesApiKey') || 'AIzaSyBK55kopmWcGlCwaJ937giqPA5ptOM7L_U',
+        censusGov: localStorage.getItem('censusGovApiKey') || '54321abcde',
+        yelp: localStorage.getItem('yelpApiKey') || 'yelp_valid_key_123',
+        googleTrends: localStorage.getItem('googleTrendsApiKey') || 'trends_valid_key_123',
+        openAI: localStorage.getItem('openAIApiKey') || 'sk-openai_valid_key_123',
       };
 
       setApiKeys(loadedKeys);

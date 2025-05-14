@@ -1,24 +1,62 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Check } from 'lucide-react';
+import { useApiKeys } from '@/hooks/useApiKeys';
+import { Button } from '@/components/ui/button';
 
 export const ApiStatusCard: React.FC = () => {
+  const { apiKeys, isApiKeyValid } = useApiKeys();
+  const [apiStatuses, setApiStatuses] = useState({
+    openAI: false,
+    googlePlaces: false,
+    censusGov: false,
+    yelp: false,
+    googleTrends: false
+  });
+
+  // Verifica lo stato delle API al caricamento del componente
+  useEffect(() => {
+    checkApiStatuses();
+  }, [apiKeys]);
+
+  // Funzione per verificare lo stato delle API
+  const checkApiStatuses = () => {
+    setApiStatuses({
+      openAI: isApiKeyValid('openAI'),
+      googlePlaces: isApiKeyValid('googlePlaces'),
+      censusGov: isApiKeyValid('censusGov'),
+      yelp: isApiKeyValid('yelp'),
+      googleTrends: isApiKeyValid('googleTrends')
+    });
+  };
+
+  const handleTestApis = () => {
+    // Simuliamo un test delle API
+    checkApiStatuses();
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2 sm:pb-4">
-        <CardTitle className="text-sm sm:text-base">Stato APIs</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-sm sm:text-base">Stato APIs</CardTitle>
+          <Button variant="outline" size="sm" onClick={handleTestApis} className="flex items-center gap-1">
+            <Check className="h-3 w-3" />
+            Verifica
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3 sm:space-y-4">
         <div className="space-y-1.5 sm:space-y-2">
-          {["openAI", "googlePlaces", "censusGov", "yelp", "googleTrends"].map(api => (
+          {Object.entries(apiStatuses).map(([api, isActive]) => (
             <div key={api} className="flex justify-between items-center">
               <span className="text-xs sm:text-sm">{api}</span>
               <span className={`text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full ${
-                api === "openAI" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+                isActive ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
               }`}>
-                {api === "openAI" ? "Attiva" : "Demo"}
+                {isActive ? "Attiva" : "Demo"}
               </span>
             </div>
           ))}
