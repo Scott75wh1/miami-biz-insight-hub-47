@@ -33,13 +33,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const toast = React.useCallback(
     ({ title, description, variant, action, ...props }: ToastOptions) => {
-      const id = sonnerToast(title, {
+      const id = sonnerToast(title as string, {
         description,
         action,
         ...props,
-        onDismiss: (toast: ToastT) => {
-          // Extract the ID from the toast object
-          const toastId = typeof toast === 'object' && toast ? toast.id : toast;
+        onDismiss: (toastInfo: any) => {
+          // Safely extract ID regardless of type
+          const toastId = typeof toastInfo === 'object' && toastInfo && 'id' in toastInfo 
+            ? toastInfo.id 
+            : toastInfo;
+          
+          // Remove from local state
           setToasts((prev) => prev.filter((t) => t.id !== toastId));
         },
       });
@@ -80,7 +84,7 @@ export function useToast() {
     return {
       toast: (opts: ToastOptions) => {
         console.warn("Toast attempted outside provider:", opts);
-        return sonnerToast(opts.title, {
+        return sonnerToast(opts.title as string, {
           description: opts.description,
           action: opts.action,
         });
@@ -96,7 +100,7 @@ export function useToast() {
 // Export the toast function directly for use in non-component code
 export const toast = (opts: ToastOptions) => {
   console.log("Direct toast called:", opts);
-  return sonnerToast(opts.title, {
+  return sonnerToast(opts.title as string, {
     description: opts.description,
     action: opts.action,
   });
