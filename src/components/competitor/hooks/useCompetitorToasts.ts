@@ -1,5 +1,5 @@
 
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 
 /**
@@ -17,22 +17,20 @@ export const useCompetitorToasts = () => {
 
   const showDefaultDataToast = () => {
     toast({
-      title: "Utilizzando dati predefiniti",
-      description: "Nessun dato disponibile dalle API, utilizzando dati di esempio.",
+      title: "Dati predefiniti",
+      description: "Utilizzando dati di esempio.",
     });
   };
 
   const showAIAnalysisToast = () => {
-    toast({
-      title: "Analisi AI completata",
-      description: "I punti di forza dei competitor sono stati analizzati con successo.",
-    });
+    // Non mostriamo questo toast per ridurre il numero di notifiche
+    // Evita possibili problemi di performance
   };
 
   const showErrorToast = () => {
     toast({
-      title: "Errore nel caricamento competitor",
-      description: "Impossibile recuperare dati. Controlla le tue API key.",
+      title: "Errore nel caricamento",
+      description: "Impossibile recuperare dati. Utilizzando dati di esempio.",
       variant: "destructive",
     });
   };
