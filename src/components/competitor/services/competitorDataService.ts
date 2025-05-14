@@ -3,7 +3,6 @@ import { BusinessType } from '@/components/BusinessTypeSelector';
 import { Competitor } from '../CompetitorCard';
 import { fetchCombinedCompetitorData, analyzeCompetitorReviews } from '@/services/apiService';
 import { getDefaultCompetitors } from '../utils/defaultCompetitorsUtil';
-import { useToast } from '@/hooks/use-toast';
 
 /**
  * Service for loading competitor data and performing AI analysis
@@ -64,7 +63,8 @@ export const loadCompetitorData = async (
       
       return {
         ...competitor,
-        strengths: strengthsData?.strengths || []
+        strengths: strengthsData?.strengths || [],
+        district: normalizedDistrict // Aggiungiamo esplicitamente il distretto
       };
     });
     

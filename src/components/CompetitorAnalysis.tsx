@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { BusinessType } from '@/components/BusinessTypeSelector';
@@ -6,6 +7,8 @@ import { CompetitorList } from './competitor/CompetitorList';
 import { CompetitorHeader } from './competitor/CompetitorHeader';
 import { useCompetitorData } from './competitor/useCompetitorData';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 interface CompetitorAnalysisProps {
   businessType: BusinessType;
@@ -16,7 +19,7 @@ const CompetitorAnalysis = ({ businessType, cuisineType }: CompetitorAnalysisPro
   const { selectedDistrict } = useDistrictSelection();
   const { apiKeys, isLoaded } = useApiKeys();
   
-  const { competitors, isLoading } = useCompetitorData(
+  const { competitors, isLoading, refreshCompetitors } = useCompetitorData(
     businessType,
     selectedDistrict,
     apiKeys, 
@@ -24,10 +27,28 @@ const CompetitorAnalysis = ({ businessType, cuisineType }: CompetitorAnalysisPro
     cuisineType
   );
   
+  // Log per debug
+  useEffect(() => {
+    console.log(`CompetitorAnalysis rendered for ${businessType} in ${selectedDistrict}`);
+    console.log(`Competitor count: ${competitors.length}`);
+  }, [selectedDistrict, businessType, competitors.length]);
+  
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
-        <CardTitle>Competitor Analysis</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>Competitor Analysis</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshCompetitors}
+            disabled={isLoading}
+            className="flex items-center"
+          >
+            <RefreshCw className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+            Aggiorna
+          </Button>
+        </div>
         <CompetitorHeader 
           businessType={businessType} 
           district={selectedDistrict} 

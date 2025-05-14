@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Building, Award, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface CompetitionTabProps {
@@ -13,11 +13,19 @@ export const CompetitionTab: React.FC<CompetitionTabProps> = ({
   district,
   yelpBusinesses
 }) => {
+  // Stato locale per tracciare l'ultimo distretto
+  const [lastDistrict, setLastDistrict] = useState<string>(district);
+  
   // Log per debug quando il componente viene aggiornato
   useEffect(() => {
     console.log(`CompetitionTab rendered for district: ${district}`);
     console.log(`Competition businesses data:`, yelpBusinesses?.length || 0);
-  }, [district, yelpBusinesses]);
+    
+    // Aggiorniamo lo stato locale quando cambia il distretto
+    if (district !== lastDistrict) {
+      setLastDistrict(district);
+    }
+  }, [district, yelpBusinesses, lastDistrict]);
   
   // Normalizza il nome del distretto per gestire "North Miami" correttamente
   const normalizedDistrict = district.toLowerCase().includes('north miami') ? 'North Miami' : district;
@@ -37,7 +45,7 @@ export const CompetitionTab: React.FC<CompetitionTabProps> = ({
           <h4 className="text-md font-medium mb-3">Principali concorrenti nella zona di {normalizedDistrict}</h4>
           <div className="space-y-4">
             {yelpBusinesses.slice(0, 5).map((business: any, index: number) => (
-              <div key={index} className="border rounded-md p-4 bg-white shadow-sm">
+              <div key={`${district}-${business.name}-${index}`} className="border rounded-md p-4 bg-white shadow-sm">
                 <div className="font-medium flex justify-between items-center mb-2">
                   <span className="text-primary">{business.name}</span>
                   <span className="text-amber-500 flex items-center">

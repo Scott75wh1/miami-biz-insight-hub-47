@@ -5,6 +5,7 @@ import { Competitor } from './CompetitorCard';
 import { loadCompetitorData } from './services/competitorDataService';
 import { getDefaultCompetitors } from './utils/defaultCompetitorsUtil';
 import { useCompetitorToasts } from './hooks/useCompetitorToasts';
+import { useToast } from '@/hooks/use-toast';
 
 export const useCompetitorData = (
   businessType: BusinessType, 
@@ -15,6 +16,10 @@ export const useCompetitorData = (
 ) => {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastLoadedDistrict, setLastLoadedDistrict] = useState<string>("");
+  const [lastLoadedType, setLastLoadedType] = useState<string>("");
+  const { toast } = useToast();
+  
   const {
     showSuccessToast,
     showDefaultDataToast,
@@ -29,6 +34,12 @@ export const useCompetitorData = (
     setIsLoading(true);
     
     try {
+      console.log(`Fetching competitor data for ${businessType} in ${selectedDistrict}`);
+      toast({
+        title: "Aggiornamento dati",
+        description: `Caricamento dati concorrenti per ${selectedDistrict}...`,
+      });
+      
       // Use the service to load and enhance competitor data
       const competitorData = await loadCompetitorData(
         businessType, 
@@ -39,6 +50,10 @@ export const useCompetitorData = (
       
       if (competitorData) {
         setCompetitors(competitorData);
+        
+        // Aggiorniamo l'ultimo distretto e tipo caricati
+        setLastLoadedDistrict(selectedDistrict);
+        setLastLoadedType(`${businessType}${cuisineType || ""}`);
         
         if (competitorData === getDefaultCompetitors(businessType, selectedDistrict, cuisineType)) {
           showDefaultDataToast();
@@ -67,26 +82,40 @@ export const useCompetitorData = (
 
   // Load data when business type, district, or cuisine type changes
   useEffect(() => {
-    console.log(`Business type changed to: ${businessType}, Cuisine: ${cuisineType}`);
-    if (isLoaded) {
+    const currentTypeKey = `${businessType}${cuisineType || ""}`;
+    
+    // Verifichiamo se è cambiato il tipo di business o il distretto
+    if (isLoaded && (selectedDistrict !== lastLoadedDistrict || currentTypeKey !== lastLoadedType)) {
+      console.log(`District (${selectedDistrict}) or business type (${businessType}) changed, reloading data...`);
       // Clear previous data
       setCompetitors([]);
       fetchCompetitorData();
     }
-  }, [businessType, cuisineType, isLoaded]);
-  
-  // Load data when district changes
+  }, [businessType, cuisineType, selectedDistrict, isLoaded, lastLoadedDistrict, lastLoadedType]);
+
+  // Listener per l'evento di cambio distretto
   useEffect(() => {
-    console.log(`District changed to: ${selectedDistrict}`);
-    if (isLoaded) {
-      // Clear previous data
-      setCompetitors([]);
-      fetchCompetitorData();
-    }
-  }, [selectedDistrict, isLoaded]);
+    const handleDistrictChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      console.log(`District change event detected: ${customEvent.detail.district}`);
+      
+      // Force reload when district changes via event
+      if (isLoaded && customEvent.detail.district !== lastLoadedDistrict) {
+        setCompetitors([]);
+        fetchCompetitorData();
+      }
+    };
+    
+    window.addEventListener('districtChanged', handleDistrictChange);
+    
+    return () => {
+      window.removeEventListener('districtChanged', handleDistrictChange);
+    };
+  }, [isLoaded, fetchCompetitorData, lastLoadedDistrict]);
 
   return {
     competitors,
-    isLoading
+    isLoading,
+    refreshCompetitors: fetchCompetitorData
   };
 };
