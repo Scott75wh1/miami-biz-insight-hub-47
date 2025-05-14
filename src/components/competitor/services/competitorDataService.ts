@@ -40,7 +40,8 @@ export const getCompetitorsByDistrict = async (
         priceLevel: business.priceLevel || '$$',
         strengths: [],
         sentiments: business.sentiments || { positive: 60, neutral: 30, negative: 10 },
-        reviewHighlight: business.reviewHighlight || null
+        reviewHighlight: business.reviewHighlight || null,
+        yelpMatch: business.yelpMatch || false
       }));
     }
     
@@ -63,5 +64,5 @@ export const loadCompetitorData = async (
   apiKeys: ReturnType<typeof useApiKeys>['apiKeys'],
   cuisineType?: string
 ): Promise<Competitor[]> => {
-  return getCompetitorsByDistrict(district, businessType as BusinessType, apiKeys, cuisineType);
+  return getCompetitorsByDistrict(district, businessType, apiKeys, cuisineType);
 };

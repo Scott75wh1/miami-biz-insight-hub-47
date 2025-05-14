@@ -8,6 +8,17 @@ export const DISTRICT_CENSUS_DATA: Record<string, CensusDataResponse> = {
     median_age: 36.2,
     median_income: 58943,
     households: 40128,
+    total_housing_units: 47500,
+    district: "Downtown",
+    location_name: "Downtown Miami",
+    education: {
+      high_school_or_higher_percent: 88,
+      bachelors_or_higher_percent: 46
+    },
+    housing: {
+      median_home_value: 450000,
+      median_rent: 1780
+    },
     demographics: {
       age_distribution: {
         under_18: 14,
@@ -62,6 +73,17 @@ export const DISTRICT_CENSUS_DATA: Record<string, CensusDataResponse> = {
     median_age: 34.1,
     median_income: 98752,
     households: 17456,
+    total_housing_units: 20100,
+    district: "Brickell",
+    location_name: "Brickell, Miami",
+    education: {
+      high_school_or_higher_percent: 95,
+      bachelors_or_higher_percent: 67
+    },
+    housing: {
+      median_home_value: 680000,
+      median_rent: 2450
+    },
     demographics: {
       age_distribution: {
         under_18: 9,
@@ -116,6 +138,17 @@ export const DISTRICT_CENSUS_DATA: Record<string, CensusDataResponse> = {
     median_age: 31.8,
     median_income: 64318,
     households: 5123,
+    total_housing_units: 5800,
+    district: "Wynwood",
+    location_name: "Wynwood, Miami",
+    education: {
+      high_school_or_higher_percent: 86,
+      bachelors_or_higher_percent: 38
+    },
+    housing: {
+      median_home_value: 410000,
+      median_rent: 1950
+    },
     demographics: {
       age_distribution: {
         under_18: 12,
@@ -170,6 +203,17 @@ export const DISTRICT_CENSUS_DATA: Record<string, CensusDataResponse> = {
     median_age: 42.3,
     median_income: 38654,
     households: 31258,
+    total_housing_units: 34500,
+    district: "Little Havana",
+    location_name: "Little Havana, Miami",
+    education: {
+      high_school_or_higher_percent: 72,
+      bachelors_or_higher_percent: 16
+    },
+    housing: {
+      median_home_value: 280000,
+      median_rent: 1260
+    },
     demographics: {
       age_distribution: {
         under_18: 18,
@@ -224,6 +268,17 @@ export const DISTRICT_CENSUS_DATA: Record<string, CensusDataResponse> = {
     median_age: 40.1,
     median_income: 53482,
     households: 44834,
+    total_housing_units: 52000,
+    district: "Miami Beach",
+    location_name: "Miami Beach",
+    education: {
+      high_school_or_higher_percent: 90,
+      bachelors_or_higher_percent: 48
+    },
+    housing: {
+      median_home_value: 520000,
+      median_rent: 1840
+    },
     demographics: {
       age_distribution: {
         under_18: 11,
@@ -280,5 +335,16 @@ export const GENERIC_MIAMI_DATA: CensusDataResponse = {
   population: 442241,
   median_age: 40.1,
   median_income: 44268,
-  households: 186860
+  households: 186860,
+  total_housing_units: 205000,
+  district: "Miami",
+  location_name: "Miami, FL",
+  education: {
+    high_school_or_higher_percent: 84,
+    bachelors_or_higher_percent: 35
+  },
+  housing: {
+    median_home_value: 380000,
+    median_rent: 1550
+  }
 };

@@ -17,6 +17,7 @@ export interface Competitor {
   };
   reviewHighlight?: string | null;
   district?: string;
+  yelpMatch?: boolean;
 }
 
 export interface CompetitorResponse {
