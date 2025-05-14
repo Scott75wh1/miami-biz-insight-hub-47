@@ -1,17 +1,13 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Loader2, Send, Lightbulb } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { fetchOpenAIAnalysis } from '@/services/apiService';
 import { useApiKeys } from '@/hooks/useApiKeys';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useUserType } from '@/hooks/useUserType';
 import { UserType } from '@/components/UserTypeSelector';
 import { BusinessType } from '@/components/BusinessTypeSelector';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import ChatInterface from './ChatInterface';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -29,7 +25,7 @@ interface EnhancedAIAssistantProps {
   businessName?: string;
 }
 
-const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ businessType, businessName }) => {
+const EnhancedAIAssistantRefactored: React.FC<EnhancedAIAssistantProps> = ({ businessType, businessName }) => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -37,7 +33,6 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ businessType,
   const { apiKeys, isLoaded } = useApiKeys();
   const { selectedDistrict } = useDistrictSelection();
   const { userType } = useUserType();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get relevant suggestions based on user type
   const getSuggestions = (): Suggestion[] => {
@@ -57,13 +52,6 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ businessType,
       ];
     }
   };
-
-  // Auto scroll to bottom of messages
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
 
   // Set welcome message based on user type
   useEffect(() => {
@@ -132,8 +120,8 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ businessType,
     return systemPrompt;
   };
 
-  const handleSendMessage = async (message: string = input) => {
-    if (!message.trim() || isProcessing) return;
+  const handleSendMessage = async () => {
+    if (!input.trim() || isProcessing) return;
     
     // Generate unique request ID
     const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
@@ -142,7 +130,7 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ businessType,
     // Add user message to chat
     const userMessage: Message = {
       role: 'user',
-      content: message,
+      content: input,
       timestamp: new Date()
     };
     
@@ -185,7 +173,7 @@ La densità competitiva è di 3.7 attività simili per km², con un rating medio
 - Conversion Rate: obiettivo 4.2%`;
         
         setMessages(prev => [...prev, {
-          role: 'assistant' as const,
+          role: 'assistant',
           content: demoResponse,
           timestamp: new Date()
         }]);
@@ -198,7 +186,7 @@ La densità competitiva è di 3.7 attività simili per km², con un rating medio
     
     try {
       // Create the enhanced prompt based on user type
-      const enhancedPrompt = buildPrompt(message);
+      const enhancedPrompt = buildPrompt(input);
       
       // Send to OpenAI
       const response = await fetchOpenAIAnalysis(apiKeys.openAI, enhancedPrompt);
@@ -225,7 +213,7 @@ La densità competitiva è di 3.7 attività simili per km², con un rating medio
       
       // Add error message
       setMessages(prev => [...prev, {
-        role: 'assistant' as const,
+        role: 'assistant',
         content: 'Mi dispiace, si è verificato un errore durante l\'elaborazione della tua richiesta. Verifica la tua API key di OpenAI o riprova più tardi.',
         timestamp: new Date()
       }]);
@@ -248,120 +236,22 @@ La densità competitiva è di 3.7 attività simili per km², con un rating medio
     setInput(suggestion);
   };
 
+  const handleInputChange = (value: string) => {
+    setInput(value);
+  };
+
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3 border-b">
-        <CardTitle className="flex items-center text-lg">
-          <MessageSquare className="mr-2 h-5 w-5" />
-          {userType === 'end_user' ? 'Assistente Personale' : 'Consulente Strategico'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: '500px' }}>
-          {messages.map((message, index) => (
-            <div 
-              key={index} 
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`flex items-start max-w-[85%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                {message.role === 'assistant' && (
-                  <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src="/placeholder.svg" alt="AI" />
-                    <AvatarFallback>AI</AvatarFallback>
-                  </Avatar>
-                )}
-                
-                <div 
-                  className={`rounded-lg p-3 ${
-                    message.role === 'user' 
-                      ? 'bg-primary text-primary-foreground ml-2' 
-                      : 'bg-muted'
-                  }`}
-                >
-                  <div className="text-sm whitespace-pre-wrap">
-                    {message.content}
-                  </div>
-                  <p className="text-xs opacity-70 mt-1">
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-          
-          {isProcessing && (
-            <div className="flex justify-start">
-              <div className="flex items-start max-w-[85%]">
-                <Avatar className="h-8 w-8 mr-2">
-                  <AvatarImage src="/placeholder.svg" alt="AI" />
-                  <AvatarFallback>AI</AvatarFallback>
-                </Avatar>
-                <div className="bg-muted rounded-lg p-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-2 w-2 bg-primary/60 rounded-full animate-pulse"></div>
-                    <div className="h-2 w-2 bg-primary/60 rounded-full animate-pulse delay-150"></div>
-                    <div className="h-2 w-2 bg-primary/60 rounded-full animate-pulse delay-300"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-        
-        {/* Suggested questions */}
-        <div className="px-4 py-2 border-t">
-          <p className="text-xs text-muted-foreground mb-2">Domande suggerite:</p>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {getSuggestions().filter(s => s.forType === userType).map((suggestion, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                size="sm"
-                className="text-xs py-1 h-auto"
-                onClick={() => handleSuggestionClick(suggestion.text)}
-                disabled={isProcessing}
-              >
-                <Lightbulb className="h-3 w-3 mr-1" />
-                {suggestion.text.length > 30 ? suggestion.text.substring(0, 30) + '...' : suggestion.text}
-              </Button>
-            ))}
-          </div>
-        </div>
-        
-        {/* Input area */}
-        <div className="p-4 border-t">
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
-            className="flex items-end gap-2"
-          >
-            <div className="flex-1">
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={userType === 'end_user' 
-                  ? "Fai una domanda sulla tua attività..." 
-                  : "Richiedi un'analisi dettagliata..."}
-                rows={3}
-                className="resize-none"
-                disabled={isProcessing}
-              />
-            </div>
-            <Button 
-              type="submit"
-              disabled={isProcessing || !input.trim()}
-              className="h-10"
-            >
-              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
-          </form>
-        </div>
-      </CardContent>
-    </Card>
+    <ChatInterface
+      messages={messages}
+      input={input}
+      isProcessing={isProcessing}
+      userType={userType}
+      suggestions={getSuggestions()}
+      onInputChange={handleInputChange}
+      onSendMessage={handleSendMessage}
+      onSuggestionClick={handleSuggestionClick}
+    />
   );
 };
 
-export default EnhancedAIAssistant;
+export default EnhancedAIAssistantRefactored;
