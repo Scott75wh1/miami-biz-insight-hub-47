@@ -1,6 +1,6 @@
 
 // Re-export from the new files
 import { TrendsProvider } from './TrendsProvider';
-import { useTrendsData } from './trendsHooks';
+import { useTrendsData, useTrendsFetcher, useAiRecommendations } from './trendsHooks';
 
-export { TrendsProvider, useTrendsData };
+export { TrendsProvider, useTrendsData, useTrendsFetcher, useAiRecommendations };
