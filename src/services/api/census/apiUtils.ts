@@ -1,3 +1,4 @@
+
 import { apiLogger } from '../../logService';
 import { handleApiError } from '../handleError';
 import { fetchWithProxy } from '../proxyService';
@@ -40,7 +41,34 @@ export const fetchRealCensusData = async (
       population: parseInt(values[0]) || 442241,
       median_age: parseFloat(values[1]) || 40.1,
       median_income: parseInt(values[2]) || 44268,
-      households: parseInt(values[3]) || 186860
+      households: parseInt(values[3]) || 186860,
+      total_housing_units: 0,
+      district: location,
+      location_name: location,
+      education: {
+        high_school_or_higher_percent: 0,
+        bachelors_or_higher_percent: 0
+      },
+      housing: {
+        median_home_value: 0,
+        median_rent: 0
+      },
+      demographics: {
+        // Add placeholder demographic data
+        age_distribution: {
+          under_18: 0,
+          age_18_to_34: 0,
+          age_35_to_64: 0,
+          age_65_plus: 0
+        },
+        education: {
+          less_than_high_school: 0,
+          high_school: 0,
+          some_college: 0,
+          bachelors: 0,
+          graduate: 0
+        }
+      }
     };
   } else {
     const error = new Error('Invalid response format from Census API');

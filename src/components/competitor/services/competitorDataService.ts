@@ -1,9 +1,8 @@
 
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { fetchCombinedCompetitorData } from '@/services/apiService';
-import { CompetitorStrength } from '@/services/api/openai';
 import { Competitor } from '../types';
-import * as defaultCompetitors from '../utils/defaultCompetitorsUtil';
+import { getDefaultCompetitors } from '../utils/defaultCompetitorsUtil';
 import { useApiKeys } from '@/hooks/useApiKeys';
 
 export const getCompetitorsByDistrict = async (
@@ -17,7 +16,7 @@ export const getCompetitorsByDistrict = async (
   try {
     // First try to get real competitor data from the APIs
     const data = await fetchCombinedCompetitorData(
-      businessType, 
+      businessType as string, 
       district, 
       apiKeys,
       cuisineType
@@ -34,6 +33,7 @@ export const getCompetitorsByDistrict = async (
         id: `${business.name.replace(/\s+/g, '-').toLowerCase()}-${Math.floor(Math.random() * 1000)}`,
         name: business.name,
         type: business.type || 'Business',
+        location: business.location || district,
         rating: business.rating || 0,
         reviewCount: business.reviews || 0,
         district: district,
@@ -46,13 +46,13 @@ export const getCompetitorsByDistrict = async (
     
     // If no real data, return default competitors
     console.log(`No competitor data from API, using defaults for ${district}`);
-    return defaultCompetitors.getDefaultCompetitors(district, businessType as BusinessType);
+    return getDefaultCompetitors(district, businessType as BusinessType);
     
   } catch (error) {
     console.error('Error fetching competitors:', error);
     
     // Fallback to default data
-    return defaultCompetitors.getDefaultCompetitors(district, businessType as BusinessType);
+    return getDefaultCompetitors(district, businessType as BusinessType);
   }
 };
 
@@ -63,5 +63,5 @@ export const loadCompetitorData = async (
   apiKeys: ReturnType<typeof useApiKeys>['apiKeys'],
   cuisineType?: string
 ): Promise<Competitor[]> => {
-  return getCompetitorsByDistrict(district, businessType, apiKeys, cuisineType);
+  return getCompetitorsByDistrict(district, businessType as BusinessType, apiKeys, cuisineType);
 };

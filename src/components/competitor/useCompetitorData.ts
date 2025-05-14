@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { BusinessType } from '@/components/BusinessTypeSelector';
-import { Competitor } from './CompetitorCard';
+import { Competitor } from './types';
 import { loadCompetitorData } from './services/competitorDataService';
 import { getDefaultCompetitors } from './utils/defaultCompetitorsUtil';
 import { useCompetitorToasts } from './hooks/useCompetitorToasts';
@@ -51,7 +50,8 @@ export const useCompetitorData = (
       );
       
       if (competitorData && competitorData.length) {
-        setCompetitors(competitorData);
+        // Using direct type assertion to satisfy TypeScript
+        setCompetitors(competitorData as Competitor[]);
         
         // Aggiorniamo l'ultimo distretto e tipo caricati
         setLastLoadedDistrict(selectedDistrict);
@@ -66,12 +66,12 @@ export const useCompetitorData = (
       } else {
         // Fallback to default data
         const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
-        setCompetitors(defaultData);
+        setCompetitors(defaultData as Competitor[]);
       }
     } catch (error) {
       // Use default data if there's an error
       const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
-      setCompetitors(defaultData);
+      setCompetitors(defaultData as Competitor[]);
       showErrorToast();
     } finally {
       setIsLoading(false);

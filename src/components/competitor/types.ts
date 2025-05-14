@@ -4,7 +4,7 @@ export interface Competitor {
   id?: string;
   name: string;
   type: string;
-  location?: string;
+  location: string;
   rating: number;
   reviewCount?: number;
   reviews?: number;

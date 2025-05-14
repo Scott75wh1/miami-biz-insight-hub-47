@@ -26,7 +26,7 @@ function getSentimentFromRating(rating: number) {
 }
 
 // Combined data from Google Places and Yelp
-export const fetchCombinedCompetitorData = async (businessType: string, district: string, apiKeys: any, cuisineType?: string): Promise<CompetitorDataResponse | ApiErrorResponse> => {
+export const fetchCombinedCompetitorData = async (businessType: string, district: string, apiKeys: any, cuisineType?: string): Promise<CompetitorDataResponse> => {
   try {
     // Normalizza il nome del distretto per gestire "North Miami" correttamente
     const normalizedDistrict = district.toLowerCase().includes('north miami') ? 'North Miami' : district;
@@ -145,8 +145,13 @@ export const fetchCombinedCompetitorData = async (businessType: string, district
     const errorResponse = handleApiError(error, 'Competitor Data') as ApiErrorResponse;
     // Add an empty businesses array to match the expected structure
     return {
-      ...errorResponse,
-      businesses: [] // Make sure businesses property exists even in error case
+      businesses: [],
+      error: errorResponse.error,
+      errorType: errorResponse.errorType,
+      service: errorResponse.service,
+      message: errorResponse.message,
+      timestamp: errorResponse.timestamp,
+      usingMockData: errorResponse.usingMockData 
     };
   }
 };

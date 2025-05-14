@@ -1,22 +1,10 @@
-
 import React from 'react';
 import { Star, MapPin, MessageSquare, Award } from 'lucide-react';
+import { Competitor as CompetitorType } from './types';
 
-export interface Competitor {
-  name: string;
-  type: string;
+// Local interface extending the imported type to ensure location is required
+export interface Competitor extends CompetitorType {
   location: string;
-  rating: number;
-  reviews: number;
-  priceLevel: string;
-  sentiments?: {
-    positive: number;
-    neutral: number;
-    negative: number;
-  };
-  yelpMatch?: boolean;
-  reviewHighlight?: string | null;
-  strengths?: string[];
 }
 
 interface CompetitorCardProps {
