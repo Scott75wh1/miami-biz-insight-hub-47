@@ -1,25 +1,17 @@
-
-// Define types for competitor data
 export interface Competitor {
-  id?: string;
+  id: string;
   name: string;
   type: string;
   location: string;
-  rating: number;
-  reviewCount?: number;
-  reviews?: number;
   priceLevel: string;
-  strengths?: string[];
+  rating: number;
+  reviews: number;
   sentiments: {
     positive: number;
     neutral: number;
     negative: number;
   };
-  reviewHighlight?: string | null;
-  district?: string;
   yelpMatch?: boolean;
-}
-
-export interface CompetitorResponse {
-  businesses: Competitor[];
+  strengths?: string[];
+  reviewHighlight?: string;
 }
