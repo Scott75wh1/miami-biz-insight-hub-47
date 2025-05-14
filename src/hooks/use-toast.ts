@@ -1,13 +1,13 @@
 import * as React from "react"
-import type {
-  ToastActionElement,
-  ToastProps,
+import {
+  type ToastActionElement,
+  type ToastProps,
 } from "@/components/ui/toast"
 
-console.log("Loading src/hooks/use-toast.ts");
+console.log("Loading src/hooks/use-toast.ts - PRIMARY SOURCE");
 
 const TOAST_LIMIT = 100
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 10000
 
 type ToasterToast = ToastProps & {
   id: string

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { Competitor } from './CompetitorCard';
 import { loadCompetitorData } from './services/competitorDataService';
@@ -18,7 +18,11 @@ export const useCompetitorData = (
   const [isLoading, setIsLoading] = useState(false);
   const [lastLoadedDistrict, setLastLoadedDistrict] = useState<string>("");
   const [lastLoadedType, setLastLoadedType] = useState<string>("");
+  const [lastUpdateTimestamp, setLastUpdateTimestamp] = useState<number>(0);
   const { toast } = useToast();
+  
+  // Reference to track if the component is mounted
+  const isMounted = useRef(true);
   
   const {
     showSuccessToast,
@@ -27,17 +31,42 @@ export const useCompetitorData = (
     showErrorToast
   } = useCompetitorToasts();
   
+  // Cleanup function for unmounting
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
+  // Add debug logging
+  useEffect(() => {
+    console.log(`[useCompetitorData] Hook initialized/updated`);
+    console.log(`[useCompetitorData] Business type: ${businessType}, District: ${selectedDistrict}`);
+    console.log(`[useCompetitorData] Last loaded - District: ${lastLoadedDistrict}, Type: ${lastLoadedType}`);
+    console.log(`[useCompetitorData] Is API loaded: ${isLoaded}`);
+  }, [businessType, selectedDistrict, lastLoadedDistrict, lastLoadedType, isLoaded]);
+  
   // Load competitor data function with AI analysis
-  const fetchCompetitorData = useCallback(async () => {
+  const fetchCompetitorData = useCallback(async (force: boolean = false) => {
     if (!isLoaded || !selectedDistrict) {
-      console.log("Non posso caricare i dati concorrenti: isLoaded:", isLoaded, "selectedDistrict:", selectedDistrict);
+      console.log(`[useCompetitorData] Cannot load competitor data: isLoaded:${isLoaded}, selectedDistrict:${selectedDistrict}`);
       return;
     }
+    
+    const currentTypeKey = `${businessType}${cuisineType || ""}`;
+    const shouldLoad = force || (selectedDistrict !== lastLoadedDistrict || currentTypeKey !== lastLoadedType);
+    
+    if (!shouldLoad) {
+      console.log(`[useCompetitorData] Skipping load - no change in parameters`);
+      return;
+    }
+    
+    console.log(`[useCompetitorData] Loading data with - Force:${force}, District change:${selectedDistrict !== lastLoadedDistrict}, Type change:${currentTypeKey !== lastLoadedType}`);
     
     setIsLoading(true);
     
     try {
-      console.log(`Fetching competitor data for ${businessType} in ${selectedDistrict}`);
+      console.log(`[useCompetitorData] Fetching competitor data for ${businessType} in ${selectedDistrict}`);
       toast({
         title: "Aggiornamento dati",
         description: `Caricamento dati concorrenti per ${selectedDistrict}...`,
@@ -51,72 +80,84 @@ export const useCompetitorData = (
         cuisineType
       );
       
-      console.log(`Competitor data loaded for ${selectedDistrict}: ${competitorData.length} items`);
+      // Check if component is still mounted before updating state
+      if (!isMounted.current) {
+        console.log(`[useCompetitorData] Component unmounted, skipping state update`);
+        return;
+      }
+      
+      console.log(`[useCompetitorData] Competitor data loaded: ${competitorData.length} items`);
       
       if (competitorData && competitorData.length) {
         setCompetitors(competitorData);
         
-        // Aggiorniamo l'ultimo distretto e tipo caricati
+        // Update timestamp and last loaded values
+        setLastUpdateTimestamp(Date.now());
         setLastLoadedDistrict(selectedDistrict);
-        setLastLoadedType(`${businessType}${cuisineType || ""}`);
+        setLastLoadedType(currentTypeKey);
         
         if (competitorData.length === getDefaultCompetitors(businessType, selectedDistrict, cuisineType).length) {
-          console.log("Usando dati di default per i concorrenti");
+          console.log(`[useCompetitorData] Using default data for competitors`);
           showDefaultDataToast();
         } else {
-          console.log("Usando dati reali per i concorrenti");
+          console.log(`[useCompetitorData] Using real competitor data`);
           showSuccessToast(businessType, selectedDistrict);
         }
         
         showAIAnalysisToast();
       } else {
         // Fallback to default data
-        console.log("Nessun dato concorrente ricevuto, usando dati di default");
+        console.log(`[useCompetitorData] No competitor data received, using default data`);
         const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
         setCompetitors(defaultData);
         showDefaultDataToast();
       }
     } catch (error) {
-      console.error('Errore caricamento dati concorrenti:', error);
+      console.error('[useCompetitorData] Error loading competitor data:', error);
       
       // Use default data if there's an error
       const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
       setCompetitors(defaultData);
       showErrorToast();
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
-  }, [businessType, selectedDistrict, cuisineType, apiKeys, isLoaded, toast, showSuccessToast, showDefaultDataToast, showAIAnalysisToast, showErrorToast]);
+  }, [businessType, selectedDistrict, cuisineType, apiKeys, isLoaded, lastLoadedDistrict, lastLoadedType, toast, showSuccessToast, showDefaultDataToast, showAIAnalysisToast, showErrorToast]);
 
   // Load data when business type, district, or cuisine type changes
   useEffect(() => {
     const currentTypeKey = `${businessType}${cuisineType || ""}`;
     
-    // Verifichiamo se è cambiato il tipo di business o il distretto
+    // Check if data needs to be refreshed
     if (isLoaded && (selectedDistrict !== lastLoadedDistrict || currentTypeKey !== lastLoadedType)) {
-      console.log(`District (${selectedDistrict}) or business type (${businessType}) changed, reloading data...`);
-      console.log(`Last loaded: District=${lastLoadedDistrict}, Type=${lastLoadedType}`);
+      console.log(`[useCompetitorData] District (${selectedDistrict}) or business type (${businessType}) changed, reloading data...`);
+      console.log(`[useCompetitorData] Last loaded: District=${lastLoadedDistrict}, Type=${lastLoadedType}`);
+      
       // Clear previous data
       setCompetitors([]);
-      fetchCompetitorData();
+      fetchCompetitorData(true); // Force update
     }
   }, [businessType, cuisineType, selectedDistrict, isLoaded, lastLoadedDistrict, lastLoadedType, fetchCompetitorData]);
 
-  // Listener per l'evento di cambio distretto
+  // Listener for district change events
   useEffect(() => {
     const handleDistrictChange = (e: Event) => {
       const customEvent = e as CustomEvent;
-      console.log(`District change event detected: ${customEvent.detail.district}`);
+      console.log(`[useCompetitorData] District change event detected: ${customEvent.detail.district}`);
       
       // Force reload when district changes via event
       if (isLoaded && customEvent.detail.district !== lastLoadedDistrict) {
-        console.log(`Forcing reload of competitor data due to district change event: ${customEvent.detail.district}`);
+        console.log(`[useCompetitorData] Forcing reload due to district change event: ${customEvent.detail.district}`);
         setCompetitors([]);
-        // Aggiorniamo temporaneamente il district per evitare loop di caricamento
+        // Update immediately to avoid race conditions
         setLastLoadedDistrict(customEvent.detail.district);
-        // Aggiungiamo un ritardo per evitare caricamenti simultanei
+        // Add delay to prevent simultaneous loads
         setTimeout(() => {
-          fetchCompetitorData();
+          if (isMounted.current) {
+            fetchCompetitorData(true);
+          }
         }, 100);
       }
     };
@@ -131,6 +172,7 @@ export const useCompetitorData = (
   return {
     competitors,
     isLoading,
-    refreshCompetitors: fetchCompetitorData
+    lastUpdateTimestamp,
+    refreshCompetitors: () => fetchCompetitorData(true)
   };
 };

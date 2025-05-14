@@ -1,83 +1,91 @@
 
+// Importing types
+
+import { logApiRequest } from '../logService';
+
+/**
+ * Generate a comprehensive and detailed prompt for OpenAI analysis
+ */
 export function generateAnalysisPrompt(
   businessName: string,
   businessAddress: string,
-  updatedDistrict: string,
-  placesResult: any,
-  censusResult: any,
-  yelpResult: any,
-  trendsResult: any,
+  district: string,
+  placesData: any,
+  censusData: any,
+  yelpData: any,
+  trendsData: any,
   competitorAnalysis: any,
   businessType: string
 ): string {
-  console.log(`Generando prompt di analisi per ${businessName} (${businessType}) in ${updatedDistrict}`);
-  console.log(`Dati disponibili: Places: ${!!placesResult}, Census: ${!!censusResult}, Yelp: ${!!yelpResult}, Trends: ${!!trendsResult}`);
-
-  // Estrai informazioni salienti dai dati per migliorare il prompt
-  const placesData = placesResult?.results?.[0] || {};
-  const censusDataStr = censusResult 
-    ? `popolazione: ${censusResult.population || 'N/A'}, età media: ${censusResult.median_age || 'N/A'}, reddito medio: ${censusResult.median_income || 'N/A'}, famiglie: ${censusResult.households || 'N/A'}`
-    : 'Dati demografici non disponibili';
+  console.log(`Generating enhanced OpenAI prompt for ${businessName} in ${district}`);
   
-  const competitorCount = yelpResult?.businesses?.length || 0;
-  const topCompetitors = yelpResult?.businesses?.slice(0, 3).map((b: any) => b.name).join(", ") || 'nessun competitor trovato';
+  // Log the request for debugging
+  const requestId = logApiRequest('generateAnalysisPrompt', {
+    business: businessName,
+    district,
+    type: businessType
+  });
+  
+  // Create a more focused and systematic prompt for better results
+  const prompt = `
+Sei un esperto analista di business nel contesto di Miami, con competenze specifiche in analisi di mercato, demografia, e competitività. Ti fornirò i dati di un'attività che richiede un'analisi dettagliata.
 
-  return `
-    ANALISI STRATEGICA DI BUSINESS PER "${businessName}" - ${updatedDistrict}, MIAMI
-    
-    Analizza in modo approfondito e strategico i dati per l'attività "${businessName}" situata a ${businessAddress} nel quartiere ${updatedDistrict} di Miami. 
-    
-    Riepilogo dati principali:
-    - Tipo di business: ${businessType}
-    - Distretto: ${updatedDistrict}
-    - Dati demografici: ${censusDataStr}
-    - Competitor principali: ${topCompetitors} (${competitorCount} totali)
-    
-    Dati dettagliati:
-    - Dati di localizzazione: ${JSON.stringify(placesResult)}
-    - Dati demografici: ${JSON.stringify(censusResult)}
-    - Dati concorrenza: ${JSON.stringify(yelpResult)}
-    - Dati di tendenza: ${JSON.stringify(trendsResult)}
-    - Analisi dei competitor: ${JSON.stringify(competitorAnalysis)}
-    
-    REQUISITI ANALISI:
-    
-    1. Sommario Strategico: Fornisci un'analisi SWOT concisa ma completa per ${businessName} a ${updatedDistrict}, evidenziando le opportunità chiave e i rischi principali. Includi un indicatore di potenziale di successo su scala 1-10 con spiegazione.
-    
-    2. Analisi Demografica: Analizza dettagliatamente la composizione demografica di ${updatedDistrict} in relazione al business ${businessType}, con segmentazione per età, reddito, e stili di vita. Identifica i 2-3 segmenti demografici più promettenti con dati statistici a supporto.
-    
-    3. Analisi della Concorrenza: Identifica i 5 principali concorrenti di ${businessName} a ${updatedDistrict}, analizzando i loro punti di forza e debolezza specifici, posizionamento di mercato, e strategie di differenziazione. Fornisci raccomandazioni su come posizionarsi rispetto a ciascun concorrente.
-    
-    4. Analisi delle Tendenze: Fornisci dati quantitativi sulle tendenze di mercato per ${businessType} a ${updatedDistrict} con previsioni a 6-12 mesi. Identifica le tendenze emergenti che potrebbero rappresentare opportunità o minacce.
-    
-    5. Keywords Strategiche: Suggerisci 8-10 parole chiave specifiche per il marketing digitale locale di ${businessName} a ${updatedDistrict}, con una stima del volume di ricerca mensile e difficoltà di competizione.
-    
-    6. Opportunità di Mercato: Identifica 3-5 opportunità di mercato concrete e actionable per ${businessName} basate sui gap di mercato a ${updatedDistrict}, con potenziale ROI e timeframe di implementazione.
-    
-    7. Profilo del Consumatore: Crea 2-3 personas dettagliate dei clienti target a ${updatedDistrict} per ${businessType}, con dati demografici, comportamenti d'acquisto, motivazioni e pain points.
-    
-    8. Punti di Interesse Locali: Identifica attrazioni, business e punti di interesse strategici vicino a ${businessName} in ${updatedDistrict} con cui potrebbero essere sviluppate partnership strategiche.
-    
-    9. Raccomandazioni Strategiche: Fornisci 5-7 raccomandazioni concrete e dettagliate per ${businessName} con:
-       - Descrizione della strategia
-       - Motivazione basata sui dati
-       - Step di implementazione
-       - KPI per misurarne il successo
-       - Timeline consigliata
-    
-    Utilizza dati concreti e specifici per supportare ogni affermazione. Sii specifico e preciso, utilizzando numeri e statistiche quando disponibili. Ogni analisi deve essere direttamente rilevante per ${businessName} a ${updatedDistrict} nel settore ${businessType}.
-    
-    Formato richiesto: JSON con i seguenti campi:
-    - summary
-    - demographicAnalysis
-    - competitionAnalysis
-    - trendsAnalysis
-    - recommendedKeywords (array)
-    - marketOpportunities
-    - consumerProfile
-    - localHighlights
-    - recommendations (array di stringhe)
-    
-    IMPORTANTE: La risposta DEVE essere un JSON valido senza commenti o testo aggiuntivo, formattato esattamente secondo la struttura richiesta. Ogni campo deve avere contenuto significativo e specifico per ${businessName} in ${updatedDistrict}.
-  `;
+DETTAGLI ATTIVITÀ:
+- Nome: ${businessName}
+- Indirizzo: ${businessAddress}
+- Distretto: ${district}
+- Tipo di attività: ${businessType}
+
+DATI DEMOGRAFICI DEL DISTRETTO DI ${district.toUpperCase()}:
+${JSON.stringify(censusData, null, 2)}
+
+DATI DEI COMPETITOR NEL DISTRETTO:
+${JSON.stringify(competitorAnalysis, null, 2)}
+
+DATI YELP RILEVANTI:
+${JSON.stringify(yelpData?.businesses?.slice(0, 5) || [], null, 2)}
+
+DATI DI TENDENZA DI MERCATO:
+${JSON.stringify(trendsData || {}, null, 2)}
+
+ANALISI RICHIESTA:
+Analizza in modo dettagliato e restituisci un report completo con le sezioni seguenti IN ITALIANO:
+
+1. SOMMARIO ESECUTIVO: Un breve riassunto di alto livello (3-4 frasi) sulle prospettive dell'attività nel distretto.
+
+2. ANALISI DEMOGRAFICA: Analisi dettagliata delle caratteristiche demografiche del distretto e come queste influenzano il potenziale successo dell'attività.
+
+3. PROFILO DEL CONSUMATORE: Descrivi il cliente tipo per questa attività nel distretto specifico.
+
+4. ANALISI DELLA CONCORRENZA: Valutazione dei principali competitor, loro punti di forza e debolezze.
+
+5. ANALISI DELLE TENDENZE: Identifica le tendenze rilevanti per questo tipo di attività nella zona.
+
+6. RACCOMANDAZIONI STRATEGICHE: Fornisci 5 raccomandazioni concrete e azionabili per aumentare le probabilità di successo dell'attività.
+
+7. OPPORTUNITÀ DI MERCATO: Identifica 3 opportunità di mercato specifiche per questa attività nel distretto.
+
+8. ELEMENTI DISTINTIVI LOCALI: Menziona 3 caratteristiche uniche del distretto che potrebbero influenzare l'attività.
+
+9. PAROLE CHIAVE RACCOMANDATE: Suggerisci 5 parole chiave per il marketing digitale dell'attività.
+
+Fornisci la tua risposta nel seguente formato JSON:
+
+{
+  "summary": "Testo del sommario...",
+  "demographicAnalysis": "Testo dell'analisi demografica...",
+  "consumerProfile": "Testo del profilo consumatore...",
+  "competitionAnalysis": "Testo dell'analisi della concorrenza...",
+  "trendsAnalysis": "Testo dell'analisi delle tendenze...",
+  "recommendations": ["Raccomandazione 1", "Raccomandazione 2", "Raccomandazione 3", "Raccomandazione 4", "Raccomandazione 5"],
+  "marketOpportunities": ["Opportunità 1", "Opportunità 2", "Opportunità 3"],
+  "localHighlights": ["Elemento distintivo 1", "Elemento distintivo 2", "Elemento distintivo 3"],
+  "recommendedKeywords": ["Parola chiave 1", "Parola chiave 2", "Parola chiave 3", "Parola chiave 4", "Parola chiave 5"]
+}
+
+La tua analisi deve essere ASSOLUTAMENTE in italiano, specifica per il distretto indicato, e con raccomandazioni concrete e attuabili.
+`;
+
+  console.log(`Enhanced prompt generated for ${businessName} with ${prompt.length} characters`);
+  return prompt;
 }

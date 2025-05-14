@@ -14,39 +14,46 @@ const MyBusinessPage = () => {
   const { selectedDistrict } = useDistrictSelection();
   const { toast } = useToast();
   
-  // Aggiungiamo uno state per forzare il re-render quando cambia il distretto
+  // State for forcing re-render when district changes
   const [districtUpdateTime, setDistrictUpdateTime] = useState<number>(Date.now());
+  const [renderCount, setRenderCount] = useState(1);
 
-  // Log per tracciare il ciclo di vita del componente
+  // Log lifecycle for debugging
   useEffect(() => {
-    console.log(`MyBusinessPage montato/aggiornato con distretto: ${selectedDistrict}`);
+    console.log(`[MyBusinessPage] Mounted/updated with district: ${selectedDistrict} (render #${renderCount})`);
+    
+    // Increment render count on each render
+    setRenderCount(prev => prev + 1);
     
     return () => {
-      console.log('MyBusinessPage smontato');
+      console.log('[MyBusinessPage] Unmounted');
     };
-  }, []);
+  }, [selectedDistrict]);
 
-  // Aggiungiamo un log per debugging quando cambiano i dati di analisi
+  // Log when analysis data changes
   useEffect(() => {
     if (analysisComplete && analysisData) {
-      console.log('Nuovi dati di analisi ricevuti:', analysisData);
+      console.log('[MyBusinessPage] New analysis data received:', analysisData);
+      console.log(`[MyBusinessPage] Analysis district: ${analysisData.businessInfo.district}`);
     }
   }, [analysisComplete, analysisData]);
 
-  // Ascoltiamo il cambio di distretto più efficacemente
+  // Listen for district changes
   useEffect(() => {
-    console.log(`Distretto selezionato nella pagina MyBusiness: ${selectedDistrict}`);
+    console.log(`[MyBusinessPage] Selected district changed to: ${selectedDistrict}`);
     setDistrictUpdateTime(Date.now());
 
     const handleDistrictChange = (e: Event) => {
       const customEvent = e as CustomEvent;
-      console.log(`Evento cambio distretto rilevato: ${customEvent.detail.district}`);
+      console.log(`[MyBusinessPage] District change event detected: ${customEvent.detail.district}`);
+      
       setDistrictUpdateTime(previous => {
-        console.log(`Aggiornamento timestamp distretto: ${previous} -> ${Date.now()}`);
-        return Date.now();
+        const newTime = Date.now();
+        console.log(`[MyBusinessPage] District update timestamp: ${previous} -> ${newTime}`);
+        return newTime;
       });
       
-      // Notifichiamo l'utente del cambio di distretto
+      // Notify user of district change
       toast({
         title: "Zona cambiata",
         description: `Selezionato il distretto: ${customEvent.detail.district}`,
@@ -60,8 +67,8 @@ const MyBusinessPage = () => {
     };
   }, [selectedDistrict, toast]);
 
-  // Log per verificare quando il componente viene renderizzato
-  console.log(`Rendering MyBusinessPage - Distretto: ${selectedDistrict}, UpdateTime: ${districtUpdateTime}`);
+  // Log render with detailed state information
+  console.log(`[MyBusinessPage] Rendering - District: ${selectedDistrict}, UpdateTime: ${districtUpdateTime}, Analysis: ${analysisComplete}`);
 
   return (
     <Layout>
@@ -82,14 +89,14 @@ const MyBusinessPage = () => {
             <BusinessAnalysisForm 
               isAnalyzing={isAnalyzing} 
               onSubmit={startAnalysis}
-              key={`form-${selectedDistrict}-${districtUpdateTime}`}
+              key={`form-${selectedDistrict}-${districtUpdateTime}-${renderCount}`}
             />
           </CardContent>
         </Card>
         
         {analysisComplete && analysisData && (
           <BusinessAnalysisResults 
-            key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${analysisData.businessInfo.district}-${districtUpdateTime}`} 
+            key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${analysisData.businessInfo.district}-${districtUpdateTime}-${renderCount}`} 
             data={{
               businessInfo: {
                 ...analysisData.businessInfo,
