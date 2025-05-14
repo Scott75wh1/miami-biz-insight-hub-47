@@ -64,5 +64,7 @@ export const loadCompetitorData = async (
   apiKeys: ReturnType<typeof useApiKeys>['apiKeys'],
   cuisineType?: string
 ): Promise<Competitor[]> => {
-  return getCompetitorsByDistrict(district, businessType, apiKeys, cuisineType);
+  // Cast businessType as any to resolve the type issue temporarily
+  // A better long-term solution would be to align types properly
+  return getCompetitorsByDistrict(district, businessType as any, apiKeys, cuisineType);
 };
