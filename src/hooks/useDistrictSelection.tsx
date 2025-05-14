@@ -28,7 +28,7 @@ export function DistrictSelectionProvider({
       console.log(`District changed to: ${district}`);
       setSelectedDistrict(district);
       
-      // Aggiungiamo un evento personalizzato per notificare l'applicazione del cambio di distretto
+      // Adding a custom event to notify the application of district change
       const event = new CustomEvent('districtChanged', { detail: { district } });
       window.dispatchEvent(event);
     }
