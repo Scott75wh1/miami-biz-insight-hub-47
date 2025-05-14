@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Building, Award, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface CompetitionTabProps {
@@ -13,6 +13,15 @@ export const CompetitionTab: React.FC<CompetitionTabProps> = ({
   district,
   yelpBusinesses
 }) => {
+  // Log per debug quando il componente viene aggiornato
+  useEffect(() => {
+    console.log(`CompetitionTab rendered for district: ${district}`);
+    console.log(`Competition businesses data:`, yelpBusinesses?.length || 0);
+  }, [district, yelpBusinesses]);
+  
+  // Normalizza il nome del distretto per gestire "North Miami" correttamente
+  const normalizedDistrict = district.toLowerCase().includes('north miami') ? 'North Miami' : district;
+  
   return (
     <div>
       <div className="flex items-center mb-3">
@@ -25,7 +34,7 @@ export const CompetitionTab: React.FC<CompetitionTabProps> = ({
       
       {yelpBusinesses && yelpBusinesses.length > 0 ? (
         <div className="mt-6">
-          <h4 className="text-md font-medium mb-3">Principali concorrenti nella zona di {district}</h4>
+          <h4 className="text-md font-medium mb-3">Principali concorrenti nella zona di {normalizedDistrict}</h4>
           <div className="space-y-4">
             {yelpBusinesses.slice(0, 5).map((business: any, index: number) => (
               <div key={index} className="border rounded-md p-4 bg-white shadow-sm">
@@ -76,11 +85,11 @@ export const CompetitionTab: React.FC<CompetitionTabProps> = ({
           </div>
         </div>
       ) : (
-        <p className="text-sm italic mt-4">Nessuna informazione disponibile sui concorrenti in {district}</p>
+        <p className="text-sm italic mt-4">Nessuna informazione disponibile sui concorrenti in {normalizedDistrict}</p>
       )}
       
       <p className="text-sm text-muted-foreground mt-3">
-        Basato sui dati di competitor simili nell'area {district}
+        Basato sui dati di competitor simili nell'area {normalizedDistrict}
       </p>
     </div>
   );

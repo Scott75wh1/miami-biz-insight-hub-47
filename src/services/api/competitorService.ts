@@ -21,7 +21,11 @@ function getSentimentFromRating(rating: number) {
 // Combined data from Google Places and Yelp
 export const fetchCombinedCompetitorData = async (businessType: string, district: string, apiKeys: any, cuisineType?: string) => {
   try {
-    console.log(`Fetching combined data for ${businessType} in ${district}${cuisineType ? ` (${cuisineType})` : ''}`);
+    // Normalizza il nome del distretto per gestire "North Miami" correttamente
+    const normalizedDistrict = district.toLowerCase().includes('north miami') ? 'North Miami' : district;
+    
+    console.log(`Fetching combined data for ${businessType} in ${normalizedDistrict}${cuisineType ? ` (${cuisineType})` : ''}`);
+    
     // Get appropriate business search term
     let searchTerm = '';
     switch (businessType) {
@@ -38,13 +42,18 @@ export const fetchCombinedCompetitorData = async (businessType: string, district
         searchTerm = 'businesses';
     }
 
-    // Get location data from Google Places with 2 mile radius
-    const placesQuery = `${searchTerm} near ${district} within 2 miles`;
-    const placesData = await fetchPlacesData(placesQuery, apiKeys.googlePlaces, district);
+    // Get location data from Google Places with 2 mile radius - specifying North Miami explicitly
+    const placesQuery = normalizedDistrict === 'North Miami' 
+      ? `${searchTerm} in North Miami, FL within 2 miles`
+      : `${searchTerm} near ${normalizedDistrict} within 2 miles`;
+      
+    console.log(`Places query: ${placesQuery}`);
+    const placesData = await fetchPlacesData(placesQuery, apiKeys.googlePlaces, normalizedDistrict);
     console.log("Places data fetched:", placesData?.results ? placesData.results.length : 0);
 
-    // Get review data from Yelp
-    const yelpData = await fetchYelpData(apiKeys.yelp, searchTerm, district);
+    // Get review data from Yelp - specifying North Miami explicitly
+    const yelpQuery = normalizedDistrict === 'North Miami' ? 'North Miami, FL' : normalizedDistrict;
+    const yelpData = await fetchYelpData(apiKeys.yelp, searchTerm, yelpQuery);
     console.log("Yelp data fetched:", yelpData?.businesses ? yelpData.businesses.length : 0);
     
     // If we have both sets of data, combine them based on similar names
@@ -104,7 +113,7 @@ export const fetchCombinedCompetitorData = async (businessType: string, district
         return {
           name: place.name,
           type: formattedType,
-          location: place.vicinity || place.formatted_address || district,
+          location: place.vicinity || place.formatted_address || normalizedDistrict,
           rating: place.rating || (yelpMatch ? yelpMatch.rating : 0),
           reviews: place.user_ratings_total || (yelpMatch ? yelpMatch.review_count : 0),
           priceLevel: place.price_level ? '$'.repeat(place.price_level) : '$$$',
@@ -114,11 +123,12 @@ export const fetchCombinedCompetitorData = async (businessType: string, district
         };
       });
       
-      console.log(`Combined ${combinedResults.length} results for ${district} (${businessType})`);
+      console.log(`Combined ${combinedResults.length} results for ${normalizedDistrict} (${businessType})`);
       return combinedResults;
     }
     
     // If either API call failed, return null
+    console.log(`Failed to get combined data for ${normalizedDistrict}`);
     return null;
   } catch (error) {
     return handleApiError(error, 'Competitor Data');

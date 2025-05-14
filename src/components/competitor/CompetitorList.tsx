@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CompetitorCard, Competitor } from './CompetitorCard';
 
 interface CompetitorListProps {
@@ -13,10 +13,19 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
   isLoading,
   selectedDistrict,
 }) => {
+  // Normalizza il nome del distretto per gestire "North Miami" correttamente
+  const normalizedDistrict = selectedDistrict.toLowerCase().includes('north miami') ? 'North Miami' : selectedDistrict;
+  
+  // Log per debug quando il componente viene aggiornato
+  useEffect(() => {
+    console.log(`CompetitorList rendered for district: ${normalizedDistrict}`);
+    console.log(`Competitors count: ${competitors.length}`);
+  }, [normalizedDistrict, competitors]);
+
   if (competitors.length === 0 && !isLoading) {
     return (
       <div className="text-center p-8 text-muted-foreground">
-        Nessun competitor trovato per questa categoria
+        Nessun competitor trovato per questa categoria in {normalizedDistrict}
       </div>
     );
   }
@@ -30,7 +39,7 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
       {competitors.length > 0 && (
         <div className="text-center mt-4">
           <button type="button" className="text-primary text-sm hover:underline">
-            Visualizza tutti i competitor in {selectedDistrict}
+            Visualizza tutti i competitor in {normalizedDistrict}
           </button>
         </div>
       )}
