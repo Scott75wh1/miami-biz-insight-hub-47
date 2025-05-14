@@ -26,8 +26,6 @@ type ToastContextType = {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  console.log("Toast provider rendered");
-  
   // State to track active toasts
   const [toasts, setToasts] = React.useState<Toast[]>([]);
 
@@ -37,14 +35,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         description,
         action,
         ...props,
-        onDismiss: (toastInfo: any) => {
-          // Safely extract ID regardless of type
-          const toastId = typeof toastInfo === 'object' && toastInfo && 'id' in toastInfo 
-            ? toastInfo.id 
-            : toastInfo;
-          
-          // Remove from local state
-          setToasts((prev) => prev.filter((t) => t.id !== toastId));
+        onDismiss: (toastInfo: ToastT | string | number) => {
+          // Rimuovi il log per evitare spam nella console
+          setToasts((prev) => prev.filter((t) => t.id !== toastInfo));
         },
       });
       
@@ -78,12 +71,9 @@ export function useToast() {
   const context = useContext(ToastContext);
 
   if (!context) {
-    console.warn(
-      "useToast was used outside of ToastProvider. A dummy implementation will be used."
-    );
+    // Rimosso il log di warning per evitare spam nella console
     return {
       toast: (opts: ToastOptions) => {
-        console.warn("Toast attempted outside provider:", opts);
         return sonnerToast(opts.title as string, {
           description: opts.description,
           action: opts.action,
@@ -99,7 +89,6 @@ export function useToast() {
 
 // Export the toast function directly for use in non-component code
 export const toast = (opts: ToastOptions) => {
-  console.log("Direct toast called:", opts);
   return sonnerToast(opts.title as string, {
     description: opts.description,
     action: opts.action,

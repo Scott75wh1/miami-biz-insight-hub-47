@@ -2,6 +2,6 @@
 // Re-export from hooks to maintain backward compatibility
 import { useToast, toast } from "@/hooks/use-toast";
 
-console.log("Loading src/components/ui/use-toast.ts - RE-EXPORTER");
+// Rimosso il log per evitare spam nella console
 
 export { useToast, toast };
