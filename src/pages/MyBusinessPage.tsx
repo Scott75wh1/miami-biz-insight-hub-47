@@ -1,14 +1,18 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Building } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Layout from '@/components/Layout';
 import BusinessAnalysisForm from '@/components/business/BusinessAnalysisForm';
 import BusinessAnalysisResults from '@/components/business/BusinessAnalysisResults';
 import { useBusinessAnalysis } from '@/hooks/useBusinessAnalysis';
+import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 
 const MyBusinessPage = () => {
   const { isAnalyzing, analysisComplete, analysisData, startAnalysis } = useBusinessAnalysis();
+  const { selectedDistrict } = useDistrictSelection();
+  // Aggiungiamo uno state per forzare il re-render quando cambia il distretto
+  const [districtUpdateTime, setDistrictUpdateTime] = useState<number>(Date.now());
 
   // Aggiungiamo un log per debugging
   useEffect(() => {
@@ -17,12 +21,30 @@ const MyBusinessPage = () => {
     }
   }, [analysisComplete, analysisData]);
 
+  // Ascoltiamo il cambio di distretto
+  useEffect(() => {
+    console.log(`Distretto selezionato nella pagina MyBusiness: ${selectedDistrict}`);
+    setDistrictUpdateTime(Date.now());
+
+    const handleDistrictChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      console.log(`Evento cambio distretto rilevato: ${customEvent.detail.district}`);
+      setDistrictUpdateTime(Date.now());
+    };
+
+    window.addEventListener('districtChanged', handleDistrictChange);
+    
+    return () => {
+      window.removeEventListener('districtChanged', handleDistrictChange);
+    };
+  }, [selectedDistrict]);
+
   return (
     <Layout>
       <div className="container py-6">
         <h1 className="text-3xl font-bold mb-6 flex items-center">
           <Building className="mr-2 h-6 w-6" />
-          La mia Attività
+          La mia Attività {selectedDistrict && `- ${selectedDistrict}`}
         </h1>
         
         <Card className="mb-6">
@@ -36,13 +58,14 @@ const MyBusinessPage = () => {
             <BusinessAnalysisForm 
               isAnalyzing={isAnalyzing} 
               onSubmit={startAnalysis}
+              key={`form-${selectedDistrict}-${districtUpdateTime}`}
             />
           </CardContent>
         </Card>
         
         {analysisComplete && analysisData && (
           <BusinessAnalysisResults 
-            key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${Date.now()}`} 
+            key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${analysisData.businessInfo.district}-${districtUpdateTime}`} 
             data={{
               businessInfo: {
                 ...analysisData.businessInfo,

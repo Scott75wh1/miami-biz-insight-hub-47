@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Loader2, AlertCircle } from 'lucide-react';
@@ -5,6 +6,7 @@ import { fetchCensusData } from '@/services/apiService';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 
 interface DemographicData {
   population: string;
@@ -35,6 +37,7 @@ const DemographicsDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { apiKeys, isLoaded } = useApiKeys();
   const { toast } = useToast();
+  const { selectedDistrict } = useDistrictSelection(); // Aggiungiamo l'hook per il distretto selezionato
   const isUsingDemoKey = !apiKeys.censusGov || apiKeys.censusGov === 'demo-key';
 
   useEffect(() => {
@@ -42,12 +45,14 @@ const DemographicsDashboard = () => {
       if (!isLoaded) return;
       
       setIsLoading(true);
+      console.log(`Caricamento dati demografici per ${selectedDistrict}`);
       
       try {
-        const data = await fetchCensusData(apiKeys.censusGov, 'Miami');
+        // Passiamo il distretto selezionato all'API di Census
+        const data = await fetchCensusData(apiKeys.censusGov, selectedDistrict);
         
         if (data) {
-          // Process the API data 
+          // Processiamo i dati API
           setDemographicData({
             population: data.population.toLocaleString(),
             medianAge: data.median_age.toString(),
@@ -66,7 +71,7 @@ const DemographicsDashboard = () => {
             title: messageType,
             description: isUsingDemoKey 
               ? "Stai utilizzando dati dimostrativi. Inserisci una API key reale nelle impostazioni per dati reali."
-              : "I dati demografici sono stati caricati con successo.",
+              : `I dati demografici per ${selectedDistrict} sono stati caricati con successo.`,
           });
         }
       } catch (error) {
@@ -82,14 +87,14 @@ const DemographicsDashboard = () => {
     };
 
     loadDemographicData();
-  }, [isLoaded, apiKeys.censusGov, toast, isUsingDemoKey]);
+  }, [isLoaded, apiKeys.censusGov, toast, isUsingDemoKey, selectedDistrict]); // Aggiungiamo selectedDistrict alle dipendenze
 
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center">
           <Users className="mr-2 h-5 w-5" />
-          Demografia
+          Demografia {selectedDistrict && `- ${selectedDistrict}`}
           {isLoading && (
             <div className="ml-2 flex items-center text-xs text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin mr-1" />

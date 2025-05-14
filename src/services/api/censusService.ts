@@ -14,6 +14,7 @@ export type { CensusDataResponse } from './census/types';
 
 export const fetchCensusData = async (apiKey: string, location: string = 'Miami') => {
   const logIndex = logCensusApiCall('fetchCensusData', { location, apiKey: apiKey ? 'provided' : 'not-provided' });
+  console.log(`Fetching census data for location: ${location}`);
   
   if (!apiKey || apiKey === 'demo-key') {
     console.log('Census.gov API key is not set or using demo key');
@@ -39,6 +40,7 @@ export const fetchCensusData = async (apiKey: string, location: string = 'Miami'
 
 export const fetchDistrictCensusData = async (apiKey: string, district: string): Promise<CensusDataResponse> => {
   const logIndex = logCensusApiCall('fetchDistrictCensusData', { district, apiKey: apiKey ? 'provided' : 'not-provided' });
+  console.log(`Fetching district census data for: ${district}`);
   
   try {
     // In a real implementation, we would make specific API calls for each district

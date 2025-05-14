@@ -1,14 +1,20 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CensusDataResponse } from '@/services/api/censusService';
 import { StatBox, ProgressItem, formatNumber } from '../utils/CensusUtils';
 import { Car, Building, Route, MapPin } from 'lucide-react';
 
 interface DemographicsTabProps {
   censusData: CensusDataResponse;
+  key?: string; // Aggiungiamo una prop key opzionale per forzare il re-render
 }
 
 const DemographicsTab: React.FC<DemographicsTabProps> = ({ censusData }) => {
+  useEffect(() => {
+    // Log per debugging
+    console.log('DemographicsTab rendering with data:', censusData);
+  }, [censusData]);
+
   return (
     <div className="pt-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

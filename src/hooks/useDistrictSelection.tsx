@@ -1,5 +1,5 @@
 
-import { useState, createContext, useContext, ReactNode } from 'react';
+import { useState, createContext, useContext, ReactNode, useEffect } from 'react';
 import { MIAMI_DISTRICTS } from '@/components/competitor/constants';
 
 interface DistrictSelectionContextType {
@@ -27,6 +27,10 @@ export function DistrictSelectionProvider({
     if (district !== selectedDistrict) {
       console.log(`District changed to: ${district}`);
       setSelectedDistrict(district);
+      
+      // Aggiungiamo un evento personalizzato per notificare l'applicazione del cambio di distretto
+      const event = new CustomEvent('districtChanged', { detail: { district } });
+      window.dispatchEvent(event);
     }
   };
 
