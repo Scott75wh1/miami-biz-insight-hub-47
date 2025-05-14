@@ -1,9 +1,8 @@
 
 import * as React from "react";
 import { createContext, useContext } from "react";
-import { toast as sonnerToast, Toast as SonnerToast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 
-type ToastProps = React.ComponentProps<typeof SonnerToast>;
 type ToastActionElement = React.ReactElement<unknown>;
 
 type ToastOptions = {
