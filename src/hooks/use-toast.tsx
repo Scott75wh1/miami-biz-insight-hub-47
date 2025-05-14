@@ -37,8 +37,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         description,
         action,
         ...props,
-        onDismiss: (toastId: string | number) => {
-          setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
+        onDismiss: (toast: ToastT) => {
+          // Extract the ID from the toast object
+          const toastId = typeof toast === 'object' && toast ? toast.id : toast;
+          setToasts((prev) => prev.filter((t) => t.id !== toastId));
         },
       });
       
