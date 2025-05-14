@@ -13,23 +13,21 @@ export const CompetitionTab: React.FC<CompetitionTabProps> = ({
   district,
   yelpBusinesses
 }) => {
-  // Local state to track the last district
+  // Stato locale per tracciare l'ultimo distretto
   const [lastDistrict, setLastDistrict] = useState<string>(district);
   
-  // Debug logs when the component updates
+  // Log per debug quando il componente viene aggiornato
   useEffect(() => {
-    console.log(`[CompetitionTab] Rendered for district: ${district}`);
-    console.log(`[CompetitionTab] Competition businesses data:`, yelpBusinesses?.length || 0);
-    console.log(`[CompetitionTab] Sample business data:`, yelpBusinesses?.[0] || 'No businesses');
+    console.log(`CompetitionTab rendered for district: ${district}`);
+    console.log(`Competition businesses data:`, yelpBusinesses?.length || 0);
     
-    // Update local state when district changes
+    // Aggiorniamo lo stato locale quando cambia il distretto
     if (district !== lastDistrict) {
-      console.log(`[CompetitionTab] District changed from ${lastDistrict} to ${district}`);
       setLastDistrict(district);
     }
   }, [district, yelpBusinesses, lastDistrict]);
   
-  // Normalize the district name to handle "North Miami" correctly
+  // Normalizza il nome del distretto per gestire "North Miami" correttamente
   const normalizedDistrict = district.toLowerCase().includes('north miami') ? 'North Miami' : district;
   
   return (
@@ -54,7 +52,7 @@ export const CompetitionTab: React.FC<CompetitionTabProps> = ({
                     {business.rating} <Award className="h-3 w-3 ml-1" />
                   </span>
                 </div>
-                <div className="text-sm text-muted-foreground mb-3">{business.location?.address1 || 'Indirizzo non disponibile'}</div>
+                <div className="text-sm text-muted-foreground mb-3">{business.location?.address1}</div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                   <div className="space-y-1">

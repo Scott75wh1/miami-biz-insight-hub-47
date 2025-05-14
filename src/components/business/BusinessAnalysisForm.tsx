@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
-import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,6 @@ interface BusinessAnalysisFormProps {
 }
 
 const BusinessAnalysisForm = ({ isAnalyzing, onSubmit }: BusinessAnalysisFormProps) => {
-  const { selectedDistrict } = useDistrictSelection();
   const form = useForm<BusinessFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,14 +39,9 @@ const BusinessAnalysisForm = ({ isAnalyzing, onSubmit }: BusinessAnalysisFormPro
   
   const { toast } = useToast();
   
-  // Monitoriamo cambiamenti nel distretto selezionato
+  // Aggiungiamo un useEffect per verificare se useToast è caricato correttamente
   useEffect(() => {
-    console.log(`[BusinessAnalysisForm] District changed to: ${selectedDistrict}`);
-  }, [selectedDistrict]);
-  
-  // Verifica se useToast è disponibile
-  useEffect(() => {
-    console.log("[BusinessAnalysisForm] Form initialized, toast available:", !!toast);
+    console.log("BusinessAnalysisForm rendered, toast available:", !!toast);
   }, [toast]);
 
   const businessTypes = [
@@ -59,14 +52,9 @@ const BusinessAnalysisForm = ({ isAnalyzing, onSubmit }: BusinessAnalysisFormPro
     { id: 'fitness', name: 'Palestre e Fitness' },
   ];
 
-  const handleFormSubmit = (values: BusinessFormValues) => {
-    console.log(`[BusinessAnalysisForm] Submitting form for ${values.businessName} in ${selectedDistrict}`);
-    onSubmit(values);
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="businessName"

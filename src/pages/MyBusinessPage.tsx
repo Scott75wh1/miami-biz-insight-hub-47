@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Building, RefreshCw } from 'lucide-react';
+import { Building } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Layout from '@/components/Layout';
 import BusinessAnalysisForm from '@/components/business/BusinessAnalysisForm';
@@ -8,49 +8,45 @@ import BusinessAnalysisResults from '@/components/business/BusinessAnalysisResul
 import { useBusinessAnalysis } from '@/hooks/useBusinessAnalysis';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 
 const MyBusinessPage = () => {
-  const { isAnalyzing, analysisComplete, analysisData, startAnalysis, refreshAnalysis } = useBusinessAnalysis();
+  const { isAnalyzing, analysisComplete, analysisData, startAnalysis } = useBusinessAnalysis();
   const { selectedDistrict } = useDistrictSelection();
   const { toast } = useToast();
   
-  // State for tracking district updates
+  // Aggiungiamo uno state per forzare il re-render quando cambia il distretto
   const [districtUpdateTime, setDistrictUpdateTime] = useState<number>(Date.now());
-  const [renderCount, setRenderCount] = useState(1);
 
-  // Log lifecycle for debugging
+  // Log per tracciare il ciclo di vita del componente
   useEffect(() => {
-    console.log(`[MyBusinessPage] Mounted/updated with district: ${selectedDistrict} (render #${renderCount})`);
-    
-    // Increment render count on each render
-    setRenderCount(prev => prev + 1);
+    console.log(`MyBusinessPage montato/aggiornato con distretto: ${selectedDistrict}`);
     
     return () => {
-      console.log('[MyBusinessPage] Unmounted');
+      console.log('MyBusinessPage smontato');
     };
-  }, [selectedDistrict, renderCount]);
+  }, []);
 
-  // Log when analysis data changes
+  // Aggiungiamo un log per debugging quando cambiano i dati di analisi
   useEffect(() => {
     if (analysisComplete && analysisData) {
-      console.log('[MyBusinessPage] New analysis data received:', analysisData);
-      console.log(`[MyBusinessPage] Analysis district: ${analysisData.businessInfo.district}`);
+      console.log('Nuovi dati di analisi ricevuti:', analysisData);
     }
   }, [analysisComplete, analysisData]);
 
-  // Gestione dei cambiamenti di distretto
+  // Ascoltiamo il cambio di distretto più efficacemente
   useEffect(() => {
-    console.log(`[MyBusinessPage] Selected district changed to: ${selectedDistrict}`);
+    console.log(`Distretto selezionato nella pagina MyBusiness: ${selectedDistrict}`);
     setDistrictUpdateTime(Date.now());
 
     const handleDistrictChange = (e: Event) => {
       const customEvent = e as CustomEvent;
-      console.log(`[MyBusinessPage] District change event detected: ${customEvent.detail.district}`);
+      console.log(`Evento cambio distretto rilevato: ${customEvent.detail.district}`);
+      setDistrictUpdateTime(previous => {
+        console.log(`Aggiornamento timestamp distretto: ${previous} -> ${Date.now()}`);
+        return Date.now();
+      });
       
-      setDistrictUpdateTime(Date.now());
-      
-      // Notify user of district change
+      // Notifichiamo l'utente del cambio di distretto
       toast({
         title: "Zona cambiata",
         description: `Selezionato il distretto: ${customEvent.detail.district}`,
@@ -64,16 +60,8 @@ const MyBusinessPage = () => {
     };
   }, [selectedDistrict, toast]);
 
-  // Handler per il refresh manuale dell'analisi
-  const handleManualRefresh = useCallback(() => {
-    if (analysisComplete && !isAnalyzing) {
-      console.log(`[MyBusinessPage] Manual refresh requested for district: ${selectedDistrict}`);
-      refreshAnalysis(selectedDistrict);
-    }
-  }, [analysisComplete, isAnalyzing, refreshAnalysis, selectedDistrict]);
-
-  // Log render with detailed state information
-  console.log(`[MyBusinessPage] Rendering - District: ${selectedDistrict}, UpdateTime: ${districtUpdateTime}, Analysis: ${analysisComplete}`);
+  // Log per verificare quando il componente viene renderizzato
+  console.log(`Rendering MyBusinessPage - Distretto: ${selectedDistrict}, UpdateTime: ${districtUpdateTime}`);
 
   return (
     <Layout>
@@ -94,38 +82,24 @@ const MyBusinessPage = () => {
             <BusinessAnalysisForm 
               isAnalyzing={isAnalyzing} 
               onSubmit={startAnalysis}
-              key={`form-${selectedDistrict}-${districtUpdateTime}-${renderCount}`}
+              key={`form-${selectedDistrict}-${districtUpdateTime}`}
             />
           </CardContent>
         </Card>
         
         {analysisComplete && analysisData && (
-          <>
-            <div className="flex justify-end mb-4">
-              <Button 
-                onClick={handleManualRefresh}
-                disabled={isAnalyzing}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
-                Aggiorna Analisi
-              </Button>
-            </div>
-            
-            <BusinessAnalysisResults 
-              key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${analysisData.businessInfo.district}-${districtUpdateTime}-${renderCount}`} 
-              data={{
-                businessInfo: {
-                  ...analysisData.businessInfo,
-                  // Ensure type is always provided with a default if not available
-                  type: analysisData.businessInfo.type || 'general'
-                },
-                analysis: analysisData.analysis,
-                rawData: analysisData.rawData
-              }} 
-            />
-          </>
+          <BusinessAnalysisResults 
+            key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${analysisData.businessInfo.district}-${districtUpdateTime}`} 
+            data={{
+              businessInfo: {
+                ...analysisData.businessInfo,
+                // Ensure type is always provided with a default if not available
+                type: analysisData.businessInfo.type || 'general'
+              },
+              analysis: analysisData.analysis,
+              rawData: analysisData.rawData
+            }} 
+          />
         )}
       </div>
     </Layout>
