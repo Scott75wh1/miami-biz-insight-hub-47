@@ -1,6 +1,7 @@
 
 import { handleApiError } from './handleError';
 import { CensusDataResponse } from './census/types';
+import { ApiErrorResponse } from './openai/types';
 import { 
   logCensusApiCall, 
   logCensusApiResponse, 
@@ -50,6 +51,28 @@ export const fetchDistrictCensusData = async (apiKey: string, district: string):
     return data;
   } catch (error) {
     logCensusApiError(logIndex, { status: 'GENERAL_ERROR', error });
-    return handleApiError(error, 'Census.gov');
+    const errorResponse = handleApiError(error, 'Census.gov') as ApiErrorResponse;
+    
+    // Return a default CensusDataResponse structure with empty values
+    return {
+      population: 0,
+      median_age: 0,
+      median_income: 0,
+      households: 0,
+      error: errorResponse.error,
+      errorMessage: errorResponse.message,
+      // Include other required properties
+      total_housing_units: 0,
+      district: district,
+      location_name: district,
+      education: {
+        high_school_or_higher_percent: 0,
+        bachelors_or_higher_percent: 0
+      },
+      housing: {
+        median_home_value: 0,
+        median_rent: 0
+      }
+    };
   }
 };

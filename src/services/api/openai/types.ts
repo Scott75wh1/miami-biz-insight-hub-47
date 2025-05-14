@@ -1,11 +1,17 @@
 
 // Types for OpenAI service
 export interface OpenAIResponse {
-  choices: {
+  choices?: {
     message: {
       content: string;
     };
   }[];
+  error?: boolean;
+  errorType?: string;
+  service?: string;
+  message?: string;
+  timestamp?: string;
+  usingMockData?: boolean;
 }
 
 export interface CompetitorStrength {
@@ -29,4 +35,14 @@ export interface BusinessAnalysis {
   consumerProfile?: string;
   localHighlights?: string;
   recommendations: string[];
+}
+
+// Add an interface for error responses
+export interface ApiErrorResponse {
+  error: boolean;
+  errorType: string;
+  service: string;
+  message: string;
+  timestamp: string;
+  usingMockData: boolean;
 }

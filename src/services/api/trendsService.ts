@@ -1,7 +1,13 @@
 
 import { handleApiError } from './handleError';
+import { ApiErrorResponse } from './openai/types';
 
-export const fetchGoogleTrendsData = async (apiKey: string, keywords: string[], geo: string = 'US-FL-528', district: string = 'Miami Beach') => {
+export interface TrendsDataResponse {
+  trends: { keyword: string; value: number; formattedTime: string }[];
+  district: string;
+}
+
+export const fetchGoogleTrendsData = async (apiKey: string, keywords: string[], geo: string = 'US-FL-528', district: string = 'Miami Beach'): Promise<TrendsDataResponse | ApiErrorResponse> => {
   if (!apiKey || apiKey === 'demo-key') {
     console.error('Google Trends API key is not set or using demo key');
     // Return mock data for demonstration
@@ -17,7 +23,10 @@ export const fetchGoogleTrendsData = async (apiKey: string, keywords: string[], 
   
   if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
     console.error('Invalid keywords parameter for Google Trends');
-    return null;
+    return {
+      trends: [],
+      district: district
+    };
   }
   
   try {
@@ -35,6 +44,12 @@ export const fetchGoogleTrendsData = async (apiKey: string, keywords: string[], 
       district: district
     };
   } catch (error) {
-    return handleApiError(error, 'Google Trends');
+    const errorResponse = handleApiError(error, 'Google Trends') as ApiErrorResponse;
+    // Add an empty trends array to match the expected structure
+    return {
+      ...errorResponse,
+      trends: [],
+      district: district
+    };
   }
 };

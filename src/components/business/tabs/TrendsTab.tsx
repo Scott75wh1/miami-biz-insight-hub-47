@@ -16,6 +16,8 @@ export const TrendsTab: React.FC<TrendsTabProps> = ({
   businessType, 
   district 
 }) => {
+  const hasKeywords = recommendedKeywords && Array.isArray(recommendedKeywords) && recommendedKeywords.length > 0;
+  
   return (
     <div>
       <div className="flex items-center mb-3">
@@ -26,7 +28,7 @@ export const TrendsTab: React.FC<TrendsTabProps> = ({
         <p>{trendsAnalysis}</p>
       </div>
       
-      {recommendedKeywords && recommendedKeywords.length > 0 && (
+      {hasKeywords && (
         <div className="mt-4">
           <div className="flex items-center mb-2">
             <Tag className="mr-2 h-4 w-4 text-green-500" />

@@ -1,6 +1,6 @@
 
 import { handleApiError } from '../handleError';
-import { OpenAIResponse } from './types';
+import { OpenAIResponse, ApiErrorResponse } from './types';
 
 export const fetchOpenAIAnalysis = async (apiKey: string, prompt: string): Promise<OpenAIResponse | null> => {
   // Log per verificare che il prompt sia completo
@@ -136,6 +136,12 @@ export const fetchOpenAIAnalysis = async (apiKey: string, prompt: string): Promi
     };
   } catch (error) {
     console.error("Errore nell'analisi OpenAI:", error);
-    return handleApiError(error, 'OpenAI');
+    const errorResponse = handleApiError(error, 'OpenAI') as ApiErrorResponse;
+    
+    // Create a valid OpenAIResponse even in error case
+    return {
+      choices: [],
+      ...errorResponse
+    };
   }
 };

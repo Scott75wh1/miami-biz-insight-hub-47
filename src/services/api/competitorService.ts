@@ -2,6 +2,13 @@
 import { handleApiError } from './handleError';
 import { fetchPlacesData } from './placesService';
 import { fetchYelpData } from './yelpService';
+import { ApiErrorResponse } from './openai/types';
+
+// Define response types
+export interface CompetitorDataResponse {
+  businesses?: any[];
+  [key: string]: any;
+}
 
 // Helper function for sentiment calculation
 function getSentimentFromRating(rating: number) {
@@ -19,7 +26,7 @@ function getSentimentFromRating(rating: number) {
 }
 
 // Combined data from Google Places and Yelp
-export const fetchCombinedCompetitorData = async (businessType: string, district: string, apiKeys: any, cuisineType?: string) => {
+export const fetchCombinedCompetitorData = async (businessType: string, district: string, apiKeys: any, cuisineType?: string): Promise<CompetitorDataResponse | ApiErrorResponse> => {
   try {
     // Normalizza il nome del distretto per gestire "North Miami" correttamente
     const normalizedDistrict = district.toLowerCase().includes('north miami') ? 'North Miami' : district;
@@ -124,13 +131,18 @@ export const fetchCombinedCompetitorData = async (businessType: string, district
       });
       
       console.log(`Combined ${combinedResults.length} results for ${normalizedDistrict} (${businessType})`);
-      return combinedResults;
+      return { businesses: combinedResults };
     }
     
-    // If either API call failed, return null
-    console.log(`Failed to get combined data for ${normalizedDistrict}`);
-    return null;
+    // If either API call failed, return empty businesses array
+    console.log(`Failed to get combined data for ${normalizedDistrict}, returning empty array`);
+    return { businesses: [] };
   } catch (error) {
-    return handleApiError(error, 'Competitor Data');
+    const errorResponse = handleApiError(error, 'Competitor Data') as ApiErrorResponse;
+    // Add an empty businesses array to match the expected structure
+    return {
+      ...errorResponse,
+      businesses: []
+    };
   }
 };
