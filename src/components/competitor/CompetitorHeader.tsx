@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin } from 'lucide-react';
 
 interface CompetitorHeaderProps {
   businessType: string;
   district: string;
   isLoading: boolean;
+  businessAddress?: string;
   cuisineType?: string;
 }
 
@@ -13,6 +14,7 @@ export const CompetitorHeader: React.FC<CompetitorHeaderProps> = ({
   businessType,
   district,
   isLoading,
+  businessAddress,
   cuisineType
 }) => {
   const getBusinessTypeLabel = () => {
@@ -47,6 +49,12 @@ export const CompetitorHeader: React.FC<CompetitorHeaderProps> = ({
       <div>
         Tipo di business: <span className="font-medium">{getBusinessTypeLabel()}</span>
       </div>
+      {businessAddress && (
+        <div className="flex items-center">
+          <MapPin className="h-3 w-3 mr-1" />
+          <span>Indirizzo: {businessAddress}</span>
+        </div>
+      )}
     </div>
   );
 };

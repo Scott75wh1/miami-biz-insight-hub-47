@@ -54,11 +54,12 @@ export const BusinessMainContent: React.FC<BusinessMainContentProps> = ({
             }} 
           />
           
-          {/* Aggiungiamo l'analisi competitiva collegata ai dati dell'attività */}
+          {/* Aggiungiamo l'indirizzo all'analisi competitiva */}
           <CompetitorAnalysisSection 
             businessType={analysisData.businessInfo.type || 'general'}
             businessName={analysisData.businessInfo.name}
             district={analysisData.businessInfo.district}
+            businessAddress={analysisData.businessInfo.address}
             cuisineType={analysisData.analysis.businessSubtype}
           />
         </>

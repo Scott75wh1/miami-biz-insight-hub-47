@@ -12,28 +12,40 @@ import { RefreshCw } from 'lucide-react';
 
 interface CompetitorAnalysisProps {
   businessType: BusinessType;
+  district?: string;
+  businessAddress?: string;
   cuisineType?: string;
   title?: string;
   showCard?: boolean;
 }
 
-const CompetitorAnalysis = ({ businessType, cuisineType, title, showCard = true }: CompetitorAnalysisProps) => {
+const CompetitorAnalysis = ({ 
+  businessType, 
+  district, 
+  businessAddress, 
+  cuisineType, 
+  title, 
+  showCard = true 
+}: CompetitorAnalysisProps) => {
+  // Se viene passato un distretto specifico, lo usiamo, altrimenti prendiamo quello selezionato
   const { selectedDistrict } = useDistrictSelection();
+  const effectiveDistrict = district || selectedDistrict;
   const { apiKeys, isLoaded } = useApiKeys();
   
   const { competitors, isLoading, refreshCompetitors } = useCompetitorData(
     businessType,
-    selectedDistrict,
+    effectiveDistrict,
     apiKeys, 
     isLoaded,
-    cuisineType
+    cuisineType,
+    businessAddress
   );
   
   // Log per debug
   useEffect(() => {
-    console.log(`CompetitorAnalysis rendered for ${businessType} in ${selectedDistrict}`);
+    console.log(`CompetitorAnalysis rendered for ${businessType} in ${effectiveDistrict}${businessAddress ? ` with address: ${businessAddress}` : ''}`);
     console.log(`Competitor count: ${competitors.length}`);
-  }, [selectedDistrict, businessType, competitors.length]);
+  }, [effectiveDistrict, businessType, competitors.length, businessAddress]);
   
   const content = (
     <>
@@ -53,8 +65,9 @@ const CompetitorAnalysis = ({ businessType, cuisineType, title, showCard = true 
         </div>
         <CompetitorHeader 
           businessType={businessType} 
-          district={selectedDistrict} 
+          district={effectiveDistrict} 
           isLoading={isLoading}
+          businessAddress={businessAddress}
           cuisineType={cuisineType}
         />
       </CardHeader>
@@ -62,7 +75,7 @@ const CompetitorAnalysis = ({ businessType, cuisineType, title, showCard = true 
         <CompetitorList 
           competitors={competitors} 
           isLoading={isLoading} 
-          selectedDistrict={selectedDistrict} 
+          selectedDistrict={effectiveDistrict} 
         />
       </CardContent>
     </>

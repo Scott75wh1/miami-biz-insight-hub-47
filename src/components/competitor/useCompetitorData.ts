@@ -12,13 +12,15 @@ export const useCompetitorData = (
   selectedDistrict: string,
   apiKeys: any,
   isLoaded: boolean,
-  cuisineType?: string
+  cuisineType?: string,
+  businessAddress?: string
 ) => {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastLoadedDistrict, setLastLoadedDistrict] = useState<string>("");
   const [lastLoadedType, setLastLoadedType] = useState<string>("");
   const [lastCuisineType, setLastCuisineType] = useState<string | undefined>("");
+  const [lastBusinessAddress, setLastBusinessAddress] = useState<string | undefined>("");
   const { toast } = useToast();
   
   const {
@@ -48,17 +50,19 @@ export const useCompetitorData = (
         businessType, 
         selectedDistrict, 
         apiKeys,
-        cuisineType
+        cuisineType,
+        businessAddress
       );
       
       if (competitorData && competitorData.length) {
         // Using direct type assertion to satisfy TypeScript
         setCompetitors(competitorData as Competitor[]);
         
-        // Aggiorniamo l'ultimo distretto, tipo e tipo di cucina caricati
+        // Aggiorniamo l'ultimo distretto, tipo, tipo di cucina e indirizzo caricati
         setLastLoadedDistrict(selectedDistrict);
         setLastLoadedType(`${businessType}`);
         setLastCuisineType(cuisineType);
+        setLastBusinessAddress(businessAddress);
         
         // Non mostriamo troppi toast in sequenza
         if (competitorData.length === getDefaultCompetitors(businessType, selectedDistrict, cuisineType).length) {
@@ -79,21 +83,22 @@ export const useCompetitorData = (
     } finally {
       setIsLoading(false);
     }
-  }, [businessType, selectedDistrict, cuisineType, apiKeys, isLoaded, toast, showSuccessToast, showDefaultDataToast, showAIAnalysisToast, showErrorToast]);
+  }, [businessType, selectedDistrict, cuisineType, businessAddress, apiKeys, isLoaded, toast, showSuccessToast, showDefaultDataToast, showAIAnalysisToast, showErrorToast]);
 
-  // Load data when business type, district, or cuisine type changes
+  // Load data when business type, district, cuisine type, or address changes
   useEffect(() => {
-    // Verifichiamo se è cambiato il tipo di business, il distretto o il tipo di cucina
+    // Verifichiamo se è cambiato il tipo di business, il distretto, il tipo di cucina o l'indirizzo
     if (isLoaded && (
       selectedDistrict !== lastLoadedDistrict || 
       businessType !== lastLoadedType || 
-      cuisineType !== lastCuisineType
+      cuisineType !== lastCuisineType ||
+      businessAddress !== lastBusinessAddress
     )) {
       // Clear previous data
       setCompetitors([]);
       fetchCompetitorData();
     }
-  }, [businessType, cuisineType, selectedDistrict, isLoaded, lastLoadedDistrict, lastLoadedType, lastCuisineType, fetchCompetitorData]);
+  }, [businessType, cuisineType, selectedDistrict, businessAddress, isLoaded, lastLoadedDistrict, lastLoadedType, lastCuisineType, lastBusinessAddress, fetchCompetitorData]);
 
   // Listener per l'evento di cambio distretto
   useEffect(() => {
