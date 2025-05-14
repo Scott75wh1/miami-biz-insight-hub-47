@@ -7,7 +7,8 @@ export function generateAnalysisPrompt(
   censusResult: any,
   yelpResult: any,
   trendsResult: any,
-  competitorAnalysis: any
+  competitorAnalysis: any,
+  businessType: string
 ): string {
   return `
     ANALISI STRATEGICA DI BUSINESS PER "${businessName}" - ${updatedDistrict}, MIAMI
