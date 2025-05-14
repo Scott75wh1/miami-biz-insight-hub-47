@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { apiLogger } from '@/services/logService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X, RefreshCw, Download } from 'lucide-react';
+import { X, RefreshCw, Download, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,17 +11,28 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 const ApiLogViewer: React.FC = () => {
   const [logs, setLogs] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const intervalRef = useRef<number | null>(null);
   
   const refreshLogs = () => {
     setLogs(apiLogger.getLogs());
+  };
+  
+  const clearLogs = () => {
+    apiLogger.clearLogs();
+    refreshLogs();
   };
   
   useEffect(() => {
     // Aggiorna i log ogni secondo quando il visualizzatore è aperto
     if (isOpen) {
       refreshLogs();
-      const interval = setInterval(refreshLogs, 1000);
-      return () => clearInterval(interval);
+      intervalRef.current = window.setInterval(refreshLogs, 1000);
+      return () => {
+        if (intervalRef.current !== null) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      };
     }
   }, [isOpen]);
   
@@ -41,7 +52,7 @@ const ApiLogViewer: React.FC = () => {
   return (
     <Card className="fixed bottom-4 right-4 w-[400px] max-h-[500px] z-50 shadow-lg">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm">Log API</CardTitle>
+        <CardTitle className="text-sm">Log API ({logs.length})</CardTitle>
         <div className="flex gap-2">
           <Button 
             variant="ghost" 
@@ -58,6 +69,14 @@ const ApiLogViewer: React.FC = () => {
             title="Scarica log"
           >
             <Download className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={clearLogs}
+            title="Pulisci log"
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
           <Button 
             variant="ghost" 

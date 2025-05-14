@@ -26,49 +26,74 @@ export function useTrendsFetcher(
   const [lastFetchParams, setLastFetchParams] = useState<{businessType: string, district: string} | null>(null);
   const [fetchAttempts, setFetchAttempts] = useState(0);
   
-  // Add a reference to track if a fetch is currently in progress
+  // Aggiungiamo un ref per il tracking dell'ultima richiesta
+  const currentRequestId = useRef<string | null>(null);
+  // Ref per tracciare se una fetch è in corso
   const isFetchingRef = useRef(false);
   
   const { toast } = useToast();
   const { apiKeys, isLoaded } = useApiKeys();
   const isUsingDemoKey = !apiKeys.googleTrends || apiKeys.googleTrends === 'demo-key';
+  
+  // Funzione di utilità per normalizzare i valori
+  const normalizeBusinessType = (value: string | BusinessType): string => {
+    if (!value) return 'general';
+    
+    if (typeof value === 'object' && value !== null) {
+      return String(value) || 'general';
+    }
+    return String(value);
+  };
 
   // Function to fetch trends data
   const fetchTrendsData = useCallback(async (businessType: string | BusinessType, district: string) => {
     if (!isLoaded) return;
     
+    const normalizedBusinessType = normalizeBusinessType(businessType);
+    
     // Prevent duplicate fetches with the same parameters
     if (lastFetchParams && 
-        lastFetchParams.businessType === businessType && 
-        lastFetchParams.district === district) {
-      console.log("Skipping duplicate fetch for:", businessType, district);
+        lastFetchParams.businessType === normalizedBusinessType && 
+        lastFetchParams.district === district && 
+        searchTrends.length > 0) {
+      console.log(`[TrendsFetcher] Skipping duplicate fetch for: ${normalizedBusinessType}, ${district}`);
       return;
     }
     
-    // Prevent concurrent fetches - this avoids infinite loops
+    // Prevent concurrent fetches
     if (isFetchingRef.current) {
-      console.log("A fetch operation is already in progress, skipping this call");
+      console.log("[TrendsFetcher] A fetch operation is already in progress, skipping this call");
       return;
     }
+    
+    // ID univoco per questa richiesta
+    const requestId = `${normalizedBusinessType}-${district}-${Date.now()}`;
+    currentRequestId.current = requestId;
     
     // Set loading state and update last fetch params
     setIsLoading(true);
-    setLastFetchParams({ businessType, district });
+    setLastFetchParams({ businessType: normalizedBusinessType, district });
     setFetchAttempts(prev => prev + 1);
     isFetchingRef.current = true;
     
     const logIndex = apiLogger.logAPICall(
       'GoogleTrends',
       'fetchTrendsData',
-      { businessType, district, isUsingDemoKey }
+      { businessType: normalizedBusinessType, district, isUsingDemoKey }
     );
     
     try {
       // Get keywords based on business type and selected district
-      const keywords = getSearchKeywords(businessType as BusinessType, district);
+      const keywords = getSearchKeywords(normalizedBusinessType as BusinessType, district);
       
       // Fetch trends data from Google Trends API
       const data = await fetchGoogleTrendsData(apiKeys.googleTrends, keywords, 'US-FL-528', district);
+      
+      // Controlla se questa è ancora la richiesta più recente
+      if (currentRequestId.current !== requestId) {
+        console.log("[TrendsFetcher] A newer request was made, discarding these results");
+        return;
+      }
       
       apiLogger.logAPIResponse(logIndex, { 
         success: true,
@@ -87,20 +112,31 @@ export function useTrendsFetcher(
         setSearchTrends(mappedTrends);
         
         // Set the growing categories based on business type and district
-        setGrowingCategories(getGrowingCategories(businessType as BusinessType, district));
+        setGrowingCategories(getGrowingCategories(normalizedBusinessType as BusinessType, district));
         
-        const messageType = isUsingDemoKey ? "Dati dimostrativi di trend caricati" : "Dati reali dei trend caricati";
-        toast({
-          title: messageType,
-          description: isUsingDemoKey 
-            ? "Stai visualizzando dati dimostrativi. Inserisci una API key valida per dati reali."
-            : `I dati dei trend per ${district} sono stati caricati con successo.`,
-        });
+        // Limitiamo i toast per evitare spam
+        if (fetchAttempts <= 1 || !isUsingDemoKey) {
+          const messageType = isUsingDemoKey ? "Dati dimostrativi di trend caricati" : "Dati reali dei trend caricati";
+          toast({
+            title: messageType,
+            description: isUsingDemoKey 
+              ? "Stai visualizzando dati dimostrativi. Inserisci una API key valida per dati reali."
+              : `I dati dei trend per ${district} sono stati caricati con successo.`,
+          });
+        }
         
-        // Now get AI recommendations based on the trends data and district
-        await getAiRecommendations(mappedTrends, getGrowingCategories(businessType as BusinessType, district), district, businessType as string);
-        
+        // Controlla nuovamente se questa è la richiesta più recente
+        if (currentRequestId.current === requestId) {
+          // Now get AI recommendations based on the trends data and district
+          await getAiRecommendations(mappedTrends, getGrowingCategories(normalizedBusinessType as BusinessType, district), district, normalizedBusinessType);
+        }
       } else {
+        // Controlla se questa è ancora la richiesta più recente
+        if (currentRequestId.current !== requestId) {
+          console.log("[TrendsFetcher] A newer request was made, discarding default data results");
+          return;
+        }
+        
         // Use default data if API returns no results or if it's an error response
         const defaultTrends = keywords.map((keyword, index) => ({
           label: keyword,
@@ -110,24 +146,33 @@ export function useTrendsFetcher(
         setSearchTrends(defaultTrends);
         
         // Set the growing categories based on business type and district
-        const defaultCategories = getGrowingCategories(businessType as BusinessType, district);
+        const defaultCategories = getGrowingCategories(normalizedBusinessType as BusinessType, district);
         setGrowingCategories(defaultCategories);
         
-        toast({
-          title: "Utilizzando dati predefiniti",
-          description: "Nessun dato disponibile dall'API, utilizzando dati di esempio.",
-        });
+        // Limitiamo i toast per evitare spam
+        if (fetchAttempts <= 1) {
+          toast({
+            title: "Utilizzando dati predefiniti",
+            description: "Nessun dato disponibile dall'API, utilizzando dati di esempio.",
+          });
+        }
         
         // Get AI recommendations based on default data
-        await getAiRecommendations(defaultTrends, defaultCategories, district, businessType as string);
+        await getAiRecommendations(defaultTrends, defaultCategories, district, normalizedBusinessType);
       }
     } catch (error) {
+      // Controlla se questa è ancora la richiesta più recente
+      if (currentRequestId.current !== requestId) {
+        console.log("[TrendsFetcher] A newer request was made while an error occurred, ignoring");
+        return;
+      }
+      
       apiLogger.logAPIError(logIndex, error);
       
       console.error('Error fetching trends data:', error);
       
       // Use default data if there's an error
-      const keywords = getSearchKeywords(businessType as BusinessType, district);
+      const keywords = getSearchKeywords(normalizedBusinessType as BusinessType, district);
       const defaultTrends = keywords.map((keyword, index) => ({
         label: keyword,
         value: 80 - (index * 10)
@@ -136,7 +181,7 @@ export function useTrendsFetcher(
       setSearchTrends(defaultTrends);
       
       // Set the growing categories based on business type and district
-      const defaultCategories = getGrowingCategories(businessType as BusinessType, district);
+      const defaultCategories = getGrowingCategories(normalizedBusinessType as BusinessType, district);
       setGrowingCategories(defaultCategories);
       
       // Mostra il toast di errore solo se non siamo al primo tentativo
@@ -148,17 +193,20 @@ export function useTrendsFetcher(
           variant: "destructive",
         });
       } else {
-        console.log("Primo tentativo fallito, usando dati predefiniti senza mostrare errore");
+        console.log("[TrendsFetcher] Primo tentativo fallito, usando dati predefiniti senza mostrare errore");
       }
       
       // Try to get AI recommendations despite the error
-      await getAiRecommendations(defaultTrends, defaultCategories, district, businessType as string);
+      await getAiRecommendations(defaultTrends, defaultCategories, district, normalizedBusinessType);
     } finally {
-      setIsLoading(false);
-      // Reset the fetching state reference
-      isFetchingRef.current = false;
+      // Reimposta gli stati solo se questa è ancora la richiesta corrente
+      if (currentRequestId.current === requestId) {
+        setIsLoading(false);
+        isFetchingRef.current = false;
+        currentRequestId.current = null;
+      }
     }
-  }, [isLoaded, apiKeys.googleTrends, toast, getAiRecommendations, isUsingDemoKey, fetchAttempts]);
+  }, [isLoaded, apiKeys.googleTrends, toast, getAiRecommendations, isUsingDemoKey, fetchAttempts, searchTrends.length]);
 
   return {
     searchTrends,
