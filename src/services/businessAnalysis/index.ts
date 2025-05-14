@@ -51,7 +51,7 @@ export async function performBusinessAnalysis(
     yelpResult,
     trendsResult,
     competitorAnalysis,
-    businessInfo.type // Pass businessInfo.type to the prompt generator
+    businessInfo.type
   );
   
   console.log(`Sending enhanced strategic business prompt to OpenAI for comprehensive analysis of ${businessInfo.name} in ${updatedDistrict}`);
@@ -82,3 +82,4 @@ export async function performBusinessAnalysis(
 
 // Re-export types for easier imports - fixed to use 'export type' syntax
 export type { BusinessInfo, AnalysisResult } from './types';
+
