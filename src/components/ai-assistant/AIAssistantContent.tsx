@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import AssistantSettingsPanel from './AssistantSettingsPanel';
-import EnhancedAIAssistantRefactored from './EnhancedAIAssistantRefactored';
+import AIAssistant from './AIAssistant';
 import { toast } from '@/hooks/use-toast';
 
 const AIAssistantContent: React.FC = () => {
@@ -17,7 +17,7 @@ const AIAssistantContent: React.FC = () => {
       toast({
         title: "Modalità dimostrativa attiva",
         description: "Per utilizzare l'assistente AI con funzionalità complete, imposta l'API key di OpenAI nelle impostazioni.",
-        variant: "warning" as const,
+        variant: "default",
       });
     }
   }, [apiKeys.openAI]);
@@ -37,7 +37,7 @@ const AIAssistantContent: React.FC = () => {
         </div>
         
         <div className="md:col-span-2">
-          <EnhancedAIAssistantRefactored 
+          <AIAssistant 
             businessType={businessType}
             businessName={businessName || undefined}
           />
