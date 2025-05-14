@@ -1,16 +1,39 @@
 
-// Error handler for API requests
 export const handleApiError = (error: any, serviceName: string) => {
-  console.error(`Error in ${serviceName} API call:`, error);
+  const errorMessage = error?.message || 'Unknown error occurred';
+  const errorDetails = {
+    timestamp: new Date().toISOString(),
+    service: serviceName,
+    message: errorMessage,
+    stack: error?.stack,
+    status: error?.response?.status || 'unknown'
+  };
   
-  // Add more detailed logging for business analysis services
-  if (serviceName.includes('Business') || serviceName.includes('Analysis')) {
-    console.error('Details:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack?.slice(0, 500) // Limit stack trace length
-    });
+  console.error(`Error with ${serviceName} API:`, errorDetails);
+  
+  // Return a standardized error response
+  return {
+    error: true,
+    errorType: 'API_CONNECTION_ERROR',
+    service: serviceName,
+    message: `Failed to connect to ${serviceName} API: ${errorMessage}`,
+    timestamp: new Date().toISOString(),
+    // Include mock data flag to indicate this is not real data
+    usingMockData: true
+  };
+};
+
+// Helper to check API responses for common issues
+export const validateApiResponse = (data: any, serviceName: string) => {
+  if (!data) {
+    console.warn(`Empty response from ${serviceName} API, using mock data`);
+    return false;
   }
   
-  return null;
+  if (data.error) {
+    console.warn(`Error in ${serviceName} API response:`, data.error);
+    return false;
+  }
+  
+  return true;
 };

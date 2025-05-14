@@ -20,6 +20,7 @@ export function useApiKeys() {
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoadError, setIsLoadError] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     // This ensures the hook only runs in browser environment
@@ -36,6 +37,7 @@ export function useApiKeys() {
       };
 
       setApiKeys(loadedKeys);
+      setLastUpdated(new Date());
       setIsLoaded(true);
     } catch (error) {
       console.error('Error loading API keys from localStorage:', error);
@@ -54,11 +56,33 @@ export function useApiKeys() {
     return Object.values(apiKeys).every(key => key !== 'demo-key');
   };
 
+  // Function to check if a specific API key is valid (not the demo key)
+  const isApiKeyValid = (keyName: keyof ApiKeys) => {
+    return apiKeys[keyName] && apiKeys[keyName] !== 'demo-key';
+  };
+
+  // Function to update API keys and store in localStorage
+  const updateApiKeys = (newKeys: Partial<ApiKeys>) => {
+    const updatedKeys = { ...apiKeys, ...newKeys };
+    setApiKeys(updatedKeys);
+    setLastUpdated(new Date());
+    
+    // Save to localStorage
+    Object.entries(newKeys).forEach(([key, value]) => {
+      if (value) {
+        localStorage.setItem(`${key}ApiKey`, value);
+      }
+    });
+  };
+
   return {
     apiKeys,
     isLoaded,
     isLoadError,
+    lastUpdated,
     areKeysSet,
     isUsingRealData,
+    isApiKeyValid,
+    updateApiKeys
   };
 }

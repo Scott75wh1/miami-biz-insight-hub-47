@@ -1,12 +1,14 @@
+import * as React from "react"
 
-import { useState } from "react"
+import type {
+  ToastActionElement,
+  ToastProps,
+} from "@/components/ui/toast"
 
-import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
+const TOAST_LIMIT = 10
+const TOAST_REMOVE_DELAY = 10000
 
-const TOAST_LIMIT = 5
-export const TOAST_REMOVE_DELAY = 1000
-
-type ToasterToast = ToastProps & {
+export type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
@@ -22,11 +24,32 @@ const actionTypes = {
 
 let count = 0
 
-function generateId() {
-  return (count++).toString()
+function genId() {
+  count = (count + 1) % Number.MAX_VALUE
+  return count.toString()
 }
 
-// To prevent duplicate toasts
+type ActionType = typeof actionTypes
+
+type Action =
+  | {
+      type: ActionType["ADD_TOAST"]
+      toast: ToasterToast
+    }
+  | {
+      type: ActionType["UPDATE_TOAST"]
+      toast: Partial<ToasterToast>
+    }
+  | {
+      type: ActionType["DISMISS_TOAST"]
+      toastId?: string
+    }
+  | {
+      type: ActionType["REMOVE_TOAST"]
+      toastId?: string
+    }
+
+// Variables for duplicate toast prevention
 let previousToastId: string | null = null
 let previousToastTimestamp: number = 0
 const DUPLICATE_TOAST_TIMEOUT = 3000 // 3 seconds
@@ -34,98 +57,145 @@ const DUPLICATE_TOAST_TIMEOUT = 3000 // 3 seconds
 // Additional variable needed for duplicate toast prevention
 let previousToastHash: string = '';
 
-export function useToast() {
-  const [state, setState] = useState<{
-    toasts: ToasterToast[]
-  }>({
-    toasts: [],
-  })
+interface State {
+  toasts: ToasterToast[]
+}
 
-  function toast(props: Omit<ToasterToast, "id">) {
-    // Check for duplicate toast prevention
-    const now = Date.now()
-    const toastHash = `${props.title}-${props.description}` // Simple hashing of toast content
-    
-    if (previousToastId && 
-        previousToastHash === toastHash && 
-        (now - previousToastTimestamp) < DUPLICATE_TOAST_TIMEOUT) {
-      // Skip creating duplicate toast if the same content was shown within the timeout
-      return { id: previousToastId, dismiss: () => dismiss(previousToastId) }
-    }
-    
-    const id = generateId()
-    const newToast = { id, ...props }
+const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-    // Store for duplicate prevention
-    previousToastId = id
-    previousToastHash = toastHash
-    previousToastTimestamp = now
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case actionTypes.ADD_TOAST:
+      return {
+        ...state,
+        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+      }
 
-    setState((state) => {
-      const nextToasts = [...state.toasts]
-      const maxToasts = TOAST_LIMIT
+    case actionTypes.UPDATE_TOAST:
+      return {
+        ...state,
+        toasts: state.toasts.map((t) =>
+          t.id === action.toast.id ? { ...t, ...action.toast } : t
+        ),
+      }
 
-      // Remove the oldest toasts if we exceed the limit
-      if (nextToasts.length >= maxToasts) {
-        nextToasts.splice(0, nextToasts.length - maxToasts + 1)
+    case actionTypes.DISMISS_TOAST: {
+      const { toastId } = action
+
+      // ! Side effects ! - This could be extracted into a dismissToast() action,
+      // but I'll keep it here for simplicity
+      if (toastId) {
+        if (toastTimeouts.has(toastId)) {
+          clearTimeout(toastTimeouts.get(toastId))
+          toastTimeouts.delete(toastId)
+        }
+      } else {
+        for (const [id, timeout] of toastTimeouts.entries()) {
+          clearTimeout(timeout)
+          toastTimeouts.delete(id)
+        }
       }
 
       return {
         ...state,
-        toasts: [...nextToasts, newToast],
+        toasts: state.toasts.map((t) =>
+          t.id === toastId || toastId === undefined
+            ? {
+                ...t,
+                open: false,
+              }
+            : t
+        ),
       }
+    }
+    case actionTypes.REMOVE_TOAST:
+      if (action.toastId === undefined) {
+        return {
+          ...state,
+          toasts: [],
+        }
+      }
+      return {
+        ...state,
+        toasts: state.toasts.filter((t) => t.id !== action.toastId),
+      }
+  }
+}
+
+const listeners: Array<(state: State) => void> = []
+
+let memoryState: State = { toasts: [] }
+
+function dispatch(action: Action) {
+  memoryState = reducer(memoryState, action)
+  listeners.forEach((listener) => {
+    listener(memoryState)
+  })
+}
+
+type Toast = Omit<ToasterToast, "id">
+
+function toast(props: Toast) {
+  // Generate a simple hash for the toast content
+  const contentHash = `${props.title || ''}-${props.description || ''}`;
+  
+  // Prevent duplicate toasts in quick succession
+  const now = Date.now();
+  if (contentHash === previousToastHash && (now - previousToastTimestamp) < DUPLICATE_TOAST_TIMEOUT) {
+    return;
+  }
+  
+  // Update duplicate prevention variables
+  previousToastHash = contentHash;
+  previousToastTimestamp = now;
+
+  const id = genId()
+
+  const update = (props: ToasterToast) =>
+    dispatch({
+      type: actionTypes.UPDATE_TOAST,
+      toast: { ...props, id },
     })
+  const dismiss = () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
 
-    return {
+  dispatch({
+    type: actionTypes.ADD_TOAST,
+    toast: {
+      ...props,
       id,
-      dismiss: () => dismiss(id),
-    }
-  }
-
-  function update(id: string, props: ToasterToast) {
-    if (id === previousToastId) {
-      // Update the previous toast reference
-      previousToastHash = `${props.title}-${props.description}`
-    }
-
-    setState((state) => ({
-      ...state,
-      toasts: state.toasts.map((t) => (t.id === id ? { ...t, ...props } : t)),
-    }))
-  }
-
-  function dismiss(id: string) {
-    setState((state) => ({
-      ...state,
-      toasts: state.toasts.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              open: false,
-            }
-          : t
-      ),
-    }))
-  }
-
-  function remove(id: string) {
-    setState((state) => ({
-      ...state,
-      toasts: state.toasts.filter((t) => t.id !== id),
-    }))
-  }
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) dismiss()
+      },
+    },
+  })
 
   return {
-    toasts: state.toasts,
-    toast,
-    update,
+    id,
     dismiss,
-    remove,
+    update,
+  }
+}
+
+function useToast() {
+  const [state, setState] = React.useState<State>(memoryState)
+
+  React.useEffect(() => {
+    listeners.push(setState)
+    return () => {
+      const index = listeners.indexOf(setState)
+      if (index > -1) {
+        listeners.splice(index, 1)
+      }
+    }
+  }, [state])
+
+  return {
+    ...state,
+    toast,
+    dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
   }
 }
 
 // Export the toast function for direct import
-export const toast = (props: Omit<ToasterToast, "id">) => {
-  const { toast } = useToast()
-  return toast(props)
-}
+export { toast, useToast }
