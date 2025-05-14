@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useApiKeys } from './useApiKeys';
 import { useToast } from '@/hooks/use-toast';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
-import { performBusinessAnalysis, AnalysisResult, BusinessInfo } from '@/services/businessAnalysisService';
+import { performBusinessAnalysis, BusinessInfo, AnalysisResult } from '@/services/businessAnalysis';
 
 // Update the BusinessFormValues interface to include businessType
 interface BusinessFormValues {
