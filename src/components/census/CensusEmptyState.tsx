@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { FileX, RefreshCcw, MapPin } from 'lucide-react';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
+import { toast } from '@/hooks/use-toast';
 
 interface CensusEmptyStateProps {
   onRefresh?: () => void;
@@ -17,7 +18,14 @@ const CensusEmptyState = ({ onRefresh }: CensusEmptyStateProps) => {
     if (otherDistricts.length > 0) {
       // Select a random district from the available ones
       const randomIndex = Math.floor(Math.random() * otherDistricts.length);
-      handleDistrictChange(otherDistricts[randomIndex]);
+      const newDistrict = otherDistricts[randomIndex];
+      
+      handleDistrictChange(newDistrict);
+      
+      toast({
+        title: "Distretto cambiato",
+        description: `Passato a ${newDistrict} per visualizzare dati diversi.`,
+      });
     }
   };
   
