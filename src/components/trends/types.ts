@@ -1,8 +1,8 @@
 
 // Re-export the types from utils to maintain consistency
-import { TrendItem, Category } from './utils';
+import type { TrendItem, Category } from './utils';
 
-export { TrendItem, Category };
+export type { TrendItem, Category };
 
 export interface AIRecommendation {
   summary: string;
