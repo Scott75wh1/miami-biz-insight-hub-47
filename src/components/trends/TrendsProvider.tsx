@@ -118,11 +118,12 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       
       apiLogger.logAPIResponse(logIndex, { 
         success: true,
-        trendsReceived: data?.trends?.length || 0,
+        trendsReceived: 'trends' in data ? data.trends.length : 0,
         isDefaultData: isUsingDemoKey
       });
       
-      if (data && 'trends' in data) {
+      // Use type guard to check if data has the trends property
+      if (data && 'trends' in data && Array.isArray(data.trends)) {
         // Map the API response to our TrendItem interface
         const mappedTrends = data.trends.map((trend: any) => ({
           label: trend.keyword,
@@ -146,7 +147,7 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         await getAiRecommendations(mappedTrends, getGrowingCategories(businessType as BusinessType, district), district, businessType);
         
       } else {
-        // Use default data if API returns no results
+        // Use default data if API returns no results or if it's an error response
         const defaultTrends = keywords.map((keyword, index) => ({
           label: keyword,
           value: 80 - (index * 10)

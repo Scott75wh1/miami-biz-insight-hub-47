@@ -37,7 +37,7 @@ export interface BusinessAnalysis {
   recommendations: string[];
 }
 
-// Add an interface for error responses
+// Updated to include trends property for consistency with TrendsDataResponse
 export interface ApiErrorResponse {
   error: boolean;
   errorType: string;
@@ -45,4 +45,6 @@ export interface ApiErrorResponse {
   message: string;
   timestamp: string;
   usingMockData: boolean;
+  trends?: any[]; // Added trends property to match TrendsDataResponse
+  district?: string; // Added district property to match TrendsDataResponse
 }
