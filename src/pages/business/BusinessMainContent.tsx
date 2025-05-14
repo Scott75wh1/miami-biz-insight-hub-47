@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import BusinessAnalysisForm from '@/components/business/BusinessAnalysisForm';
 import BusinessAnalysisResults from '@/components/business/BusinessAnalysisResults';
+import CompetitorAnalysisSection from '@/components/business/CompetitorAnalysisSection';
 
 interface BusinessMainContentProps {
   selectedDistrict: string | undefined;
@@ -40,17 +41,27 @@ export const BusinessMainContent: React.FC<BusinessMainContentProps> = ({
       </Card>
       
       {analysisComplete && analysisData && (
-        <BusinessAnalysisResults 
-          key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${analysisData.businessInfo.district}-${districtUpdateTime}`} 
-          data={{
-            businessInfo: {
-              ...analysisData.businessInfo,
-              type: analysisData.businessInfo.type || 'general'
-            },
-            analysis: analysisData.analysis,
-            rawData: analysisData.rawData
-          }} 
-        />
+        <>
+          <BusinessAnalysisResults 
+            key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${analysisData.businessInfo.district}-${districtUpdateTime}`} 
+            data={{
+              businessInfo: {
+                ...analysisData.businessInfo,
+                type: analysisData.businessInfo.type || 'general'
+              },
+              analysis: analysisData.analysis,
+              rawData: analysisData.rawData
+            }} 
+          />
+          
+          {/* Aggiungiamo l'analisi competitiva collegata ai dati dell'attività */}
+          <CompetitorAnalysisSection 
+            businessType={analysisData.businessInfo.type || 'general'}
+            businessName={analysisData.businessInfo.name}
+            district={analysisData.businessInfo.district}
+            cuisineType={analysisData.analysis.businessSubtype}
+          />
+        </>
       )}
     </div>
   );

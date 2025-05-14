@@ -13,9 +13,11 @@ import { RefreshCw } from 'lucide-react';
 interface CompetitorAnalysisProps {
   businessType: BusinessType;
   cuisineType?: string;
+  title?: string;
+  showCard?: boolean;
 }
 
-const CompetitorAnalysis = ({ businessType, cuisineType }: CompetitorAnalysisProps) => {
+const CompetitorAnalysis = ({ businessType, cuisineType, title, showCard = true }: CompetitorAnalysisProps) => {
   const { selectedDistrict } = useDistrictSelection();
   const { apiKeys, isLoaded } = useApiKeys();
   
@@ -33,11 +35,11 @@ const CompetitorAnalysis = ({ businessType, cuisineType }: CompetitorAnalysisPro
     console.log(`Competitor count: ${competitors.length}`);
   }, [selectedDistrict, businessType, competitors.length]);
   
-  return (
-    <Card className="h-full">
+  const content = (
+    <>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
-          <CardTitle>Competitor Analysis</CardTitle>
+          <CardTitle>{title || "Competitor Analysis"}</CardTitle>
           <Button
             variant="outline"
             size="sm"
@@ -63,6 +65,16 @@ const CompetitorAnalysis = ({ businessType, cuisineType }: CompetitorAnalysisPro
           selectedDistrict={selectedDistrict} 
         />
       </CardContent>
+    </>
+  );
+  
+  if (!showCard) {
+    return content;
+  }
+  
+  return (
+    <Card className="h-full">
+      {content}
     </Card>
   );
 };

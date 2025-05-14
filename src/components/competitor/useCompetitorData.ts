@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { Competitor } from './types';
@@ -17,6 +18,7 @@ export const useCompetitorData = (
   const [isLoading, setIsLoading] = useState(false);
   const [lastLoadedDistrict, setLastLoadedDistrict] = useState<string>("");
   const [lastLoadedType, setLastLoadedType] = useState<string>("");
+  const [lastCuisineType, setLastCuisineType] = useState<string | undefined>("");
   const { toast } = useToast();
   
   const {
@@ -53,9 +55,10 @@ export const useCompetitorData = (
         // Using direct type assertion to satisfy TypeScript
         setCompetitors(competitorData as Competitor[]);
         
-        // Aggiorniamo l'ultimo distretto e tipo caricati
+        // Aggiorniamo l'ultimo distretto, tipo e tipo di cucina caricati
         setLastLoadedDistrict(selectedDistrict);
-        setLastLoadedType(`${businessType}${cuisineType || ""}`);
+        setLastLoadedType(`${businessType}`);
+        setLastCuisineType(cuisineType);
         
         // Non mostriamo troppi toast in sequenza
         if (competitorData.length === getDefaultCompetitors(businessType, selectedDistrict, cuisineType).length) {
@@ -80,15 +83,17 @@ export const useCompetitorData = (
 
   // Load data when business type, district, or cuisine type changes
   useEffect(() => {
-    const currentTypeKey = `${businessType}${cuisineType || ""}`;
-    
-    // Verifichiamo se è cambiato il tipo di business o il distretto
-    if (isLoaded && (selectedDistrict !== lastLoadedDistrict || currentTypeKey !== lastLoadedType)) {
+    // Verifichiamo se è cambiato il tipo di business, il distretto o il tipo di cucina
+    if (isLoaded && (
+      selectedDistrict !== lastLoadedDistrict || 
+      businessType !== lastLoadedType || 
+      cuisineType !== lastCuisineType
+    )) {
       // Clear previous data
       setCompetitors([]);
       fetchCompetitorData();
     }
-  }, [businessType, cuisineType, selectedDistrict, isLoaded, lastLoadedDistrict, lastLoadedType, fetchCompetitorData]);
+  }, [businessType, cuisineType, selectedDistrict, isLoaded, lastLoadedDistrict, lastLoadedType, lastCuisineType, fetchCompetitorData]);
 
   // Listener per l'evento di cambio distretto
   useEffect(() => {
