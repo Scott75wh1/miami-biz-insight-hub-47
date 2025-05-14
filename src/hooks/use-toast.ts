@@ -1,7 +1,5 @@
-
 import * as React from "react"
-import {
-  Toast,
+import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { Competitor } from './CompetitorCard';
 import { loadCompetitorData } from './services/competitorDataService';
@@ -28,8 +28,11 @@ export const useCompetitorData = (
   } = useCompetitorToasts();
   
   // Load competitor data function with AI analysis
-  const fetchCompetitorData = async () => {
-    if (!isLoaded || !selectedDistrict) return;
+  const fetchCompetitorData = useCallback(async () => {
+    if (!isLoaded || !selectedDistrict) {
+      console.log("Non posso caricare i dati concorrenti: isLoaded:", isLoaded, "selectedDistrict:", selectedDistrict);
+      return;
+    }
     
     setIsLoading(true);
     
@@ -48,28 +51,33 @@ export const useCompetitorData = (
         cuisineType
       );
       
-      if (competitorData) {
+      console.log(`Competitor data loaded for ${selectedDistrict}: ${competitorData.length} items`);
+      
+      if (competitorData && competitorData.length) {
         setCompetitors(competitorData);
         
         // Aggiorniamo l'ultimo distretto e tipo caricati
         setLastLoadedDistrict(selectedDistrict);
         setLastLoadedType(`${businessType}${cuisineType || ""}`);
         
-        if (competitorData === getDefaultCompetitors(businessType, selectedDistrict, cuisineType)) {
+        if (competitorData.length === getDefaultCompetitors(businessType, selectedDistrict, cuisineType).length) {
+          console.log("Usando dati di default per i concorrenti");
           showDefaultDataToast();
         } else {
+          console.log("Usando dati reali per i concorrenti");
           showSuccessToast(businessType, selectedDistrict);
         }
         
         showAIAnalysisToast();
       } else {
         // Fallback to default data
+        console.log("Nessun dato concorrente ricevuto, usando dati di default");
         const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
         setCompetitors(defaultData);
         showDefaultDataToast();
       }
     } catch (error) {
-      console.error('Error loading competitor data:', error);
+      console.error('Errore caricamento dati concorrenti:', error);
       
       // Use default data if there's an error
       const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
@@ -78,7 +86,7 @@ export const useCompetitorData = (
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [businessType, selectedDistrict, cuisineType, apiKeys, isLoaded, toast, showSuccessToast, showDefaultDataToast, showAIAnalysisToast, showErrorToast]);
 
   // Load data when business type, district, or cuisine type changes
   useEffect(() => {
@@ -87,11 +95,12 @@ export const useCompetitorData = (
     // Verifichiamo se è cambiato il tipo di business o il distretto
     if (isLoaded && (selectedDistrict !== lastLoadedDistrict || currentTypeKey !== lastLoadedType)) {
       console.log(`District (${selectedDistrict}) or business type (${businessType}) changed, reloading data...`);
+      console.log(`Last loaded: District=${lastLoadedDistrict}, Type=${lastLoadedType}`);
       // Clear previous data
       setCompetitors([]);
       fetchCompetitorData();
     }
-  }, [businessType, cuisineType, selectedDistrict, isLoaded, lastLoadedDistrict, lastLoadedType]);
+  }, [businessType, cuisineType, selectedDistrict, isLoaded, lastLoadedDistrict, lastLoadedType, fetchCompetitorData]);
 
   // Listener per l'evento di cambio distretto
   useEffect(() => {
@@ -101,8 +110,14 @@ export const useCompetitorData = (
       
       // Force reload when district changes via event
       if (isLoaded && customEvent.detail.district !== lastLoadedDistrict) {
+        console.log(`Forcing reload of competitor data due to district change event: ${customEvent.detail.district}`);
         setCompetitors([]);
-        fetchCompetitorData();
+        // Aggiorniamo temporaneamente il district per evitare loop di caricamento
+        setLastLoadedDistrict(customEvent.detail.district);
+        // Aggiungiamo un ritardo per evitare caricamenti simultanei
+        setTimeout(() => {
+          fetchCompetitorData();
+        }, 100);
       }
     };
     

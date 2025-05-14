@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useApiKeys } from './useApiKeys';
 import { useToast } from '@/hooks/use-toast';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
@@ -19,11 +20,19 @@ export function useBusinessAnalysis() {
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [analysisData, setAnalysisData] = useState<AnalysisResult | null>(null);
 
+  // Aggiungiamo un effect per monitorare i cambiamenti di distretto
+  useEffect(() => {
+    console.log(`useBusinessAnalysis: distretto cambiato a ${selectedDistrict}`);
+  }, [selectedDistrict]);
+
   const startAnalysis = async (values: BusinessFormValues) => {
     // Reset previous analysis data before starting a new one
     setAnalysisData(null);
     setAnalysisComplete(false);
     setIsAnalyzing(true);
+    
+    console.log(`Iniziando analisi per ${values.businessName} nel distretto ${selectedDistrict}`);
+    console.log(`API Keys disponibili:`, Object.keys(apiKeys).filter(k => !!apiKeys[k]).join(', '));
     
     try {
       toast({
@@ -49,6 +58,16 @@ export function useBusinessAnalysis() {
       };
       
       const result = await performBusinessAnalysis(businessInfo, apiKeysRecord);
+      
+      console.log(`Analisi completata per ${businessInfo.name}:`, {
+        district: result.businessInfo.district,
+        dataReceived: {
+          places: !!result.rawData.places,
+          yelp: !!result.rawData.yelp,
+          census: !!result.rawData.census,
+          trends: !!result.rawData.trends
+        }
+      });
       
       setAnalysisData(result);
       setAnalysisComplete(true);

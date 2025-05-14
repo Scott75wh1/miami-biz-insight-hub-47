@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Building } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Layout from '@/components/Layout';
@@ -7,21 +7,33 @@ import BusinessAnalysisForm from '@/components/business/BusinessAnalysisForm';
 import BusinessAnalysisResults from '@/components/business/BusinessAnalysisResults';
 import { useBusinessAnalysis } from '@/hooks/useBusinessAnalysis';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
+import { useToast } from '@/hooks/use-toast';
 
 const MyBusinessPage = () => {
   const { isAnalyzing, analysisComplete, analysisData, startAnalysis } = useBusinessAnalysis();
   const { selectedDistrict } = useDistrictSelection();
+  const { toast } = useToast();
+  
   // Aggiungiamo uno state per forzare il re-render quando cambia il distretto
   const [districtUpdateTime, setDistrictUpdateTime] = useState<number>(Date.now());
 
-  // Aggiungiamo un log per debugging
+  // Log per tracciare il ciclo di vita del componente
+  useEffect(() => {
+    console.log(`MyBusinessPage montato/aggiornato con distretto: ${selectedDistrict}`);
+    
+    return () => {
+      console.log('MyBusinessPage smontato');
+    };
+  }, []);
+
+  // Aggiungiamo un log per debugging quando cambiano i dati di analisi
   useEffect(() => {
     if (analysisComplete && analysisData) {
       console.log('Nuovi dati di analisi ricevuti:', analysisData);
     }
   }, [analysisComplete, analysisData]);
 
-  // Ascoltiamo il cambio di distretto
+  // Ascoltiamo il cambio di distretto più efficacemente
   useEffect(() => {
     console.log(`Distretto selezionato nella pagina MyBusiness: ${selectedDistrict}`);
     setDistrictUpdateTime(Date.now());
@@ -29,7 +41,16 @@ const MyBusinessPage = () => {
     const handleDistrictChange = (e: Event) => {
       const customEvent = e as CustomEvent;
       console.log(`Evento cambio distretto rilevato: ${customEvent.detail.district}`);
-      setDistrictUpdateTime(Date.now());
+      setDistrictUpdateTime(previous => {
+        console.log(`Aggiornamento timestamp distretto: ${previous} -> ${Date.now()}`);
+        return Date.now();
+      });
+      
+      // Notifichiamo l'utente del cambio di distretto
+      toast({
+        title: "Zona cambiata",
+        description: `Selezionato il distretto: ${customEvent.detail.district}`,
+      });
     };
 
     window.addEventListener('districtChanged', handleDistrictChange);
@@ -37,7 +58,10 @@ const MyBusinessPage = () => {
     return () => {
       window.removeEventListener('districtChanged', handleDistrictChange);
     };
-  }, [selectedDistrict]);
+  }, [selectedDistrict, toast]);
+
+  // Log per verificare quando il componente viene renderizzato
+  console.log(`Rendering MyBusinessPage - Distretto: ${selectedDistrict}, UpdateTime: ${districtUpdateTime}`);
 
   return (
     <Layout>

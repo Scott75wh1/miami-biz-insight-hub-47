@@ -10,12 +10,30 @@ export function generateAnalysisPrompt(
   competitorAnalysis: any,
   businessType: string
 ): string {
+  console.log(`Generando prompt di analisi per ${businessName} (${businessType}) in ${updatedDistrict}`);
+  console.log(`Dati disponibili: Places: ${!!placesResult}, Census: ${!!censusResult}, Yelp: ${!!yelpResult}, Trends: ${!!trendsResult}`);
+
+  // Estrai informazioni salienti dai dati per migliorare il prompt
+  const placesData = placesResult?.results?.[0] || {};
+  const censusDataStr = censusResult 
+    ? `popolazione: ${censusResult.population || 'N/A'}, età media: ${censusResult.median_age || 'N/A'}, reddito medio: ${censusResult.median_income || 'N/A'}, famiglie: ${censusResult.households || 'N/A'}`
+    : 'Dati demografici non disponibili';
+  
+  const competitorCount = yelpResult?.businesses?.length || 0;
+  const topCompetitors = yelpResult?.businesses?.slice(0, 3).map((b: any) => b.name).join(", ") || 'nessun competitor trovato';
+
   return `
     ANALISI STRATEGICA DI BUSINESS PER "${businessName}" - ${updatedDistrict}, MIAMI
     
     Analizza in modo approfondito e strategico i dati per l'attività "${businessName}" situata a ${businessAddress} nel quartiere ${updatedDistrict} di Miami. 
     
-    Dati a disposizione:
+    Riepilogo dati principali:
+    - Tipo di business: ${businessType}
+    - Distretto: ${updatedDistrict}
+    - Dati demografici: ${censusDataStr}
+    - Competitor principali: ${topCompetitors} (${competitorCount} totali)
+    
+    Dati dettagliati:
     - Dati di localizzazione: ${JSON.stringify(placesResult)}
     - Dati demografici: ${JSON.stringify(censusResult)}
     - Dati concorrenza: ${JSON.stringify(yelpResult)}
@@ -59,5 +77,7 @@ export function generateAnalysisPrompt(
     - consumerProfile
     - localHighlights
     - recommendations (array di stringhe)
+    
+    IMPORTANTE: La risposta DEVE essere un JSON valido senza commenti o testo aggiuntivo, formattato esattamente secondo la struttura richiesta. Ogni campo deve avere contenuto significativo e specifico per ${businessName} in ${updatedDistrict}.
   `;
 }
