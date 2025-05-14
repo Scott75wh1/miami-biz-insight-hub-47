@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Building } from 'lucide-react';
+import { Building, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Layout from '@/components/Layout';
 import BusinessAnalysisForm from '@/components/business/BusinessAnalysisForm';
@@ -8,13 +8,14 @@ import BusinessAnalysisResults from '@/components/business/BusinessAnalysisResul
 import { useBusinessAnalysis } from '@/hooks/useBusinessAnalysis';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 const MyBusinessPage = () => {
-  const { isAnalyzing, analysisComplete, analysisData, startAnalysis } = useBusinessAnalysis();
+  const { isAnalyzing, analysisComplete, analysisData, startAnalysis, refreshAnalysis } = useBusinessAnalysis();
   const { selectedDistrict } = useDistrictSelection();
   const { toast } = useToast();
   
-  // State for forcing re-render when district changes
+  // State for tracking district updates
   const [districtUpdateTime, setDistrictUpdateTime] = useState<number>(Date.now());
   const [renderCount, setRenderCount] = useState(1);
 
@@ -28,7 +29,7 @@ const MyBusinessPage = () => {
     return () => {
       console.log('[MyBusinessPage] Unmounted');
     };
-  }, [selectedDistrict]);
+  }, [selectedDistrict, renderCount]);
 
   // Log when analysis data changes
   useEffect(() => {
@@ -38,7 +39,7 @@ const MyBusinessPage = () => {
     }
   }, [analysisComplete, analysisData]);
 
-  // Listen for district changes
+  // Gestione dei cambiamenti di distretto
   useEffect(() => {
     console.log(`[MyBusinessPage] Selected district changed to: ${selectedDistrict}`);
     setDistrictUpdateTime(Date.now());
@@ -47,11 +48,7 @@ const MyBusinessPage = () => {
       const customEvent = e as CustomEvent;
       console.log(`[MyBusinessPage] District change event detected: ${customEvent.detail.district}`);
       
-      setDistrictUpdateTime(previous => {
-        const newTime = Date.now();
-        console.log(`[MyBusinessPage] District update timestamp: ${previous} -> ${newTime}`);
-        return newTime;
-      });
+      setDistrictUpdateTime(Date.now());
       
       // Notify user of district change
       toast({
@@ -66,6 +63,14 @@ const MyBusinessPage = () => {
       window.removeEventListener('districtChanged', handleDistrictChange);
     };
   }, [selectedDistrict, toast]);
+
+  // Handler per il refresh manuale dell'analisi
+  const handleManualRefresh = useCallback(() => {
+    if (analysisComplete && !isAnalyzing) {
+      console.log(`[MyBusinessPage] Manual refresh requested for district: ${selectedDistrict}`);
+      refreshAnalysis(selectedDistrict);
+    }
+  }, [analysisComplete, isAnalyzing, refreshAnalysis, selectedDistrict]);
 
   // Log render with detailed state information
   console.log(`[MyBusinessPage] Rendering - District: ${selectedDistrict}, UpdateTime: ${districtUpdateTime}, Analysis: ${analysisComplete}`);
@@ -95,18 +100,32 @@ const MyBusinessPage = () => {
         </Card>
         
         {analysisComplete && analysisData && (
-          <BusinessAnalysisResults 
-            key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${analysisData.businessInfo.district}-${districtUpdateTime}-${renderCount}`} 
-            data={{
-              businessInfo: {
-                ...analysisData.businessInfo,
-                // Ensure type is always provided with a default if not available
-                type: analysisData.businessInfo.type || 'general'
-              },
-              analysis: analysisData.analysis,
-              rawData: analysisData.rawData
-            }} 
-          />
+          <>
+            <div className="flex justify-end mb-4">
+              <Button 
+                onClick={handleManualRefresh}
+                disabled={isAnalyzing}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
+                Aggiorna Analisi
+              </Button>
+            </div>
+            
+            <BusinessAnalysisResults 
+              key={`analysis-${analysisData.businessInfo.name}-${analysisData.businessInfo.address}-${analysisData.businessInfo.district}-${districtUpdateTime}-${renderCount}`} 
+              data={{
+                businessInfo: {
+                  ...analysisData.businessInfo,
+                  // Ensure type is always provided with a default if not available
+                  type: analysisData.businessInfo.type || 'general'
+                },
+                analysis: analysisData.analysis,
+                rawData: analysisData.rawData
+              }} 
+            />
+          </>
         )}
       </div>
     </Layout>
