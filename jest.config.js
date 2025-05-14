@@ -26,5 +26,12 @@ module.exports = {
       lines: 70,
       statements: 70
     }
-  }
+  },
+  // Make sure TypeScript recognizes Jest's custom matchers
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json'
+    }
+  },
+  moduleDirectories: ['node_modules', 'src']
 };

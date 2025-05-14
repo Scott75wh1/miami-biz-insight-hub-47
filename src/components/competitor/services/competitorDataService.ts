@@ -1,7 +1,6 @@
+
 import { BusinessType } from "@/components/BusinessTypeSelector";
 import { Competitor } from "../types";
-import { fetchCompetitorsByDistrict, fetchCompetitorDetailsById } from "./competitorDataService";
-import { getDefaultCompetitors } from "../utils/defaultCompetitorsUtil";
 
 // Mock data for competitors
 const mockCompetitors = {
@@ -322,10 +321,10 @@ export const loadCompetitorData = async (
   try {
     // In a real implementation, this would call APIs using the provided API keys
     // For now, we'll just return the mock data
-    const competitors = fetchCompetitorsByDistrict(selectedDistrict, businessType, cuisineType);
+    const competitors = getDefaultCompetitors(selectedDistrict, businessType, cuisineType);
     
     // Return the competitors
-    return competitors as Competitor[];
+    return competitors;
   } catch (error) {
     console.error("Error loading competitor data:", error);
     // Return default competitors as fallback
@@ -336,7 +335,7 @@ export const loadCompetitorData = async (
 /**
  * Fetch competitors by district
  */
-export const fetchCompetitorsByDistrict = (district: string, businessType: string, cuisineType?: string) => {
+export const fetchCompetitorsByDistrict = (district: string, businessType: string, cuisineType?: string): Competitor[] => {
   try {
     // Fix the type casting issue - businessType as BusinessType
     const defaultCompetitors = getDefaultCompetitors(district, businessType as BusinessType, cuisineType);
@@ -350,7 +349,7 @@ export const fetchCompetitorsByDistrict = (district: string, businessType: strin
 /**
  * Fetch competitor details by ID
  */
-export const fetchCompetitorDetailsById = (competitorId: string, district: string, businessType: string) => {
+export const fetchCompetitorDetailsById = (competitorId: string, district: string, businessType: string): Competitor | null => {
   try {
     // Fix the type casting issue - businessType as BusinessType
     const competitors = getDefaultCompetitors(district, businessType as BusinessType);
