@@ -18,7 +18,9 @@ const MyBusinessPageContainer: React.FC = () => {
   const isMobile = useIsMobile();
   
   // Aggiungiamo uno state per forzare il re-render quando cambia il distretto
+  // Ma limitiamo gli aggiornamenti usando un ref per evitare loop
   const [districtUpdateTime, setDistrictUpdateTime] = useState<number>(Date.now());
+  const districtChangeHandled = React.useRef<string>(selectedDistrict);
   
   // State for business history
   const [previousAnalyses] = useState<Array<{
@@ -33,11 +35,22 @@ const MyBusinessPageContainer: React.FC = () => {
   
   // Ascoltiamo il cambio di distretto più efficacemente
   useEffect(() => {
-    setDistrictUpdateTime(Date.now());
+    // Only update if the district has actually changed from the last handled district
+    if (selectedDistrict !== districtChangeHandled.current) {
+      console.log(`District changed from ${districtChangeHandled.current} to ${selectedDistrict}. Updating...`);
+      setDistrictUpdateTime(Date.now());
+      districtChangeHandled.current = selectedDistrict;
+    }
 
     const handleDistrictChange = (e: Event) => {
       const customEvent = e as CustomEvent;
-      setDistrictUpdateTime(Date.now());
+      const newDistrict = customEvent.detail?.district;
+      
+      if (newDistrict && newDistrict !== districtChangeHandled.current) {
+        console.log(`District event received: ${newDistrict}`);
+        setDistrictUpdateTime(Date.now());
+        districtChangeHandled.current = newDistrict;
+      }
     };
 
     window.addEventListener('districtChanged', handleDistrictChange);

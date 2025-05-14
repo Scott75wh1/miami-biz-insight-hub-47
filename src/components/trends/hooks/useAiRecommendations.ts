@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { analyzeTrendsData } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,12 @@ export function useAiRecommendations(): UseAiRecommendationsResult {
   });
   const [isAiLoading, setIsAiLoading] = useState(false);
   
+  // Track currently analyzing params to prevent duplicate/recursive calls
+  const processingRequest = useRef<{
+    district: string,
+    businessType: string
+  } | null>(null);
+  
   const { toast } = useToast();
   const { apiKeys } = useApiKeys();
 
@@ -35,7 +41,16 @@ export function useAiRecommendations(): UseAiRecommendationsResult {
     district: string, 
     businessType: string | BusinessType
   ) => {
+    // Skip if we're already processing the same request
+    if (processingRequest.current && 
+        processingRequest.current.district === district && 
+        processingRequest.current.businessType === businessType) {
+      console.log(`Already processing request for ${businessType} in ${district}, skipping duplicate call`);
+      return;
+    }
+    
     setIsAiLoading(true);
+    processingRequest.current = { district, businessType: businessType as string };
     
     const logIndex = apiLogger.logAPICall(
       'OpenAI',
@@ -84,6 +99,7 @@ export function useAiRecommendations(): UseAiRecommendationsResult {
       });
     } finally {
       setIsAiLoading(false);
+      processingRequest.current = null;
     }
   }, [apiKeys.openAI, toast]);
 

@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { fetchGoogleTrendsData } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +26,9 @@ export function useTrendsFetcher(
   const [lastFetchParams, setLastFetchParams] = useState<{businessType: string, district: string} | null>(null);
   const [fetchAttempts, setFetchAttempts] = useState(0);
   
+  // Add a reference to track if a fetch is currently in progress
+  const isFetchingRef = useRef(false);
+  
   const { toast } = useToast();
   const { apiKeys, isLoaded } = useApiKeys();
   const isUsingDemoKey = !apiKeys.googleTrends || apiKeys.googleTrends === 'demo-key';
@@ -42,10 +45,17 @@ export function useTrendsFetcher(
       return;
     }
     
+    // Prevent concurrent fetches - this avoids infinite loops
+    if (isFetchingRef.current) {
+      console.log("A fetch operation is already in progress, skipping this call");
+      return;
+    }
+    
     // Set loading state and update last fetch params
     setIsLoading(true);
     setLastFetchParams({ businessType, district });
     setFetchAttempts(prev => prev + 1);
+    isFetchingRef.current = true;
     
     const logIndex = apiLogger.logAPICall(
       'GoogleTrends',
@@ -145,6 +155,8 @@ export function useTrendsFetcher(
       await getAiRecommendations(defaultTrends, defaultCategories, district, businessType as string);
     } finally {
       setIsLoading(false);
+      // Reset the fetching state reference
+      isFetchingRef.current = false;
     }
   }, [isLoaded, apiKeys.googleTrends, toast, getAiRecommendations, isUsingDemoKey, fetchAttempts]);
 
