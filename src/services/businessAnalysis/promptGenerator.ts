@@ -1,7 +1,7 @@
 
 // Importing types
 
-import { logApiRequest } from '../logService';
+import { apiLogger } from '../logService';
 
 /**
  * Generate a comprehensive and detailed prompt for OpenAI analysis
@@ -19,8 +19,8 @@ export function generateAnalysisPrompt(
 ): string {
   console.log(`Generating enhanced OpenAI prompt for ${businessName} in ${district}`);
   
-  // Log the request for debugging
-  const requestId = logApiRequest('generateAnalysisPrompt', {
+  // Log the request for debugging using apiLogger instead of logApiRequest
+  const logIndex = apiLogger.logAPICall('promptGenerator', 'generateAnalysisPrompt', {
     business: businessName,
     district,
     type: businessType
@@ -87,5 +87,10 @@ La tua analisi deve essere ASSOLUTAMENTE in italiano, specifica per il distretto
 `;
 
   console.log(`Enhanced prompt generated for ${businessName} with ${prompt.length} characters`);
+  
+  // Log the response to complete the logging cycle
+  apiLogger.logAPIResponse(logIndex, { promptLength: prompt.length });
+  
   return prompt;
 }
+
