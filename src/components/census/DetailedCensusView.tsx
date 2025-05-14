@@ -19,35 +19,35 @@ const DetailedCensusView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const isUsingDemoKey = !apiKeys.censusGov || apiKeys.censusGov === 'demo-key';
 
-  useEffect(() => {
-    const loadCensusData = async () => {
-      if (!isLoaded || !selectedDistrict) return;
+  const loadCensusData = async () => {
+    if (!isLoaded || !selectedDistrict) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const data = await fetchDistrictCensusData(apiKeys.censusGov, selectedDistrict);
       
-      setIsLoading(true);
-      
-      try {
-        const data = await fetchDistrictCensusData(apiKeys.censusGov, selectedDistrict);
+      if (data) {
+        setCensusData(data);
         
-        if (data) {
-          setCensusData(data);
-          
-          toast({
-            title: "Dati del distretto caricati",
-            description: `I dati demografici per ${selectedDistrict} sono stati aggiornati.`,
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching district census data:', error);
         toast({
-          title: "Errore nel caricamento dei dati",
-          description: "Non è stato possibile recuperare i dati del censimento per questo distretto.",
-          variant: "destructive",
+          title: "Dati del distretto caricati",
+          description: `I dati demografici per ${selectedDistrict} sono stati aggiornati.`,
         });
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching district census data:', error);
+      toast({
+        title: "Errore nel caricamento dei dati",
+        description: "Non è stato possibile recuperare i dati del censimento per questo distretto.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadCensusData();
   }, [selectedDistrict, apiKeys.censusGov, isLoaded, toast]);
 
@@ -78,7 +78,7 @@ const DetailedCensusView = () => {
             selectedDistrict={selectedDistrict} 
           />
         ) : (
-          <CensusEmptyState />
+          <CensusEmptyState onRefresh={loadCensusData} />
         )}
       </CardContent>
     </Card>
