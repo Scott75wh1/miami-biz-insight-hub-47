@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { createContext, useContext } from "react";
-import { toast as sonnerToast } from "sonner";
+import { toast as sonnerToast, type ToastT } from "sonner";
 
 type ToastActionElement = React.ReactElement<unknown>;
 
@@ -37,7 +37,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         description,
         action,
         ...props,
-        onDismiss: (toastId) => {
+        onDismiss: (toastId: string | number) => {
           setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
         },
       });
