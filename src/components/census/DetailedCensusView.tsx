@@ -12,12 +12,17 @@ import CensusTabsContainer from './CensusTabsContainer';
 import CensusLoadingState from './CensusLoadingState';
 import CensusEmptyState from './CensusEmptyState';
 
-const DetailedCensusView = () => {
+interface DetailedCensusViewProps {
+  isDataLoaded?: boolean;
+  onRefreshData?: () => void;
+}
+
+const DetailedCensusView: React.FC<DetailedCensusViewProps> = ({ isDataLoaded = false, onRefreshData }) => {
   const { selectedDistrict } = useDistrictSelection();
   const { apiKeys, isLoaded } = useApiKeys();
   const { toast } = useToast();
   const [censusData, setCensusData] = useState<CensusDataResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!isDataLoaded);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const isUsingDemoKey = !apiKeys.censusGov || apiKeys.censusGov === 'demo-key';
 
@@ -54,8 +59,20 @@ const DetailedCensusView = () => {
   };
 
   useEffect(() => {
-    loadCensusData();
-  }, [selectedDistrict, apiKeys.censusGov, isLoaded]);
+    if (!isDataLoaded) {
+      loadCensusData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [selectedDistrict, apiKeys.censusGov, isLoaded, isDataLoaded]);
+  
+  const handleRefreshData = () => {
+    if (onRefreshData) {
+      onRefreshData();
+    } else {
+      loadCensusData();
+    }
+  };
 
   return (
     <Card className="w-full">
@@ -79,7 +96,7 @@ const DetailedCensusView = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={loadCensusData}
+              onClick={handleRefreshData}
               className="flex items-center gap-1"
             >
               <RefreshCcw className="h-3 w-3" />
@@ -104,7 +121,10 @@ const DetailedCensusView = () => {
             selectedDistrict={selectedDistrict} 
           />
         ) : (
-          <CensusEmptyState onRefresh={loadCensusData} />
+          <CensusEmptyState 
+            onRefresh={handleRefreshData}
+            selectedDistrict={selectedDistrict}
+          />
         )}
       </CardContent>
     </Card>

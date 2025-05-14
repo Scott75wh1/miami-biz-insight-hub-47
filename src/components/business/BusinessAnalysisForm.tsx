@@ -1,145 +1,142 @@
 
-import React, { useEffect } from 'react';
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/hooks/use-toast";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, MapPin, Store } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const formSchema = z.object({
-  businessName: z.string().min(3, {
-    message: "Il nome dell'attività deve contenere almeno 3 caratteri",
-  }),
-  businessAddress: z.string().min(5, {
-    message: "L'indirizzo deve essere completo",
-  }),
-  businessType: z.string().optional(),
-});
-
-export type BusinessFormValues = z.infer<typeof formSchema>;
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useDistrictSelection } from '@/hooks/useDistrictSelection';
+import { Loader2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useApiKeys } from '@/hooks/useApiKeys';
 
 interface BusinessAnalysisFormProps {
   isAnalyzing: boolean;
-  onSubmit: (values: BusinessFormValues) => void;
+  onSubmit: (values: {
+    businessName?: string;
+    businessAddress?: string;
+    businessType?: string;
+  }) => void;
 }
 
-const BusinessAnalysisForm = ({ isAnalyzing, onSubmit }: BusinessAnalysisFormProps) => {
-  const form = useForm<BusinessFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      businessName: "",
-      businessAddress: "",
-      businessType: "restaurant",
-    },
+const businessTypes = [
+  { value: 'restaurant', label: 'Ristorante' },
+  { value: 'coffee_shop', label: 'Caffetteria' },
+  { value: 'retail', label: 'Negozio al dettaglio' },
+  { value: 'tech', label: 'Tech Startup' },
+  { value: 'fitness', label: 'Palestra/Centro fitness' },
+  { value: 'hotel', label: 'Hotel' },
+  { value: 'salon', label: 'Salone di bellezza' },
+  { value: 'market', label: 'Mercato' }
+];
+
+const BusinessAnalysisForm: React.FC<BusinessAnalysisFormProps> = ({ isAnalyzing, onSubmit }) => {
+  const { selectedDistrict } = useDistrictSelection();
+  const { areKeysSet } = useApiKeys();
+  
+  const [values, setValues] = useState({
+    businessName: '',
+    businessAddress: '',
+    businessType: 'restaurant'
   });
   
-  const { toast } = useToast();
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setValues(prev => ({ ...prev, [name]: value }));
+  };
   
-  // Aggiungiamo un useEffect per verificare se useToast è caricato correttamente
-  useEffect(() => {
-    console.log("BusinessAnalysisForm rendered, toast available:", !!toast);
-  }, [toast]);
+  const handleBusinessTypeChange = (value: string) => {
+    setValues(prev => ({ ...prev, businessType: value }));
+  };
+  
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(values);
+  };
 
-  const businessTypes = [
-    { id: 'restaurant', name: 'Ristoranti' },
-    { id: 'coffee_shop', name: 'Caffetterie' },
-    { id: 'retail', name: 'Negozi al dettaglio' },
-    { id: 'tech', name: 'Aziende Tech' },
-    { id: 'fitness', name: 'Palestre e Fitness' },
-  ];
+  const isFormValid = values.businessName.trim() !== '' && values.businessAddress.trim() !== '';
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="businessName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nome dell'Attività</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="es. Pizzeria Napoli, Tech Solutions, ecc." 
-                  {...field} 
-                />
-              </FormControl>
-              <FormDescription>
-                Inserisci il nome completo della tua attività
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <form onSubmit={handleFormSubmit} className="space-y-6">
+      {!areKeysSet() && (
+        <Alert variant="warning" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+          <AlertDescription>
+            Stai utilizzando dati simulati. Per risultati più accurati, configura le API key nelle impostazioni.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="businessName">Nome dell'attività</Label>
+            <Input
+              id="businessName"
+              name="businessName"
+              value={values.businessName}
+              onChange={handleChange}
+              placeholder="Inserisci il nome della tua attività"
+              className="w-full"
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="businessType">Tipologia</Label>
+            <Select 
+              value={values.businessType}
+              onValueChange={handleBusinessTypeChange}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleziona tipo attività" />
+              </SelectTrigger>
+              <SelectContent>
+                {businessTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         
-        <FormField
-          control={form.control}
-          name="businessAddress"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Indirizzo</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <MapPin className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="es. 123 Ocean Drive, Miami Beach, FL 33139" 
-                    className="pl-8"
-                    {...field} 
-                  />
-                </div>
-              </FormControl>
-              <FormDescription>
-                Inserisci l'indirizzo completo della tua attività
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="businessType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tipo di Attività</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <div className="flex items-center">
-                      <Store className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <SelectValue placeholder="Seleziona il tipo di attività" />
-                    </div>
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {businessTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Seleziona la categoria della tua attività
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <Button type="submit" disabled={isAnalyzing} className="w-full">
+        <div className="space-y-2">
+          <Label htmlFor="businessAddress">Indirizzo</Label>
+          <Input
+            id="businessAddress"
+            name="businessAddress"
+            value={values.businessAddress}
+            onChange={handleChange}
+            placeholder={`Inserisci l'indirizzo a ${selectedDistrict}`}
+            className="w-full"
+            required
+          />
+          <p className="text-sm text-muted-foreground">
+            L'analisi verrà eseguita per il distretto: <span className="font-medium">{selectedDistrict}</span>
+          </p>
+        </div>
+      </div>
+      
+      <Separator />
+      
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          disabled={isAnalyzing || !isFormValid}
+          className="w-full md:w-auto"
+        >
           {isAnalyzing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Analisi in corso...
             </>
-          ) : "Analizza la mia attività"}
+          ) : (
+            'Analizza Attività'
+          )}
         </Button>
-      </form>
-    </Form>
+      </div>
+    </form>
   );
 };
 

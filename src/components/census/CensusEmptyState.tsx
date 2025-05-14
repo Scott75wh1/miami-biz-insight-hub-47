@@ -1,70 +1,66 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { FileX, RefreshCcw, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { RefreshCcw, Database, ArrowRight } from 'lucide-react';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
-import { toast } from '@/hooks/use-toast';
+import { Card } from '@/components/ui/card';
 
 interface CensusEmptyStateProps {
-  onRefresh?: () => void;
+  onRefresh: () => void;
+  selectedDistrict: string;
 }
 
-const CensusEmptyState = ({ onRefresh }: CensusEmptyStateProps) => {
-  const { selectedDistrict, handleDistrictChange, districts } = useDistrictSelection();
+const CensusEmptyState: React.FC<CensusEmptyStateProps> = ({ onRefresh, selectedDistrict }) => {
+  const { districts, handleDistrictChange } = useDistrictSelection();
   
-  const tryAnotherDistrict = () => {
-    // Find a different district to suggest
-    const otherDistricts = districts.filter(d => d !== selectedDistrict);
-    if (otherDistricts.length > 0) {
-      // Select a random district from the available ones
-      const randomIndex = Math.floor(Math.random() * otherDistricts.length);
-      const newDistrict = otherDistricts[randomIndex];
-      
-      handleDistrictChange(newDistrict);
-      
-      toast({
-        title: "Distretto cambiato",
-        description: `Passato a ${newDistrict} per visualizzare dati diversi.`,
-      });
-    }
+  const handleTryAnotherDistrict = () => {
+    // Get a random district that's different from the current one
+    const filteredDistricts = districts.filter(d => d !== selectedDistrict);
+    const randomIndex = Math.floor(Math.random() * filteredDistricts.length);
+    const newDistrict = filteredDistricts[randomIndex];
+    
+    handleDistrictChange(newDistrict);
   };
-  
+
   return (
-    <div className="py-12 px-4 text-center">
-      <div className="flex justify-center mb-6">
-        <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center">
-          <FileX className="h-10 w-10 text-muted-foreground" />
-        </div>
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <div className="bg-muted/40 rounded-full p-6 mb-6">
+        <Database className="h-12 w-12 text-muted-foreground/70" />
       </div>
-      
-      <h3 className="text-lg font-semibold mb-2">
-        Dati non disponibili
-      </h3>
-      
-      <p className="text-muted-foreground max-w-md mx-auto mb-6">
-        Non ci sono dati demografici disponibili per {selectedDistrict}. 
-        Prova a selezionare un altro distretto o aggiornare i dati.
+      <h3 className="text-xl font-semibold mb-2">Nessun dato disponibile</h3>
+      <p className="text-muted-foreground text-center max-w-md mb-6">
+        Non sono stati trovati dati del censimento per {selectedDistrict}. 
+        Prova ad aggiornare i dati o a selezionare un altro distretto.
       </p>
-      
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        {onRefresh && (
-          <Button 
-            variant="outline"
-            onClick={onRefresh}
-            className="flex items-center gap-2"
-          >
-            <RefreshCcw className="h-4 w-4" />
-            Aggiorna dati
-          </Button>
-        )}
-        
+      <div className="flex flex-wrap justify-center gap-3">
         <Button 
-          onClick={tryAnotherDistrict}
+          onClick={onRefresh}
           className="flex items-center gap-2"
         >
-          <MapPin className="h-4 w-4" />
+          <RefreshCcw className="h-4 w-4" />
+          Aggiorna i dati
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={handleTryAnotherDistrict}
+          className="flex items-center gap-2"
+        >
+          <ArrowRight className="h-4 w-4" />
           Prova un altro distretto
         </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 w-full max-w-2xl">
+        {districts.filter(d => d !== selectedDistrict).slice(0, 3).map(district => (
+          <Card 
+            key={district} 
+            className="p-4 cursor-pointer hover:shadow-md transition-shadow border-muted"
+            onClick={() => handleDistrictChange(district)}
+          >
+            <p className="font-medium">{district}</p>
+            <p className="text-xs text-muted-foreground mt-1">Dati disponibili</p>
+          </Card>
+        ))}
       </div>
     </div>
   );

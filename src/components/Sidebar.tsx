@@ -3,18 +3,21 @@ import React from 'react';
 import { 
   ChartBar, 
   Users, 
-  Search, 
   Database, 
   Building, 
   MessageSquare,
-  Map as MapIcon,
+  MapIcon,
   ChevronLeft,
-  ChevronRight
-  // Car removed as we're suspending the Traffic page
+  ChevronRight,
+  Search,
+  BarChart4,
+  Settings,
+  RefreshCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useDataCollection } from '@/hooks/useDataCollection';
 
 interface SidebarProps {
   className?: string;
@@ -24,6 +27,12 @@ const Sidebar = ({ className }: SidebarProps) => {
   const [collapsed, setCollapsed] = React.useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { refreshAllData, isLoading } = useDataCollection();
+
+  const handleRefreshAllData = (e: React.MouseEvent) => {
+    e.preventDefault();
+    refreshAllData();
+  };
 
   return (
     <aside className={cn(
@@ -48,26 +57,18 @@ const Sidebar = ({ className }: SidebarProps) => {
       <nav className="flex-1 p-2 space-y-1">
         <SidebarItem 
           icon={MapIcon} 
-          label="Mappa di Miami" 
+          label="Dashboard" 
           collapsed={collapsed} 
           active={location.pathname === '/'} 
           onClick={() => navigate('/')}
         />
         <SidebarItem 
-          icon={Users} 
-          label="Demografia" 
+          icon={Database} 
+          label="Dati del Censimento" 
           collapsed={collapsed}
           active={location.pathname === '/census'} 
           onClick={() => navigate('/census')}
         />
-        {/* Traffic page temporarily removed
-        <SidebarItem 
-          icon={Car} 
-          label="Analisi Traffico" 
-          collapsed={collapsed}
-          active={location.pathname === '/traffic'} 
-          onClick={() => navigate('/traffic')}
-        /> */}
         <SidebarItem 
           icon={Building} 
           label="La mia Attività" 
@@ -75,11 +76,60 @@ const Sidebar = ({ className }: SidebarProps) => {
           active={location.pathname === '/my-business'} 
           onClick={() => navigate('/my-business')}
         />
-        <SidebarItem icon={ChartBar} label="Trend di Mercato" collapsed={collapsed} />
-        <SidebarItem icon={Search} label="Ricerca Avanzata" collapsed={collapsed} />
-        <SidebarItem icon={Database} label="Dataset" collapsed={collapsed} />
-        <SidebarItem icon={MessageSquare} label="Assistente AI" collapsed={collapsed} />
+        <SidebarItem 
+          icon={Search} 
+          label="Esplora Dati" 
+          collapsed={collapsed} 
+          active={location.pathname === '/explore'} 
+          onClick={() => navigate('/explore')}
+        />
+        <SidebarItem 
+          icon={ChartBar} 
+          label="Trend di Mercato" 
+          collapsed={collapsed}
+        />
+        <SidebarItem 
+          icon={BarChart4} 
+          label="Analisi Competitiva" 
+          collapsed={collapsed}
+        />
+        <SidebarItem 
+          icon={MessageSquare} 
+          label="Assistente AI" 
+          collapsed={collapsed}
+        />
       </nav>
+      
+      <div className="p-2 mt-auto">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className={cn(
+            "w-full justify-start",
+            isLoading && "animate-pulse"
+          )}
+          onClick={handleRefreshAllData}
+          disabled={isLoading}
+        >
+          <RefreshCcw className={cn(
+            "h-5 w-5 text-muted-foreground mr-2",
+            isLoading && "animate-spin"
+          )} />
+          {!collapsed && <span>{isLoading ? "Aggiornamento..." : "Aggiorna Dati"}</span>}
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className={cn(
+            "w-full justify-start mt-1",
+            collapsed ? "px-2" : "px-3"
+          )}
+        >
+          <Settings className="h-5 w-5 text-muted-foreground mr-2" />
+          {!collapsed && <span>Impostazioni</span>}
+        </Button>
+      </div>
       
       <div className="p-4 border-t">
         {!collapsed && (

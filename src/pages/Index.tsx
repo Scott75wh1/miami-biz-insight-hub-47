@@ -1,89 +1,146 @@
 
 import React, { useState } from 'react';
-import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
-import MapComponent from '@/components/MapComponent';
-import DemographicsDashboard from '@/components/DemographicsDashboard';
-import TrendsAnalysis from '@/components/TrendsAnalysis';
-import CompetitorAnalysis from '@/components/CompetitorAnalysis';
-import AIAssistant from '@/components/AIAssistant';
-import BusinessTypeSelector, { BusinessType } from '@/components/BusinessTypeSelector';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CuisineTypeSelector } from '@/components/restaurant/CuisineTypeSelector';
-import { useCuisineSelection } from '@/hooks/useCuisineSelection';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Database, BarChart, Building, Search, MapIcon } from 'lucide-react';
+import Layout from '@/components/Layout';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useDistrictSelection } from '@/hooks/useDistrictSelection';
+import DataCollectionSummary from '@/components/dashboard/DataCollectionSummary';
+import ApiStatusIndicators from '@/components/dashboard/ApiStatusIndicators';
+import LatestAnalytics from '@/components/dashboard/LatestAnalytics';
+import QuickActions from '@/components/dashboard/QuickActions';
+import { useApiKeys } from '@/hooks/useApiKeys';
+import { Skeleton } from '@/components/ui/skeleton';
 import InteractiveMap from '@/components/map/InteractiveMap';
 
 const Index = () => {
-  const [businessType, setBusinessType] = useState<BusinessType>('restaurant');
-  const { selectedCuisine, handleCuisineChange } = useCuisineSelection();
+  const navigate = useNavigate();
+  const { areKeysSet } = useApiKeys();
+  const { selectedDistrict } = useDistrictSelection();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleAnalysisClick = () => {
+    navigate('/my-business');
+  };
+
+  const handleDataClick = () => {
+    navigate('/census');
+  };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-            <BusinessTypeSelector
-              selectedType={businessType}
-              onTypeChange={setBusinessType}
-            />
-            
-            {businessType === 'restaurant' && (
-              <CuisineTypeSelector
-                selectedCuisine={selectedCuisine}
-                onCuisineChange={handleCuisineChange}
-              />
-            )}
-          </div>
-          
-          <InteractiveMap />
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div className="lg:col-span-2">
-              <MapComponent businessType={businessType} cuisineType={businessType === 'restaurant' ? selectedCuisine : undefined} />
-            </div>
-            <div>
-              <DemographicsDashboard />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <TrendsAnalysis businessType={businessType} />
-            <CompetitorAnalysis businessType={businessType} cuisineType={businessType === 'restaurant' ? selectedCuisine : undefined} />
-          </div>
-          
-          <div className="grid grid-cols-1 gap-6 mb-6">
-            <AIAssistant businessType={businessType} />
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            {[
-              { title: 'Nuove Attività', value: '1,247', change: '+12%' },
-              { title: 'Chiusure', value: '483', change: '-4%' },
-              { title: 'Fatturato Medio', value: '$1.2M', change: '+5.7%' },
-              { title: 'Occupazione', value: '94.3%', change: '+2.1%' }
-            ].map((stat, i) => (
-              <Card key={i}>
-                <CardHeader className="pb-1">
-                  <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <p className={`text-xs ${stat.change.startsWith('+') ? 'text-green-500' : 'text-red-500'}`}>
-                    {stat.change} ultimo anno
+    <Layout>
+      <div className="container py-6">
+        <div className="flex flex-col space-y-6">
+          {/* Welcome Card */}
+          <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-200 dark:border-blue-800">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold">Miami Business Insight Hub</CardTitle>
+              <CardDescription className="text-lg">
+                Raccogli, analizza e ottimizza la tua attività con dati avanzati
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row items-center justify-between">
+                <div className="max-w-md mb-4 md:mb-0">
+                  <p className="mb-4">
+                    Benvenuto nella piattaforma completa per dati demografici, analisi di mercato e intelligence
+                    competitiva per la tua attività a Miami.
                   </p>
-                </CardContent>
-              </Card>
-            ))}
+                  <div className="flex space-x-2">
+                    <Button onClick={handleAnalysisClick} className="flex items-center gap-2">
+                      <Building size={18} />
+                      Analizza la tua Attività
+                    </Button>
+                    <Button onClick={handleDataClick} variant="outline" className="flex items-center gap-2">
+                      <Database size={18} />
+                      Esplora Dati
+                    </Button>
+                  </div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-lg">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">Area selezionata</p>
+                    <p className="text-xl font-semibold">{selectedDistrict}</p>
+                    <Button variant="ghost" size="sm" className="mt-2" onClick={() => navigate('/census')}>
+                      <MapIcon size={16} className="mr-1" /> Cambia
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Map Preview */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapIcon className="h-5 w-5" />
+                Mappa Interattiva di {selectedDistrict}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 h-[300px]">
+              <InteractiveMap />
+            </CardContent>
+          </Card>
+
+          {/* API Status */}
+          <ApiStatusIndicators />
+
+          {/* Data Collection Summary */}
+          <DataCollectionSummary />
+
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Latest Analytics */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart className="h-5 w-5" />
+                  Analisi Recenti
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-[125px] w-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-[80%]" />
+                    </div>
+                  </div>
+                ) : (
+                  <LatestAnalytics />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <Search className="h-5 w-5" />
+                  Azioni Rapide
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-[125px] w-full" />
+                  </div>
+                ) : (
+                  <QuickActions />
+                )}
+              </CardContent>
+            </Card>
           </div>
-          
-          <footer className="mt-8 text-center text-xs text-muted-foreground">
-            <p>Miami Business Insight Hub - I dati visualizzati sono simulati a scopo dimostrativo</p>
+
+          <footer className="text-center text-xs text-muted-foreground">
+            <p>Miami Business Insight Hub - Dati aggiornati a Maggio 2025</p>
           </footer>
-        </main>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 
