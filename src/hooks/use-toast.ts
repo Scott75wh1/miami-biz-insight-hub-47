@@ -31,6 +31,9 @@ let previousToastId: string | null = null
 let previousToastTimestamp: number = 0
 const DUPLICATE_TOAST_TIMEOUT = 3000 // 3 seconds
 
+// Additional variable needed for duplicate toast prevention
+let previousToastHash: string = '';
+
 export function useToast() {
   const [state, setState] = useState<{
     toasts: ToasterToast[]
@@ -121,5 +124,8 @@ export function useToast() {
   }
 }
 
-// Additional variable needed for duplicate toast prevention
-let previousToastHash: string = '';
+// Export the toast function for direct import
+export const toast = (props: Omit<ToasterToast, "id">) => {
+  const { toast } = useToast()
+  return toast(props)
+}

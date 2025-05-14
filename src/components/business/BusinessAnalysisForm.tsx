@@ -59,7 +59,7 @@ const BusinessAnalysisForm: React.FC<BusinessAnalysisFormProps> = ({ isAnalyzing
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6">
       {!areKeysSet() && (
-        <Alert variant="warning" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+        <Alert className="bg-yellow-50 text-yellow-800 border-yellow-300">
           <AlertDescription>
             Stai utilizzando dati simulati. Per risultati più accurati, configura le API key nelle impostazioni.
           </AlertDescription>
