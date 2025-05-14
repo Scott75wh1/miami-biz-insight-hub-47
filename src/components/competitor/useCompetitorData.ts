@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { Competitor } from './types';
@@ -5,6 +6,7 @@ import { loadCompetitorData } from './services/competitorDataService';
 import { getDefaultCompetitors } from './utils/defaultCompetitorsUtil';
 import { useCompetitorToasts } from './hooks/useCompetitorToasts';
 import { useToast } from '@/hooks/use-toast';
+import { apiLogger } from '@/services/logService';
 
 export const useCompetitorData = (
   businessType: BusinessType, 
@@ -25,7 +27,6 @@ export const useCompetitorData = (
   const {
     showSuccessToast,
     showDefaultDataToast,
-    showAIAnalysisToast,
     showErrorToast
   } = useCompetitorToasts();
   
@@ -37,6 +38,13 @@ export const useCompetitorData = (
     
     setIsLoading(true);
     
+    // Log API call attempt
+    const logIndex = apiLogger.logAPICall(
+      'CompetitorService',
+      'loadCompetitorData',
+      { businessType, district: selectedDistrict, cuisineType, businessAddress }
+    );
+    
     try {
       // Utilizziamo un singolo toast per notificare l'inizio del caricamento
       const loadingToastId = toast({
@@ -45,7 +53,6 @@ export const useCompetitorData = (
       }).id;
       
       // Use the service to load and enhance competitor data
-      // Fixed here: Passing only 4 arguments instead of 5, according to the function signature
       const competitorData = await loadCompetitorData(
         businessType, 
         selectedDistrict, 
@@ -53,6 +60,12 @@ export const useCompetitorData = (
         cuisineType,
         businessAddress
       );
+      
+      // Log successful API response
+      apiLogger.logAPIResponse(logIndex, { 
+        count: competitorData?.length || 0, 
+        isDefault: competitorData?.length === getDefaultCompetitors(businessType, selectedDistrict, cuisineType).length 
+      });
       
       if (competitorData && competitorData.length) {
         // Using direct type assertion to satisfy TypeScript
@@ -65,8 +78,9 @@ export const useCompetitorData = (
         setLastBusinessAddress(businessAddress);
         
         // Non mostriamo troppi toast in sequenza
-        if (competitorData.length === getDefaultCompetitors(businessType, selectedDistrict, cuisineType).length) {
-          // Usiamo dati predefiniti, nessun toast necessario
+        const isDefaultData = competitorData.length === getDefaultCompetitors(businessType, selectedDistrict, cuisineType).length;
+        if (isDefaultData) {
+          showDefaultDataToast();
         } else {
           showSuccessToast(businessType, selectedDistrict);
         }
@@ -74,8 +88,14 @@ export const useCompetitorData = (
         // Fallback to default data
         const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
         setCompetitors(defaultData as Competitor[]);
+        showDefaultDataToast();
       }
     } catch (error) {
+      // Log error
+      apiLogger.logAPIError(logIndex, error);
+      
+      console.error("Error fetching competitor data:", error);
+      
       // Use default data if there's an error
       const defaultData = getDefaultCompetitors(businessType, selectedDistrict, cuisineType);
       setCompetitors(defaultData as Competitor[]);
@@ -83,17 +103,30 @@ export const useCompetitorData = (
     } finally {
       setIsLoading(false);
     }
-  }, [businessType, selectedDistrict, cuisineType, businessAddress, apiKeys, isLoaded, toast, showSuccessToast, showDefaultDataToast, showAIAnalysisToast, showErrorToast]);
+  }, [businessType, selectedDistrict, cuisineType, businessAddress, apiKeys, isLoaded, toast, showSuccessToast, showDefaultDataToast, showErrorToast]);
 
   // Load data when business type, district, cuisine type, or address changes
   useEffect(() => {
     // Verifichiamo se è cambiato il tipo di business, il distretto, il tipo di cucina o l'indirizzo
-    if (isLoaded && (
+    const hasChanged = isLoaded && (
       selectedDistrict !== lastLoadedDistrict || 
       businessType !== lastLoadedType || 
       cuisineType !== lastCuisineType ||
       businessAddress !== lastBusinessAddress
-    )) {
+    );
+    
+    if (hasChanged) {
+      console.log(`[Competitor] Dati cambiati, aggiornamento necessario:`, {
+        prevDistrict: lastLoadedDistrict,
+        newDistrict: selectedDistrict,
+        prevType: lastLoadedType,
+        newType: businessType,
+        prevCuisine: lastCuisineType,
+        newCuisine: cuisineType,
+        prevAddress: lastBusinessAddress,
+        newAddress: businessAddress
+      });
+      
       // Clear previous data
       setCompetitors([]);
       fetchCompetitorData();
@@ -107,6 +140,7 @@ export const useCompetitorData = (
       
       // Force reload when district changes via event
       if (isLoaded && customEvent.detail.district !== lastLoadedDistrict) {
+        console.log(`[Competitor] Distretto cambiato via evento: ${customEvent.detail.district}`);
         setCompetitors([]);
         // Aggiorniamo temporaneamente il district per evitare loop di caricamento
         setLastLoadedDistrict(customEvent.detail.district);

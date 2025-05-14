@@ -7,6 +7,7 @@ import { getSearchKeywords, getGrowingCategories } from '@/components/trends/Tre
 import { TrendsContextType, TrendItem, Category, AIRecommendation } from './types';
 import { analyzeTrendsData } from '@/services/apiService';
 import { BusinessType } from '@/components/BusinessTypeSelector';
+import { apiLogger } from '@/services/logService';
 
 export const TrendsContext = createContext<TrendsContextType | undefined>(undefined);
 
@@ -20,6 +21,7 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   });
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [lastFetchParams, setLastFetchParams] = useState<{businessType: string, district: string} | null>(null);
+  const [fetchAttempts, setFetchAttempts] = useState(0);
   
   const { toast } = useToast();
   const { apiKeys, isLoaded } = useApiKeys();
@@ -34,6 +36,12 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   ) => {
     setIsAiLoading(true);
     
+    const logIndex = apiLogger.logAPICall(
+      'OpenAI',
+      'analyzeTrendsData',
+      { businessType, district, trendsCount: trends.length }
+    );
+    
     try {
       const aiAnalysis = await analyzeTrendsData(
         apiKeys.openAI,
@@ -42,6 +50,11 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         categories,
         district
       );
+      
+      apiLogger.logAPIResponse(logIndex, { 
+        success: true,
+        recommendationsCount: aiAnalysis?.recommendations?.length || 0
+      });
       
       if (aiAnalysis) {
         setAiRecommendations(aiAnalysis);
@@ -55,6 +68,8 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
       }
     } catch (error) {
+      apiLogger.logAPIError(logIndex, error);
+      
       console.error('Error getting AI trend recommendations:', error);
       
       // Set default recommendations in case of error
@@ -86,6 +101,13 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // Set loading state and update last fetch params
     setIsLoading(true);
     setLastFetchParams({ businessType, district });
+    setFetchAttempts(prev => prev + 1);
+    
+    const logIndex = apiLogger.logAPICall(
+      'GoogleTrends',
+      'fetchTrendsData',
+      { businessType, district, isUsingDemoKey }
+    );
     
     try {
       // Get keywords based on business type and selected district
@@ -93,6 +115,12 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       
       // Fetch trends data from Google Trends API
       const data = await fetchGoogleTrendsData(apiKeys.googleTrends, keywords, 'US-FL-528', district);
+      
+      apiLogger.logAPIResponse(logIndex, { 
+        success: true,
+        trendsReceived: data?.trends?.length || 0,
+        isDefaultData: isUsingDemoKey
+      });
       
       if (data && 'trends' in data) {
         // Map the API response to our TrendItem interface
@@ -139,6 +167,8 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         await getAiRecommendations(defaultTrends, defaultCategories, district, businessType);
       }
     } catch (error) {
+      apiLogger.logAPIError(logIndex, error);
+      
       console.error('Error fetching trends data:', error);
       
       // Use default data if there's an error
@@ -154,18 +184,24 @@ export const TrendsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const defaultCategories = getGrowingCategories(businessType as BusinessType, district);
       setGrowingCategories(defaultCategories);
       
-      toast({
-        title: "Errore nel caricamento dei trend",
-        description: "Impossibile recuperare dati da Google Trends. Controlla la tua API key.",
-        variant: "destructive",
-      });
+      // Mostra il toast di errore solo se non siamo al primo tentativo
+      // Questo evita di mostrare errori durante il caricamento iniziale
+      if (fetchAttempts > 1) {
+        toast({
+          title: "Errore nel caricamento dei trend",
+          description: "Impossibile recuperare dati da Google Trends. Controlla la tua API key.",
+          variant: "destructive",
+        });
+      } else {
+        console.log("Primo tentativo fallito, usando dati predefiniti senza mostrare errore");
+      }
       
       // Try to get AI recommendations despite the error
       await getAiRecommendations(defaultTrends, defaultCategories, district, businessType);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoaded, apiKeys.googleTrends, toast, getAiRecommendations, isUsingDemoKey]);
+  }, [isLoaded, apiKeys.googleTrends, toast, getAiRecommendations, isUsingDemoKey, fetchAttempts]);
 
   return (
     <TrendsContext.Provider

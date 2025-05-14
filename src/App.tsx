@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DistrictSelectionProvider } from "./hooks/useDistrictSelection";
 import { DataCollectionProvider } from "./hooks/useDataCollection";
+import ApiLogViewer from "./components/debug/ApiLogViewer";
 import Index from "./pages/Index";
 import CensusDetail from "./pages/CensusDetail";
 import MyBusinessPage from "./pages/MyBusinessPage";
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+          <ApiLogViewer />
           <Toaster />
           <Sonner />
         </DataCollectionProvider>
