@@ -1,4 +1,7 @@
 import { BusinessType } from "@/components/BusinessTypeSelector";
+import { Competitor } from "../types";
+import { fetchCompetitorsByDistrict, fetchCompetitorDetailsById } from "./competitorDataService";
+import { getDefaultCompetitors } from "../utils/defaultCompetitorsUtil";
 
 // Mock data for competitors
 const mockCompetitors = {
@@ -297,14 +300,42 @@ const mockCuisineRestaurants = {
   },
 };
 
-const getDefaultCompetitors = (district: string, businessType: BusinessType, cuisineType?: string) => {
+/**
+ * Get default competitors based on district and business type
+ */
+export const getDefaultCompetitors = (district: string, businessType: BusinessType, cuisineType?: string): Competitor[] => {
   if (cuisineType && mockCuisineRestaurants[district] && mockCuisineRestaurants[district][cuisineType]) {
     return mockCuisineRestaurants[district][cuisineType];
   }
   return mockCompetitors[district]?.[businessType] || [];
 };
 
-// Fix the type error by explicitly casting businessType
+/**
+ * Load competitor data service - fetches and processes competitor data
+ */
+export const loadCompetitorData = async (
+  businessType: BusinessType,
+  selectedDistrict: string,
+  apiKeys: any,
+  cuisineType?: string
+): Promise<Competitor[]> => {
+  try {
+    // In a real implementation, this would call APIs using the provided API keys
+    // For now, we'll just return the mock data
+    const competitors = fetchCompetitorsByDistrict(selectedDistrict, businessType, cuisineType);
+    
+    // Return the competitors
+    return competitors as Competitor[];
+  } catch (error) {
+    console.error("Error loading competitor data:", error);
+    // Return default competitors as fallback
+    return getDefaultCompetitors(selectedDistrict, businessType, cuisineType);
+  }
+};
+
+/**
+ * Fetch competitors by district
+ */
 export const fetchCompetitorsByDistrict = (district: string, businessType: string, cuisineType?: string) => {
   try {
     // Fix the type casting issue - businessType as BusinessType
@@ -316,6 +347,9 @@ export const fetchCompetitorsByDistrict = (district: string, businessType: strin
   }
 };
 
+/**
+ * Fetch competitor details by ID
+ */
 export const fetchCompetitorDetailsById = (competitorId: string, district: string, businessType: string) => {
   try {
     // Fix the type casting issue - businessType as BusinessType
