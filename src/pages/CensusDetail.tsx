@@ -9,6 +9,73 @@ import { Button } from '@/components/ui/button';
 import { DISTRICT_CENSUS_DATA } from '@/services/api/census/mockCensusData';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 
+interface DistrictData {
+  population: number;
+  median_age: number;
+  median_income: number;
+  households: number;
+  total_housing_units: number;
+  district: string;
+  location_name: string;
+  demographics: {
+    age_distribution?: {
+      under_18: number;
+      age_18_to_34: number;
+      age_35_to_64: number;
+      age_65_plus: number;
+    };
+    race_distribution?: {
+      white: number;
+      black: number;
+      asian: number;
+      hispanic: number;
+      other: number;
+    };
+    gender_distribution?: {
+      male: number;
+      female: number;
+    };
+    population_density?: number;
+    population_growth?: number;
+  };
+  economics: {
+    median_income: number;
+    unemployment_rate: number;
+    jobs: number;
+    business_count: number;
+    economic_growth: number;
+    main_industry: string;
+    industry_distribution: {
+      [key: string]: number;
+    };
+  };
+  education: {
+    high_school_or_higher_percent: number;
+    bachelors_or_higher_percent: number;
+    bachelor_degree: number;
+    high_school_diploma: number;
+    advanced_degree: number;
+    public_schools: number;
+    private_schools: number;
+    universities: number;
+    education_level_distribution: {
+      [key: string]: number;
+    };
+  };
+  housing: {
+    median_home_value: number;
+    median_rent: number;
+    median_home_price: number;
+    housing_units: number;
+    ownership_rate: number;
+    rental_rate: number;
+    price_growth: number;
+    housing_type_distribution: {
+      [key: string]: number;
+    };
+  };
+}
+
 const CensusDetail: React.FC = () => {
   const { district } = useParams<{ district: string }>();
   const navigate = useNavigate();
@@ -23,7 +90,7 @@ const CensusDetail: React.FC = () => {
   }, [district, handleDistrictChange]);
   
   // Get district data from mock data
-  const districtData = district ? DISTRICT_CENSUS_DATA[district] : null;
+  const districtData = district ? (DISTRICT_CENSUS_DATA[district] as DistrictData) : null;
   
   if (!district || !districtData) {
     return (
@@ -91,33 +158,33 @@ const CensusDetail: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <DataCard
                     title="Popolazione"
-                    value={demographics?.population?.toLocaleString() || 'N/A'}
+                    value={districtData.population.toLocaleString() || 'N/A'}
                   />
                   <DataCard
                     title="Età Media"
-                    value={demographics?.median_age?.toString() || 'N/A'}
+                    value={districtData.median_age.toString() || 'N/A'}
                   />
                   <DataCard
                     title="Distribuzione di Genere"
-                    value={demographics?.gender_distribution?.male ? 
+                    value={demographics.gender_distribution ? 
                       `${demographics.gender_distribution.male}% maschi, ${demographics.gender_distribution.female}% femmine` : 
-                      'N/A'}
+                      '50% maschi, 50% femmine'}
                   />
                   <DataCard
                     title="Densità di Popolazione"
-                    value={demographics?.population_density ? 
+                    value={demographics.population_density ? 
                       `${demographics.population_density} per km²` : 
                       'N/A'}
                   />
                   <DataCard
                     title="Crescita della Popolazione"
-                    value={demographics?.population_growth ? 
+                    value={demographics.population_growth ? 
                       `${demographics.population_growth}%` : 
                       'N/A'}
                   />
                   <DataCard
                     title="Households"
-                    value={demographics?.households?.toLocaleString() || 'N/A'}
+                    value={districtData.households.toLocaleString() || 'N/A'}
                   />
                 </div>
                 
@@ -126,7 +193,7 @@ const CensusDetail: React.FC = () => {
                   {demographics?.age_distribution ? (
                     Object.entries(demographics.age_distribution).map(([range, percentage]) => (
                       <div key={range} className="bg-muted rounded-lg p-3 text-center">
-                        <div className="text-xs text-muted-foreground mb-1">{range} anni</div>
+                        <div className="text-xs text-muted-foreground mb-1">{range.replace('_', ' ')} anni</div>
                         <div className="text-lg font-semibold">{percentage}%</div>
                       </div>
                     ))

@@ -11,13 +11,36 @@ export interface CensusDataResponse {
   education: {
     high_school_or_higher_percent: number;
     bachelors_or_higher_percent: number;
+    bachelor_degree?: number;
+    high_school_diploma?: number;
+    advanced_degree?: number;
+    public_schools?: number;
+    private_schools?: number;
+    universities?: number;
+    education_level_distribution?: {
+      [key: string]: number;
+    };
   };
   housing: {
     median_home_value: number;
     median_rent: number;
+    median_home_price?: number;
+    housing_units?: number;
+    ownership_rate?: number;
+    rental_rate?: number;
+    price_growth?: number;
+    housing_type_distribution?: {
+      [key: string]: number;
+    };
   };
-  // Add the demographics nested object
+  // Demographics nested object with optional fields
   demographics?: {
+    gender_distribution?: {
+      male: number;
+      female: number;
+    };
+    population_density?: number;
+    population_growth?: number;
     age_distribution?: {
       under_18: number;
       age_18_to_34: number;
@@ -63,6 +86,18 @@ export interface CensusDataResponse {
         bicycle: number;
         work_from_home: number;
       };
+    };
+  };
+  // Add economics field that CensusDetail page expects
+  economics?: {
+    median_income: number;
+    unemployment_rate: number;
+    jobs: number;
+    business_count: number;
+    economic_growth: number;
+    main_industry: string;
+    industry_distribution: {
+      [key: string]: number;
     };
   };
   errorMessage?: string; // Optional field for error messages
