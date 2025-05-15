@@ -31,8 +31,8 @@ export const useAIAssistantChat = (
   const { userType } = useUserType();
   const isOpenAIConfigured = isLoaded && apiKeys.openAI && apiKeys.openAI !== 'demo-key';
   
-  // Convert apiKeys to the required format
-  const apiKeysWithIndex: ApiKeysWithIndex = apiKeys as ApiKeysWithIndex;
+  // Properly convert apiKeys to the required format with a type assertion
+  const apiKeysWithIndex: ApiKeysWithIndex = apiKeys as unknown as ApiKeysWithIndex;
   
   // Use the extracted hooks for specific functionality
   const { 
