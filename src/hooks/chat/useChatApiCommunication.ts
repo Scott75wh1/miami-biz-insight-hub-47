@@ -61,16 +61,18 @@ export const useChatApiCommunication = ({
       timestamp: new Date()
     };
     
-    setMessages(prev => [...prev, userMessage]);
+    setMessages([...messages, userMessage]);
     setInput('');
     setIsProcessing(true);
     
     try {
       // Set up initial typing state
-      setMessages(prev => [
-        ...prev,
+      const updatedMessages: Message[] = [
+        ...messages, 
+        userMessage,
         { role: 'assistant', content: '', isTyping: true, timestamp: new Date() }
-      ]);
+      ];
+      setMessages(updatedMessages);
       
       // Check if OpenAI API key is configured, otherwise use demo response
       if (!isLoaded || !apiKeys.openAI || apiKeys.openAI === 'demo-key') {
@@ -81,10 +83,11 @@ export const useChatApiCommunication = ({
         const demoResponse = generateDemoResponse(userType, selectedDistrict, businessType);
         
         // Update messages with response
-        setMessages(prev => [
-          ...prev.slice(0, -1), // Remove typing indicator
+        const finalMessages: Message[] = [
+          ...updatedMessages.slice(0, -1), // Remove typing indicator
           { role: 'assistant', content: demoResponse, timestamp: new Date() }
-        ]);
+        ];
+        setMessages(finalMessages);
       } else {
         // Make real API call
         const response = await fetchAIResponse(
@@ -101,42 +104,46 @@ export const useChatApiCommunication = ({
           setConnectionAttempts(0);
           
           // Update messages with response
-          setMessages(prev => [
-            ...prev.slice(0, -1), // Remove typing indicator
+          const finalMessages: Message[] = [
+            ...updatedMessages.slice(0, -1), // Remove typing indicator
             { role: 'assistant', content: response.content, timestamp: new Date() }
-          ]);
+          ];
+          setMessages(finalMessages);
         } else {
           // Increment connection attempts on failure
-          setConnectionAttempts(prev => prev + 1);
+          setConnectionAttempts(connectionAttempts + 1);
           
           // Update messages with error
-          setMessages(prev => [
-            ...prev.slice(0, -1), // Remove typing indicator
+          const errorMessages: Message[] = [
+            ...updatedMessages.slice(0, -1), // Remove typing indicator
             { 
               role: 'assistant', 
               content: response.content || "Mi dispiace, si è verificato un errore di comunicazione.", 
               isError: true,
               timestamp: new Date() 
             }
-          ]);
+          ];
+          setMessages(errorMessages);
         }
       }
     } catch (error) {
       console.error('Error in chat communication:', error);
       
       // Increment connection attempts on error
-      setConnectionAttempts(prev => prev + 1);
+      setConnectionAttempts(connectionAttempts + 1);
       
       // Update messages with error
-      setMessages(prev => [
-        ...prev.slice(0, -1), // Remove typing indicator
+      const errorMessages: Message[] = [
+        ...messages,
+        userMessage, 
         { 
           role: 'assistant', 
           content: "Mi dispiace, si è verificato un errore durante l'elaborazione della tua richiesta.", 
           isError: true,
           timestamp: new Date() 
         }
-      ]);
+      ];
+      setMessages(errorMessages);
     } finally {
       setIsProcessing(false);
       setCurrentRequestId(null);
@@ -155,6 +162,7 @@ export const useChatApiCommunication = ({
     businessType,
     businessName,
     setCurrentRequestId,
+    connectionAttempts,
     setConnectionAttempts
   ]);
   

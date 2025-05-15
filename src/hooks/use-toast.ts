@@ -1,5 +1,5 @@
 
-import { useToast as useHookToast } from "@/components/ui/use-toast";
+import { useToast as useHookToast } from "@/components/ui/toast";
 
 export interface ToastProps {
   title?: string;
@@ -21,4 +21,4 @@ export const useToast = () => {
   return { toast };
 };
 
-export { toast } from "@/components/ui/use-toast";
+export { toast } from "@/components/ui/toast";

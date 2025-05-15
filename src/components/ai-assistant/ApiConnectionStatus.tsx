@@ -14,8 +14,8 @@ const ApiConnectionStatus: React.FC<ApiConnectionStatusProps> = ({ status, onRet
   
   return (
     <Alert 
-      variant={status === 'error' ? 'destructive' : 'warning'}
-      className="border-b rounded-none"
+      variant={status === 'error' ? 'destructive' : 'default'}
+      className={`border-b rounded-none ${status === 'unstable' ? 'border-amber-200 bg-amber-50 text-amber-800' : ''}`}
     >
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center">

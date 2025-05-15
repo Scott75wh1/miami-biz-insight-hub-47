@@ -3,6 +3,7 @@ import React from 'react';
 import { Message } from '@/types/chatTypes';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
+import TypingIndicator from './TypingIndicator';
 
 interface ChatMessageProps {
   message: Message;
