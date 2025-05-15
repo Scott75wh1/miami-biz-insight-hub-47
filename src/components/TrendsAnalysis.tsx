@@ -17,14 +17,26 @@ interface TrendsAnalysisProps {
 }
 
 const TrendsAnalysis = ({ businessType }: TrendsAnalysisProps) => {
-  // Use district selection from global context
-  const { selectedDistrict } = useDistrictSelection();
+  // Use district selection from global context with fallback
+  let selectedDistrict = "Miami Beach"; // Default value
+  let districtSelection = null;
+  
+  try {
+    // Try to use the district selection hook, but don't crash if it's not available
+    districtSelection = useDistrictSelection();
+    selectedDistrict = districtSelection?.selectedDistrict || "Miami Beach";
+  } catch (error) {
+    console.warn("District selection not available, using default district in TrendsAnalysis");
+  }
+  
   const [selectedTab, setSelectedTab] = useState<string>("general");
   const [districtUpdateTime, setDistrictUpdateTime] = useState<number>(Date.now());
 
   // Listen for district changes more effectively
   useEffect(() => {
-    setDistrictUpdateTime(Date.now());
+    if (selectedDistrict) {
+      setDistrictUpdateTime(Date.now());
+    }
 
     const handleDistrictChange = (e: Event) => {
       const customEvent = e as CustomEvent;

@@ -54,6 +54,7 @@ export function DistrictSelectionProvider({
 export function useDistrictSelection() {
   const context = useContext(DistrictSelectionContext);
   if (context === undefined) {
+    console.error("useDistrictSelection must be used within a DistrictSelectionProvider");
     throw new Error('useDistrictSelection must be used within a DistrictSelectionProvider');
   }
   return context;

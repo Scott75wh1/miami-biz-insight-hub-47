@@ -10,8 +10,26 @@ import {
 import { Button } from '@/components/ui/button';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 
+const DEFAULT_DISTRICTS = ["Miami Beach", "Wynwood", "Brickell"];
+
 const DistrictTrendsSelector = () => {
-  const { districts, selectedDistrict, handleDistrictChange } = useDistrictSelection();
+  // Safe access to district selection with fallback
+  let districts = DEFAULT_DISTRICTS;
+  let selectedDistrict = "Miami Beach";
+  let handleDistrictChange = (district: string) => {
+    console.log(`District changed to: ${district} (default handler)`);
+    // Default handler that doesn't actually do anything
+  };
+  
+  try {
+    // Try to use the district selection hook, but don't crash if it's not available
+    const districtContext = useDistrictSelection();
+    districts = districtContext.districts;
+    selectedDistrict = districtContext.selectedDistrict;
+    handleDistrictChange = districtContext.handleDistrictChange;
+  } catch (error) {
+    console.warn("District selection not available in DistrictTrendsSelector, using defaults");
+  }
   
   return (
     <Popover>
