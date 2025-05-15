@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { WifiOff, AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
@@ -12,35 +12,22 @@ interface ApiConnectionStatusProps {
 const ApiConnectionStatus: React.FC<ApiConnectionStatusProps> = ({ status, onRetry }) => {
   if (status === 'good') return null;
   
+  const isUnstable = status === 'unstable';
+  const Icon = isUnstable ? AlertTriangle : AlertCircle;
+  const variant = isUnstable ? "default" : "destructive";
+  
   return (
-    <Alert 
-      variant={status === 'error' ? 'destructive' : 'default'}
-      className={`border-b rounded-none ${status === 'unstable' ? 'border-amber-200 bg-amber-50 text-amber-800' : ''}`}
-    >
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center">
-          {status === 'error' ? (
-            <WifiOff className="h-4 w-4 mr-2" />
-          ) : (
-            <AlertCircle className="h-4 w-4 mr-2" />
-          )}
-          <AlertDescription>
-            {status === 'error' 
-              ? "Connessione all'API fallita. Verifica la tua connessione internet o le API key." 
-              : "Connessione instabile. Alcune richieste potrebbero non andare a buon fine."
-            }
-          </AlertDescription>
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onRetry}
-          className="ml-2 flex items-center gap-1"
-        >
-          <RefreshCw className="h-3 w-3" /> 
-          Riprova
-        </Button>
-      </div>
+    <Alert variant={variant} className={`${isUnstable ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-destructive/10'} mb-4`}>
+      <Icon className="h-4 w-4 mr-2" />
+      <AlertDescription className="text-xs flex-1">
+        {isUnstable
+          ? "La connessione all'API sembra instabile. Alcuni messaggi potrebbero non essere elaborati correttamente."
+          : "Impossibile connettersi all'API. Verifica la tua connessione e le impostazioni API."
+        }
+      </AlertDescription>
+      <Button variant="outline" size="sm" onClick={onRetry} className="ml-2 text-xs">
+        {isUnstable ? 'Riprova' : 'Riavvia'}
+      </Button>
     </Alert>
   );
 };
