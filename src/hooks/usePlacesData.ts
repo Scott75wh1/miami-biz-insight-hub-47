@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
 import { fetchPlacesData } from '@/services/apiService';
+import { useToast } from '@/hooks/use-toast';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 
 export interface PlaceData {

@@ -4,7 +4,8 @@ import Layout from '@/components/Layout';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Settings, Key } from 'lucide-react';
+import { ApiVerificationStatus } from '@/components/settings/ApiVerificationStatus';
 
 const SettingsPage: React.FC = () => {
   return (
@@ -16,7 +17,7 @@ const SettingsPage: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
+                <Key className="h-5 w-5" />
                 Configurazione API
               </CardTitle>
             </CardHeader>
@@ -28,7 +29,7 @@ const SettingsPage: React.FC = () => {
             </CardContent>
           </Card>
           
-          {/* Altre card per impostazioni aggiuntive possono essere aggiunte qui */}
+          <ApiVerificationStatus />
         </div>
       </div>
     </Layout>

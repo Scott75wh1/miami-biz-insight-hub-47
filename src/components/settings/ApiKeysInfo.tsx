@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Info, AlertCircle, ExternalLink } from "lucide-react";
+import { Info, AlertCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -34,14 +34,18 @@ export const ApiKeysInfo = ({ useDemoKeys }: ApiKeysInfoProps) => {
             </ul>
           </AlertDescription>
         </Alert>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="mt-3"
-          onClick={useDemoKeys}
-        >
-          Usa chiavi demo
-        </Button>
+        <div className="mt-3 flex items-center justify-between">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={useDemoKeys}
+            className="flex items-center gap-1"
+          >
+            <Shield className="h-3 w-3" />
+            Usa chiavi demo
+          </Button>
+          <span className="text-xs text-amber-600">Sicuro per test e sviluppo</span>
+        </div>
       </div>
       
       <Accordion type="single" collapsible className="w-full">
@@ -67,15 +71,6 @@ export const ApiKeysInfo = ({ useDemoKeys }: ApiKeysInfoProps) => {
                 <strong>Formati delle richieste:</strong> Assicurati che i parametri delle richieste API siano formattati correttamente.
               </li>
             </ol>
-            
-            <div className="flex items-center gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex items-center gap-1" asChild>
-                <a href="https://docs.lovable.dev/tips-tricks/troubleshooting" target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-3 w-3" />
-                  Documentazione Troubleshooting
-                </a>
-              </Button>
-            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
