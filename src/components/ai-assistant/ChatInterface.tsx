@@ -98,7 +98,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <div className="flex justify-start">
               <div className="flex items-start max-w-[85%]">
                 <Avatar className="h-8 w-8 mr-2">
-                  <AvatartImage src="/placeholder.svg" alt="AI" />
+                  <AvatarImage src="/placeholder.svg" alt="AI" />
                   <AvatarFallback>AI</AvatarFallback>
                 </Avatar>
                 <div className="bg-muted rounded-lg p-3">
