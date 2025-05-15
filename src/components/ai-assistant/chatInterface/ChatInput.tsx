@@ -1,61 +1,40 @@
 
-import React, { useRef, useEffect } from 'react';
-import { SendIcon } from 'lucide-react';
+import React from 'react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Send } from 'lucide-react';
 
 interface ChatInputProps {
   input: string;
+  isProcessing: boolean;
   onInputChange: (value: string) => void;
   onSendMessage: () => void;
-  isProcessing: boolean;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({
-  input,
-  onInputChange,
-  onSendMessage,
-  isProcessing
-}) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
-  // Auto-resize textarea
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`;
-    }
-  }, [input]);
-  
-  // Handle enter key press
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+const ChatInput: React.FC<ChatInputProps> = ({ input, isProcessing, onInputChange, onSendMessage }) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && !isProcessing) {
       e.preventDefault();
       onSendMessage();
     }
   };
   
   return (
-    <div className="relative">
-      <Textarea
-        ref={textareaRef}
+    <div className="flex items-center gap-2 mt-2">
+      <Input
         placeholder="Scrivi un messaggio..."
         value={input}
         onChange={(e) => onInputChange(e.target.value)}
-        onKeyDown={handleKeyPress}
+        onKeyDown={handleKeyDown}
         disabled={isProcessing}
-        className="resize-none pr-10 min-h-[60px] max-h-[150px]"
-        rows={1}
+        className="flex-1"
       />
-      <Button
+      <Button 
+        onClick={onSendMessage} 
+        disabled={isProcessing || !input.trim()} 
         size="icon"
-        variant="ghost"
-        onClick={onSendMessage}
-        disabled={!input.trim() || isProcessing}
-        className="absolute right-2 bottom-2 text-primary"
       >
-        <SendIcon className="h-4 w-4" />
+        <Send className="h-4 w-4" />
       </Button>
     </div>
   );

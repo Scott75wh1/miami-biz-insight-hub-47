@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
+import { Message } from '@/types/chatTypes';
 import { UserType } from '@/components/UserTypeSelector';
 import { BusinessType } from '@/components/BusinessTypeSelector';
-import { Message } from '@/types/chatTypes';
 import { generateWelcomeMessage } from '@/services/aiAssistantService';
 
 export const useChatMessageManagement = (
@@ -12,30 +12,26 @@ export const useChatMessageManagement = (
   businessName?: string
 ) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
   
-  // Set welcome message based on user type
+  // Initialize with welcome message when user type or district changes
   useEffect(() => {
-    const welcomeMessage = generateWelcomeMessage(
-      userType,
-      selectedDistrict,
-      businessType,
-      businessName
-    );
-    
+    const welcomeMessage = generateWelcomeMessage(userType, selectedDistrict, businessType, businessName);
     setMessages([welcomeMessage]);
-  }, [selectedDistrict, businessType, businessName, userType]);
-  
+    // Reset connection status
+    setConnectionAttempts(0);
+  }, [userType, selectedDistrict, businessType, businessName]);
+
   return {
     messages,
     setMessages,
-    isProcessing,
-    setIsProcessing,
     currentRequestId,
     setCurrentRequestId,
     connectionAttempts,
-    setConnectionAttempts
+    setConnectionAttempts,
+    isProcessing,
+    setIsProcessing
   };
 };

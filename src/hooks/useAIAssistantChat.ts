@@ -17,8 +17,13 @@ import {
 // Re-export types for convenience
 export type { Message, Suggestion } from '@/types/chatTypes';
 
+// Definire correttamente l'interfaccia ApiKeysWithIndex
 interface ApiKeysWithIndex {
   openAI: string;
+  googlePlaces: string;
+  censusGov: string;
+  yelp: string;
+  googleTrends: string;
   [key: string]: string;
 }
 

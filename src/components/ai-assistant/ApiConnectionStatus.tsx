@@ -1,66 +1,47 @@
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { WifiOff, AlertCircle, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ApiConnectionStatusProps {
   status: 'good' | 'unstable' | 'error';
-  onRetry?: () => void;
+  onRetry: () => void;
 }
 
-const ApiConnectionStatus: React.FC<ApiConnectionStatusProps> = ({ 
-  status,
-  onRetry
-}) => {
+const ApiConnectionStatus: React.FC<ApiConnectionStatusProps> = ({ status, onRetry }) => {
   if (status === 'good') return null;
-
+  
   return (
-    <div className="mb-4">
-      <Alert variant={status === 'unstable' ? 'default' : 'destructive'}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {status === 'unstable' ? (
-              <Wifi className="h-4 w-4 text-amber-500" />
-            ) : (
-              <WifiOff className="h-4 w-4 text-destructive" />
-            )}
-            <AlertTitle>
-              {status === 'unstable' 
-                ? "Connessione API instabile" 
-                : "Errore di connessione API"}
-            </AlertTitle>
-          </div>
-          {onRetry && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={onRetry}
-              className="flex items-center text-xs gap-1"
-            >
-              <RefreshCw className="h-3 w-3" />
-              Riprova
-            </Button>
-          )}
-        </div>
-        <AlertDescription className="mt-2 text-sm">
-          {status === 'unstable' ? (
-            <>
-              Si stanno verificando problemi intermittenti nella connessione alle API.
-              Prova a:
-              <ul className="list-disc pl-5 mt-1 text-xs">
-                <li>Verificare la tua connessione internet</li>
-                <li>Controllare che l'API key sia valida nelle impostazioni</li>
-                <li>Ricaricare la pagina se il problema persiste</li>
-              </ul>
-            </>
+    <Alert 
+      variant={status === 'error' ? 'destructive' : 'warning'}
+      className="border-b rounded-none"
+    >
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center">
+          {status === 'error' ? (
+            <WifiOff className="h-4 w-4 mr-2" />
           ) : (
-            "Non è stato possibile connettersi alle API. Verifica la tua connessione internet e l'API key nelle impostazioni."
+            <AlertCircle className="h-4 w-4 mr-2" />
           )}
-        </AlertDescription>
-      </Alert>
-    </div>
+          <AlertDescription>
+            {status === 'error' 
+              ? "Connessione all'API fallita. Verifica la tua connessione internet o le API key." 
+              : "Connessione instabile. Alcune richieste potrebbero non andare a buon fine."
+            }
+          </AlertDescription>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onRetry}
+          className="ml-2 flex items-center gap-1"
+        >
+          <RefreshCw className="h-3 w-3" /> 
+          Riprova
+        </Button>
+      </div>
+    </Alert>
   );
 };
 

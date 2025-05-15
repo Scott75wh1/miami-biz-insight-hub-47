@@ -1,30 +1,39 @@
 
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
 import { Message } from '@/types/chatTypes';
+import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatMessageProps {
   message: Message;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const getMessageStyle = (role: string) => {
-    if (role === 'assistant') {
-      return 'bg-accent/50 border-accent/20 text-foreground';
-    }
-    return 'bg-primary/10 border-primary/20 text-foreground';
-  };
-
+  const isUser = message.role === 'user';
+  const isError = message.isError;
+  
   return (
-    <div className={`p-3 rounded-lg border ${getMessageStyle(message.role)}`}>
-      <div className="mb-1 text-xs text-muted-foreground flex justify-between">
-        <span>{message.role === 'assistant' ? 'Assistente' : 'Tu'}</span>
-        <span>{message.timestamp.toLocaleTimeString()}</span>
-      </div>
-      <div className="prose prose-sm max-w-none dark:prose-invert">
-        <ReactMarkdown>
-          {message.content}
-        </ReactMarkdown>
+    <div
+      className={cn(
+        "flex max-w-[80%] rounded-lg p-4",
+        isUser ? "bg-primary text-primary-foreground ml-auto" : "bg-muted",
+        isError && "bg-destructive/10 border border-destructive/20"
+      )}
+    >
+      <div className="space-y-2">
+        <div className={cn("text-sm font-medium", isUser ? "text-primary-foreground" : "text-foreground")}>
+          {isUser ? 'Tu' : 'Assistente'}
+        </div>
+        <div className={cn(
+          "prose dark:prose-invert max-w-none",
+          isUser ? "text-primary-foreground" : "text-foreground"
+        )}>
+          {message.isTyping ? (
+            <TypingIndicator />
+          ) : (
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          )}
+        </div>
       </div>
     </div>
   );

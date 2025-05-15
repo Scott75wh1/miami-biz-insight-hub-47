@@ -1,8 +1,9 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Message } from '@/types/chatTypes';
 import ChatMessage from './ChatMessage';
 import TypingIndicator from './TypingIndicator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface MessageListProps {
   messages: Message[];
@@ -10,21 +11,31 @@ interface MessageListProps {
 }
 
 const MessageList: React.FC<MessageListProps> = ({ messages, isProcessing }) => {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  // Auto-scroll to bottom of messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isProcessing]);
+    // Scroll to bottom when messages change
+    if (scrollAreaRef.current) {
+      const scrollArea = scrollAreaRef.current;
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
+  }, [messages]);
   
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {messages.map((msg, index) => (
-        <ChatMessage key={index} message={msg} />
-      ))}
-      {isProcessing && <TypingIndicator />}
-      <div ref={messagesEndRef}></div>
-    </div>
+    <ScrollArea 
+      ref={scrollAreaRef} 
+      className="flex-1 p-4 overflow-y-auto" 
+      style={{ height: 'calc(100% - 180px)' }}
+    >
+      <div className="space-y-4">
+        {messages.map((message, index) => (
+          <ChatMessage key={index} message={message} />
+        ))}
+        {isProcessing && (
+          <TypingIndicator />
+        )}
+      </div>
+    </ScrollArea>
   );
 };
 

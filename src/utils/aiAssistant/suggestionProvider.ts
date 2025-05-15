@@ -4,23 +4,31 @@ import { BusinessType } from '@/components/BusinessTypeSelector';
 import { Suggestion } from '@/types/chatTypes';
 
 export const getSuggestions = (
-  userType: UserType,
+  userType: UserType, 
   businessType: BusinessType,
-  selectedDistrict: string
+  district: string
 ): Suggestion[] => {
+  // Suggerimenti base per ogni tipo di utente
+  const baseSuggestions: Suggestion[] = [
+    { text: `Come posso migliorare la mia attività a ${district}?` },
+    { text: `Quali sono i trend attuali nel settore ${businessType}?` },
+  ];
+  
+  // Suggerimenti specifici per end user
   if (userType === 'end_user') {
     return [
-      { forType: 'end_user', text: "Cosa vogliono i clienti in questa zona?" },
-      { forType: 'end_user', text: `Come posso migliorare la mia attività ${businessType} a ${selectedDistrict}?` },
-      { forType: 'end_user', text: "Quali sono i punti di forza della concorrenza?" },
-      { forType: 'end_user', text: "Suggerisci 3 idee pratiche per aumentare i clienti" }
-    ];
-  } else {
-    return [
-      { forType: 'marketer', text: `Analizza la segmentazione demografica di ${selectedDistrict} per ${businessType}` },
-      { forType: 'marketer', text: `Quali KPI dovrei monitorare per un'attività ${businessType}?` },
-      { forType: 'marketer', text: `Compara le strategie di marketing dei top competitor a ${selectedDistrict}` },
-      { forType: 'marketer', text: `Elabora una strategia SEO locale per ${selectedDistrict}` }
+      ...baseSuggestions,
+      { text: `Consigli pratici per aumentare la clientela` },
+      { text: `Come posso ottimizzare la mia presenza online?` },
+      { text: `Suggerimenti per migliorare l'esperienza cliente` }
     ];
   }
+  
+  // Suggerimenti avanzati per marketer
+  return [
+    ...baseSuggestions,
+    { text: `Analizza il target demografico a ${district} per ${businessType}` },
+    { text: `Strategie di posizionamento competitivo a ${district}` },
+    { text: `Quali KPI dovrei monitorare per il mio ${businessType}?` }
+  ];
 };
