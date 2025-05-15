@@ -2,22 +2,19 @@
 import { useState, useEffect } from 'react';
 import { UserType } from '@/components/UserTypeSelector';
 import { BusinessType } from '@/components/BusinessTypeSelector';
-import { fetchOpenAIAnalysis } from '@/services/apiService';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
-import { toast } from '@/hooks/use-toast';
-import { buildPrompt } from '@/utils/promptBuilder';
+import { useUserType } from '@/hooks/useUserType';
+import { getSuggestions, Suggestion } from '@/utils/aiAssistant/suggestionProvider';
+import { Message } from '@/types/chatTypes';
+import { 
+  generateWelcomeMessage, 
+  generateDemoResponse, 
+  fetchAIResponse 
+} from '@/services/aiAssistantService';
 
-export interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
-
-export interface Suggestion {
-  forType: UserType;
-  text: string;
-}
+export { Suggestion } from '@/utils/aiAssistant/suggestionProvider';
+export { Message } from '@/types/chatTypes';
 
 export const useAIAssistantChat = (
   businessType: BusinessType,
@@ -31,36 +28,16 @@ export const useAIAssistantChat = (
   const { selectedDistrict } = useDistrictSelection();
   const { userType } = useUserType();
   
-  // Get relevant suggestions based on user type
-  const getSuggestions = (): Suggestion[] => {
-    if (userType === 'end_user') {
-      return [
-        { forType: 'end_user', text: "Cosa vogliono i clienti in questa zona?" },
-        { forType: 'end_user', text: `Come posso migliorare la mia attività ${businessType} a ${selectedDistrict}?` },
-        { forType: 'end_user', text: "Quali sono i punti di forza della concorrenza?" },
-        { forType: 'end_user', text: "Suggerisci 3 idee pratiche per aumentare i clienti" }
-      ];
-    } else {
-      return [
-        { forType: 'marketer', text: `Analizza la segmentazione demografica di ${selectedDistrict} per ${businessType}` },
-        { forType: 'marketer', text: `Quali KPI dovrei monitorare per un'attività ${businessType}?` },
-        { forType: 'marketer', text: `Compara le strategie di marketing dei top competitor a ${selectedDistrict}` },
-        { forType: 'marketer', text: `Elabora una strategia SEO locale per ${selectedDistrict}` }
-      ];
-    }
-  };
-
   // Set welcome message based on user type
   useEffect(() => {
-    const welcomeMessage = userType === 'end_user'
-      ? `Ciao! Sono il tuo assistente personale per la tua attività${businessName ? ' ' + businessName : ''} a ${selectedDistrict}. Come posso aiutarti oggi? Puoi farmi domande pratiche su come migliorare la tua attività o capire meglio i tuoi clienti.`
-      : `Benvenuto, professionista. Sono pronto ad assisterti con analisi dettagliate del mercato a ${selectedDistrict} per il settore ${businessType}. Posso fornirti approfondimenti su dati demografici, trend di mercato e strategie competitive.`;
+    const welcomeMessage = generateWelcomeMessage(
+      userType,
+      selectedDistrict,
+      businessType,
+      businessName
+    );
     
-    setMessages([{
-      role: 'assistant',
-      content: welcomeMessage,
-      timestamp: new Date()
-    }]);
+    setMessages([welcomeMessage]);
   }, [selectedDistrict, businessType, businessName, userType]);
 
   const handleSendMessage = async () => {
@@ -81,11 +58,11 @@ export const useAIAssistantChat = (
     setInput('');
     setIsProcessing(true);
     
-    // Verifica se l'API key di OpenAI è configurata
+    // Verify OpenAI API key configuration
     const isOpenAIConfigured = apiKeys.openAI && apiKeys.openAI !== 'demo-key';
     
     if (!isLoaded || !isOpenAIConfigured) {
-      // Se l'API key non è configurata, mostra un toast di errore e aggiungi un messaggio informativo
+      // If API key isn't configured, show error toast and add informative message
       if (isLoaded && !isOpenAIConfigured) {
         toast({
           title: "Configurazione API mancante",
@@ -98,36 +75,9 @@ export const useAIAssistantChat = (
         // Check if this is still the current request
         if (currentRequestId !== requestId) return;
         
-        const demoResponse = userType === 'end_user'
-          ? `Basandomi sui dati disponibili per ${selectedDistrict}, ecco 3 consigli pratici per la tua attività:
-
-1. Amplia la tua presenza sui social media locali con contenuti che mostrano il tuo legame con ${selectedDistrict}. I residenti apprezzano molto le attività che si sentono parte della comunità.
-
-2. Considera di creare un'offerta speciale per i residenti locali durante i giorni feriali, quando il flusso di clienti è tipicamente più basso.
-
-3. Collabora con altre attività locali di ${selectedDistrict} per promozioni incrociate che possono aumentare la visibilità con investimenti minimi.
-
-Questi suggerimenti sono specificamente pensati per un'attività ${businessType} in questa zona, dove i dati mostrano un forte senso di comunità locale.`
-          : `## Analisi di Mercato per ${businessType} a ${selectedDistrict}
-
-### Segmentazione demografica
-I dati demografici di ${selectedDistrict} mostrano una popolazione prevalentemente di fascia d'età 28-45 anni (42%), con reddito medio-alto e istruzione universitaria (65%). Questo segmento dimostra particolare interesse verso ${businessType}.
-
-### Analisi competitiva
-La densità competitiva è di 3.7 attività simili per km², con un rating medio di 4.2/5 e un prezzo medio di €€-€€€. Il principale fattore differenziante è l'esperienza cliente personalizzata.
-
-### Strategie raccomandate
-1. Implementare una strategia SEO locale focalizzata su ${selectedDistrict} con contenuti geolocalizzati
-2. Sviluppare un programma di fidelizzazione basato sui dati comportamentali raccolti
-3. Ottimizzare il posizionamento del brand sui canali digitali più utilizzati dal target demografico identificato
-
-### KPI consigliati
-- Customer Acquisition Cost (CAC): target < €25
-- Retention Rate: obiettivo >65%
-- Engagement Rate sui social: benchmark di settore +15%
-- Conversion Rate: obiettivo 4.2%`;
+        const demoResponse = generateDemoResponse(userType, selectedDistrict, businessType);
         
-        // Aggiungi un avviso se l'API key non è configurata
+        // Add warning if API key isn't configured
         const apiKeyWarning = !isOpenAIConfigured ? 
           "\n\n**NOTA: Questa è una risposta di esempio. Per ottenere analisi personalizzate, configura la tua API key di OpenAI nelle impostazioni.**" : "";
         
@@ -144,47 +94,37 @@ La densità competitiva è di 3.7 attività simili per km², con un rating medio
     }
     
     try {
-      // Log per debug
+      // Debug log
       console.log("Utilizzando API key OpenAI:", apiKeys.openAI.substring(0, 5) + "...");
       
-      // Create the enhanced prompt based on user type
-      const enhancedPrompt = buildPrompt(input, userType, businessType, selectedDistrict, businessName);
-      
-      // Send to OpenAI
-      const response = await fetchOpenAIAnalysis(apiKeys.openAI, enhancedPrompt);
+      // Fetch AI response
+      const response = await fetchAIResponse(
+        apiKeys.openAI,
+        input,
+        userType,
+        businessType,
+        selectedDistrict,
+        businessName
+      );
       
       // Check if this is still the current request
       if (currentRequestId !== requestId) return;
       
-      if (response && response.choices && response.choices[0]) {
+      if (response.success) {
         const aiMessage: Message = {
           role: 'assistant',
-          content: response.choices[0].message.content,
+          content: response.content,
           timestamp: new Date()
         };
         
         setMessages(prev => [...prev, aiMessage]);
       } else {
-        throw new Error('Invalid API response');
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: response.content,
+          timestamp: new Date()
+        }]);
       }
-    } catch (error) {
-      console.error('Error getting AI response:', error);
-      
-      // Check if this is still the current request
-      if (currentRequestId !== requestId) return;
-      
-      // Add error message
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Mi dispiace, si è verificato un errore durante l\'elaborazione della tua richiesta. Verifica la tua API key di OpenAI o riprova più tardi.',
-        timestamp: new Date()
-      }]);
-      
-      toast({
-        title: "Errore comunicazione AI",
-        description: "Impossibile ottenere una risposta dall'assistente AI. Verifica la tua API key.",
-        variant: "destructive",
-      });
     } finally {
       // Only update state if this is still the current request
       if (currentRequestId === requestId) {
@@ -207,13 +147,10 @@ La densità competitiva è di 3.7 attività simili per km², con un rating medio
     input,
     isProcessing,
     userType,
-    suggestions: getSuggestions(),
+    suggestions: getSuggestions(userType, businessType, selectedDistrict),
     handleInputChange,
     handleSendMessage,
     handleSuggestionClick,
     isOpenAIConfigured: isLoaded && apiKeys.openAI && apiKeys.openAI !== 'demo-key'
   };
 };
-
-// This import is needed here to avoid circular dependencies
-import { useUserType } from '@/hooks/useUserType';

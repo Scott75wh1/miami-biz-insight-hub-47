@@ -8,7 +8,6 @@ import { UserType } from '@/components/UserTypeSelector';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Message, Suggestion } from '@/hooks/useAIAssistantChat';
 import { SettingsDialog } from '@/components/SettingsDialog';
-import { useApiKeys } from '@/hooks/useApiKeys';
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -16,6 +15,7 @@ interface ChatInterfaceProps {
   isProcessing: boolean;
   userType: UserType;
   suggestions: Suggestion[];
+  isOpenAIConfigured: boolean;
   onInputChange: (value: string) => void;
   onSendMessage: () => void;
   onSuggestionClick: (suggestion: string) => void;
@@ -27,14 +27,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isProcessing,
   userType,
   suggestions,
+  isOpenAIConfigured,
   onInputChange,
   onSendMessage,
   onSuggestionClick,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { apiKeys, isLoaded } = useApiKeys();
-  const isOpenAIConfigured = isLoaded && apiKeys.openAI && apiKeys.openAI !== 'demo-key';
-
+  
   // Auto scroll to bottom of messages
   useEffect(() => {
     if (messagesEndRef.current) {
