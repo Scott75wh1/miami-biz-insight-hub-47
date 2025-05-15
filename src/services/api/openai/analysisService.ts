@@ -1,6 +1,7 @@
 
 import { handleApiError } from '../handleError';
 import { OpenAIResponse, ApiErrorResponse } from './types';
+import { toast } from '@/hooks/use-toast';
 
 export const fetchOpenAIAnalysis = async (apiKey: string, prompt: string): Promise<OpenAIResponse | null> => {
   // Log per verificare che il prompt sia completo
@@ -105,6 +106,10 @@ La densità competitiva nel settore ${businessType} a ${district} è di 3.7 atti
   try {
     console.log(`Invio prompt a OpenAI con chiave API valida (${apiKey.substring(0, 3)}...)`);
     
+    // Aggiungiamo un controllo di timeout per gestire richieste bloccate
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondi di timeout
+    
     // Implementazione reale dell'API OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -122,12 +127,32 @@ La densità competitiva nel settore ${businessType} a ${district} è di 3.7 atti
         ],
         temperature: 0.7,
         max_tokens: 1500
-      })
+      }),
+      signal: controller.signal
     });
+    
+    // Puliamo il timeout
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Errore OpenAI:", errorData);
+      
+      // Gestione errori specifici
+      if (errorData.error?.type === "auth_subrequest_error") {
+        toast({
+          title: "Errore di autenticazione OpenAI",
+          description: "Controlla che la tua API key di OpenAI sia corretta e attiva nelle impostazioni.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: `Errore ${response.status}`,
+          description: errorData.error?.message || "Errore sconosciuto nel contattare OpenAI",
+          variant: "destructive",
+        });
+      }
+      
       throw new Error(`Error ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
     }
     
@@ -137,8 +162,25 @@ La densità competitiva nel settore ${businessType} a ${district} è di 3.7 atti
     return {
       choices: data.choices || []
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Errore nell'analisi OpenAI:", error);
+    
+    // Verifica se è un errore di abort/timeout
+    if (error.name === 'AbortError') {
+      toast({
+        title: "Timeout di connessione",
+        description: "La richiesta all'API OpenAI è scaduta. Riprova tra qualche istante.",
+        variant: "destructive",
+      });
+      
+      return {
+        choices: [],
+        error: true,
+        errorType: 'TIMEOUT_ERROR',
+        message: 'La connessione è scaduta. Riprova più tardi.'
+      };
+    }
+    
     const errorResponse = handleApiError(error, 'OpenAI') as ApiErrorResponse;
     
     // Create a valid OpenAIResponse even in error case

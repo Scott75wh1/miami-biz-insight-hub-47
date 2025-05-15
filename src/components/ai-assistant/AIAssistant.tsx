@@ -19,7 +19,8 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ businessType, businessName })
     handleInputChange,
     handleSendMessage,
     handleSuggestionClick,
-    isOpenAIConfigured
+    isOpenAIConfigured,
+    connectionStatus
   } = useAIAssistantChat(businessType, businessName);
 
   return (
@@ -33,6 +34,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ businessType, businessName })
       onSendMessage={handleSendMessage}
       onSuggestionClick={handleSuggestionClick}
       isOpenAIConfigured={isOpenAIConfigured}
+      connectionStatus={connectionStatus}
     />
   );
 };

@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { UserType } from '@/components/UserTypeSelector';
 import { BusinessType } from '@/components/BusinessTypeSelector';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useUserType } from '@/hooks/useUserType';
 import { getSuggestions } from '@/utils/aiAssistant/suggestionProvider';
-import { Message } from '@/types/chatTypes';
+import { Message, ChatState } from '@/types/chatTypes';
 import { 
   generateWelcomeMessage, 
   generateDemoResponse, 
@@ -26,6 +26,7 @@ export const useAIAssistantChat = (
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
   const { apiKeys, isLoaded } = useApiKeys();
   const { selectedDistrict } = useDistrictSelection();
   const { userType } = useUserType();
@@ -41,7 +42,19 @@ export const useAIAssistantChat = (
     
     setMessages([welcomeMessage]);
   }, [selectedDistrict, businessType, businessName, userType]);
-
+  
+  // Funzione per generare risposta in modalità demo
+  const generateDemoResponseWithWarning = useCallback(() => {
+    const demoResponse = generateDemoResponse(userType, selectedDistrict, businessType);
+    
+    // Add warning if API key isn't configured
+    const isOpenAIConfigured = apiKeys.openAI && apiKeys.openAI !== 'demo-key';
+    const apiKeyWarning = !isOpenAIConfigured ? 
+      "\n\n**NOTA: Questa è una risposta di esempio. Per ottenere analisi personalizzate, configura la tua API key di OpenAI nelle impostazioni.**" : "";
+    
+    return demoResponse + apiKeyWarning;
+  }, [userType, selectedDistrict, businessType, apiKeys.openAI]);
+  
   const handleSendMessage = async () => {
     if (!input.trim() || isProcessing) return;
     
@@ -77,19 +90,14 @@ export const useAIAssistantChat = (
         // Check if this is still the current request
         if (currentRequestId !== requestId) return;
         
-        const demoResponse = generateDemoResponse(userType, selectedDistrict, businessType);
-        
-        // Add warning if API key isn't configured
-        const apiKeyWarning = !isOpenAIConfigured ? 
-          "\n\n**NOTA: Questa è una risposta di esempio. Per ottenere analisi personalizzate, configura la tua API key di OpenAI nelle impostazioni.**" : "";
-        
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: demoResponse + apiKeyWarning,
+          content: generateDemoResponseWithWarning(),
           timestamp: new Date()
         }]);
         
         setIsProcessing(false);
+        setCurrentRequestId(null);
       }, 1200);
       
       return;
@@ -112,6 +120,11 @@ export const useAIAssistantChat = (
       // Check if this is still the current request
       if (currentRequestId !== requestId) return;
       
+      // Resetta i tentativi di connessione se andiamo a buon fine
+      if (connectionAttempts > 0) {
+        setConnectionAttempts(0);
+      }
+      
       if (response.success) {
         const aiMessage: Message = {
           role: 'assistant',
@@ -121,9 +134,50 @@ export const useAIAssistantChat = (
         
         setMessages(prev => [...prev, aiMessage]);
       } else {
+        // Se c'è stato un errore ma non è di connessione, mostra il messaggio di errore
         setMessages(prev => [...prev, {
           role: 'assistant',
           content: response.content,
+          timestamp: new Date()
+        }]);
+        
+        // Controlla se è un errore potenzialmente legato alla connessione
+        if (response.error && typeof response.error === 'object') {
+          const errorStr = JSON.stringify(response.error);
+          if (errorStr.includes('network') || 
+              errorStr.includes('connection') || 
+              errorStr.includes('timeout') ||
+              errorStr.includes('500')) {
+            
+            setConnectionAttempts(prev => prev + 1);
+            
+            // Se è il terzo errore consecutivo, mostra un toast con consiglio
+            if (connectionAttempts >= 2) {
+              toast({
+                title: "Problemi persistenti di connessione",
+                description: "Sembra che ci siano problemi persistenti con la connessione alle API. Prova a ricaricare la pagina o verifica la tua connessione internet.",
+                variant: "destructive",
+                duration: 8000
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error in handleSendMessage:", error);
+      
+      // Se siamo qui, c'è un errore imprevisto
+      // Controlla se è ancora la richiesta corrente
+      if (currentRequestId === requestId) {
+        toast({
+          title: "Errore imprevisto",
+          description: "Si è verificato un errore imprevisto durante l'elaborazione del messaggio.",
+          variant: "destructive",
+        });
+        
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: "Mi dispiace, si è verificato un errore imprevisto. Riprova più tardi.",
           timestamp: new Date()
         }]);
       }
@@ -153,6 +207,7 @@ export const useAIAssistantChat = (
     handleInputChange,
     handleSendMessage,
     handleSuggestionClick,
-    isOpenAIConfigured: isLoaded && apiKeys.openAI && apiKeys.openAI !== 'demo-key'
+    isOpenAIConfigured: isLoaded && apiKeys.openAI && apiKeys.openAI !== 'demo-key',
+    connectionStatus: connectionAttempts > 0 ? 'unstable' : 'good'
   };
 };

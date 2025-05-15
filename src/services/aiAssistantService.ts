@@ -77,17 +77,70 @@ export const fetchAIResponse = async (
       businessName
     );
     
-    // Send to OpenAI
-    const response = await fetchOpenAIAnalysis(apiKey, enhancedPrompt);
+    // Aggiungiamo un indicatore di tentativi
+    let attempts = 0;
+    const maxAttempts = 2;
+    let lastError = null;
     
-    if (response && response.choices && response.choices[0]) {
-      return {
-        success: true,
-        content: response.choices[0].message.content
-      };
-    } else {
-      throw new Error('Invalid API response');
+    // Sistema di retry per problemi di connessione
+    while (attempts < maxAttempts) {
+      try {
+        // Se stiamo riprovando, mostriamo un toast informativo
+        if (attempts > 0) {
+          toast({
+            title: "Ritentativo connessione",
+            description: `Tentativo ${attempts + 1}/${maxAttempts} di connessione all'API OpenAI...`,
+          });
+          
+          // Attendiamo un po' prima di riprovare
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+        
+        // Send to OpenAI
+        const response = await fetchOpenAIAnalysis(apiKey, enhancedPrompt);
+        
+        if (response && response.choices && response.choices[0]) {
+          return {
+            success: true,
+            content: response.choices[0].message.content
+          };
+        } else if (response && response.error) {
+          // Se abbiamo un errore API specifico, non ritentiamo
+          throw new Error(response.message || 'Errore API specifico');
+        } else {
+          throw new Error('Invalid API response');
+        }
+      } catch (error: any) {
+        lastError = error;
+        
+        // Se è un errore di autenticazione o un errore specifico noto, non ritentiamo
+        if (error.message?.includes('authentication') || 
+            error.message?.includes('auth_') ||
+            error.message?.includes('API key')) {
+          break;
+        }
+        
+        attempts++;
+        
+        // Se abbiamo raggiunto il numero massimo di tentativi, usciamo dal ciclo
+        if (attempts >= maxAttempts) break;
+      }
     }
+    
+    // Se siamo qui, tutti i tentativi sono falliti
+    console.error('Error getting AI response after retries:', lastError);
+    
+    toast({
+      title: "Errore comunicazione AI",
+      description: "Impossibile ottenere una risposta dall'assistente AI dopo ripetuti tentativi. Verifica la tua API key o la connessione internet.",
+      variant: "destructive",
+    });
+    
+    return {
+      success: false,
+      content: 'Mi dispiace, si è verificato un errore durante l\'elaborazione della tua richiesta. Verifica la tua API key di OpenAI o riprova più tardi.',
+      error: lastError
+    };
   } catch (error) {
     console.error('Error getting AI response:', error);
     
