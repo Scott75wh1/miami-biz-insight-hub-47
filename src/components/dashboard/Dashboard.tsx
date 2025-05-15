@@ -18,12 +18,18 @@ const Dashboard: React.FC = () => {
   const [businessInfo, setBusinessInfo] = useState({
     name: '',
     type: 'restaurant' as const,
-    description: ''
+    description: '',
+    address: ''
   });
   const [showAssistant, setShowAssistant] = useState(false);
   const [dataCollected, setDataCollected] = useState(false);
   
-  const handleBusinessInfoSubmit = (info: {name: string, type: string, description: string}) => {
+  const handleBusinessInfoSubmit = (info: {
+    name: string, 
+    type: string, 
+    description: string, 
+    address: string
+  }) => {
     setBusinessInfo({
       ...info,
       type: info.type as any
