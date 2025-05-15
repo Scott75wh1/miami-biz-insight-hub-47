@@ -115,6 +115,16 @@ type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 
 type ToastActionElement = React.ReactElement<typeof ToastAction>
 
+// Create a custom toast function that doesn't rely on context
+function toast(props: ToastProps) {
+  const event = new CustomEvent("toast", {
+    detail: {
+      toast: props,
+    },
+  });
+  document.dispatchEvent(event);
+}
+
 export {
   type ToastProps,
   type ToastActionElement,
@@ -125,4 +135,5 @@ export {
   ToastDescription,
   ToastClose,
   ToastAction,
+  toast,
 }
