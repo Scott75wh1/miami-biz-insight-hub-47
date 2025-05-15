@@ -3,11 +3,13 @@ import { fetchOpenAIAnalysis } from '@/services/apiService';
 import { toast } from '@/hooks/use-toast';
 import { Message } from '@/types/chatTypes';
 import { buildEnhancedPrompt } from '@/utils/aiAssistant/promptBuilder';
+import { BusinessType } from '@/components/BusinessTypeSelector';
+import { UserType } from '@/components/UserTypeSelector';
 
 export const generateWelcomeMessage = (
-  userType: 'end_user' | 'marketer',
+  userType: UserType,
   selectedDistrict: string,
-  businessType: string,
+  businessType: BusinessType,
   businessName?: string
 ): Message => {
   const welcomeMessage = userType === 'end_user'
@@ -22,9 +24,9 @@ export const generateWelcomeMessage = (
 };
 
 export const generateDemoResponse = (
-  userType: 'end_user' | 'marketer', 
+  userType: UserType, 
   selectedDistrict: string, 
-  businessType: string
+  businessType: BusinessType
 ): string => {
   if (userType === 'end_user') {
     return `Basandomi sui dati disponibili per ${selectedDistrict}, ecco 3 consigli pratici per la tua attività:
@@ -61,8 +63,8 @@ La densità competitiva è di 3.7 attività simili per km², con un rating medio
 export const fetchAIResponse = async (
   apiKey: string,
   userMessage: string,
-  userType: 'end_user' | 'marketer',
-  businessType: string,
+  userType: UserType,
+  businessType: BusinessType,
   selectedDistrict: string,
   businessName?: string
 ) => {

@@ -5,16 +5,18 @@ import { BusinessType } from '@/components/BusinessTypeSelector';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useUserType } from '@/hooks/useUserType';
-import { getSuggestions, Suggestion } from '@/utils/aiAssistant/suggestionProvider';
+import { getSuggestions } from '@/utils/aiAssistant/suggestionProvider';
 import { Message } from '@/types/chatTypes';
 import { 
   generateWelcomeMessage, 
   generateDemoResponse, 
   fetchAIResponse 
 } from '@/services/aiAssistantService';
+import { toast } from '@/hooks/use-toast';
 
-export { Suggestion } from '@/utils/aiAssistant/suggestionProvider';
-export { Message } from '@/types/chatTypes';
+// Using 'export type' for types with isolatedModules enabled
+export type { Suggestion } from '@/utils/aiAssistant/suggestionProvider';
+export type { Message } from '@/types/chatTypes';
 
 export const useAIAssistantChat = (
   businessType: BusinessType,
@@ -24,7 +26,7 @@ export const useAIAssistantChat = (
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
-  const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
+  const { apiKeys, isLoaded } = useApiKeys();
   const { selectedDistrict } = useDistrictSelection();
   const { userType } = useUserType();
   
