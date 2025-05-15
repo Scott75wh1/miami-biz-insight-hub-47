@@ -7,15 +7,9 @@ import { DataCollectionProvider } from '@/hooks/useDataCollection';
 import AIAssistantContent from '@/components/ai-assistant/AIAssistantContent';
 
 const AIAssistantPage: React.FC = () => (
-  <DataCollectionProvider>
-    <DistrictSelectionProvider>
-      <UserTypeProvider>
-        <Layout>
-          <AIAssistantContent />
-        </Layout>
-      </UserTypeProvider>
-    </DistrictSelectionProvider>
-  </DataCollectionProvider>
+  <Layout>
+    <AIAssistantContent />
+  </Layout>
 );
 
 export default AIAssistantPage;

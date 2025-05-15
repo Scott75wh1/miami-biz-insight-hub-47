@@ -19,10 +19,10 @@ import ApiLogViewer from './components/debug/ApiLogViewer';
 
 function App() {
   return (
-    <DataCollectionProvider>
+    <Router>
       <DistrictSelectionProvider>
-        <UserTypeProvider>
-          <Router>
+        <DataCollectionProvider>
+          <UserTypeProvider>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/my-business" element={<MyBusinessPage />} />
@@ -30,7 +30,7 @@ function App() {
               <Route path="/explore" element={<DataExplorerPage />} />
               <Route path="/competitor-analysis" element={<CompetitorAnalysisPage />} />
               <Route path="/traffic" element={<TrafficPage />} />
-              <Route path="/ai-assistant" element={<Index />} />
+              <Route path="/ai-assistant" element={<AIAssistantPage />} />
               <Route path="/market-trends" element={<MarketTrendsPage />} />
               <Route path="/census" element={<CensusPage />} />
               <Route path="/census/:district" element={<CensusDetail />} />
@@ -38,10 +38,10 @@ function App() {
             </Routes>
             <ApiLogViewer />
             <Toaster />
-          </Router>
-        </UserTypeProvider>
+          </UserTypeProvider>
+        </DataCollectionProvider>
       </DistrictSelectionProvider>
-    </DataCollectionProvider>
+    </Router>
   );
 }
 

@@ -40,7 +40,16 @@ interface DataCollectionProviderProps {
 
 export function DataCollectionProvider({ children }: DataCollectionProviderProps) {
   const { toast } = useToast();
-  const { selectedDistrict } = useDistrictSelection();
+  let selectedDistrict = "Miami Beach"; // Default value
+  
+  try {
+    // Try to use the district selection hook, but don't crash if it's not available
+    const districtSelection = useDistrictSelection();
+    selectedDistrict = districtSelection.selectedDistrict;
+  } catch (error) {
+    console.warn("District selection not available, using default district");
+  }
+  
   const [isLoading, setIsLoading] = useState(false);
   
   const [dataState, setDataState] = useState<DataState>({
