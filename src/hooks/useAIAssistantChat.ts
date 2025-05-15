@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { UserType } from '@/components/UserTypeSelector';
 import { BusinessType } from '@/components/BusinessTypeSelector';
@@ -5,7 +6,7 @@ import { useApiKeys } from '@/hooks/useApiKeys';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useUserType } from '@/hooks/useUserType';
 import { getSuggestions } from '@/utils/aiAssistant/suggestionProvider';
-import { Message, ChatState } from '@/types/chatTypes';
+import { Message, ChatState, Suggestion } from '@/types/chatTypes';
 import { 
   generateWelcomeMessage, 
   generateDemoResponse, 
@@ -14,8 +15,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 
 // Using 'export type' for types with isolatedModules enabled
-export type { Suggestion } from '@/utils/aiAssistant/suggestionProvider';
-export type { Message } from '@/types/chatTypes';
+export type { Message, Suggestion } from '@/types/chatTypes';
 
 export const useAIAssistantChat = (
   businessType: BusinessType,
