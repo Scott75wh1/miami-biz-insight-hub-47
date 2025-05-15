@@ -1,6 +1,6 @@
 
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Toaster } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 import Dashboard from '@/pages/Dashboard';
 import AIAssistantPage from '@/pages/AIAssistantPage';
 import { UserTypeProvider } from '@/hooks/useUserType';

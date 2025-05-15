@@ -1,10 +1,9 @@
-
 import React from 'react';
 import Layout from '@/components/Layout';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Settings, Key, Database, CloudSync, Bell, Shield } from 'lucide-react';
+import { Settings, Key, Database, CloudSun, Bell, Shield } from 'lucide-react';
 import { ApiVerificationStatus } from '@/components/settings/ApiVerificationStatus';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { useToast } from '@/hooks/use-toast';
@@ -44,7 +43,7 @@ const SettingsPage: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Impostazioni</h1>
           <Button variant="outline" onClick={handleClearCache} className="flex items-center gap-2">
-            <CloudSync className="h-4 w-4" />
+            <CloudSun className="h-4 w-4" />
             Cancella cache locale
           </Button>
         </div>

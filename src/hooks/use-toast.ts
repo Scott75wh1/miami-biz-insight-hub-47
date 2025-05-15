@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -5,7 +6,6 @@ import {
   Toast,
   ToastActionElement,
   ToastProps,
-  toast,
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 5

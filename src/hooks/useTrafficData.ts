@@ -19,10 +19,18 @@ export function useTrafficData() {
       variant: "destructive",
     });
   }, [toast]);
+  
+  const showSuccessToast = useCallback((message: string) => {
+    toast({
+      title: "Successo",
+      description: message,
+    });
+  }, [toast]);
 
   return {
     isTrafficLayerAvailable,
     showErrorToast,
+    showSuccessToast,
     isLoading,
     setIsLoading
   };
