@@ -39,7 +39,7 @@ const AIAssistantContent: React.FC = () => {
                 <Label>Tipo di attività</Label>
                 <BusinessTypeSelector
                   selectedType={businessType}
-                  onSelectType={handleBusinessTypeChange}
+                  onTypeChange={handleBusinessTypeChange}
                 />
               </div>
               
