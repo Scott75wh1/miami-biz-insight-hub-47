@@ -105,90 +105,37 @@ La densità competitiva nel settore ${businessType} a ${district} è di 3.7 atti
   try {
     console.log(`Invio prompt a OpenAI con chiave API valida (${apiKey.substring(0, 3)}...)`);
     
-    // In a real implementation, this would be a fetch to the OpenAI API
-    // For now we'll continue to use the mock response but with better formatting
+    // Implementazione reale dell'API OpenAI
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: "gpt-4o", // Utilizzo gpt-4o, un modello avanzato
+        messages: [
+          {
+            role: "system",
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1500
+      })
+    });
     
-    // Extract useful context from the prompt
-    const isEndUser = prompt.includes("imprenditori a prendere decisioni pratiche");
-    let district = "Miami Beach";
-    let businessType = "restaurant";
-    
-    const districtMatch = prompt.match(/specificatamente il contesto di (.*?) e/i) || 
-                         prompt.match(/specifica per (.*?) e/i);
-    if (districtMatch && districtMatch[1]) {
-      district = districtMatch[1];
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Errore OpenAI:", errorData);
+      throw new Error(`Error ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
     }
     
-    const typeMatch = prompt.match(/tipo di attività (.*?)$/m) || 
-                     prompt.match(/settore (.*?)$/m);
-    if (typeMatch && typeMatch[1]) {
-      businessType = typeMatch[1];
-    }
-    
-    // Generate enhanced mock response based on detected user type and other parameters
-    let mockResponse = '';
-    
-    if (isEndUser) {
-      mockResponse = `Basandomi sui dati che abbiamo per ${district}, ecco alcune raccomandazioni pratiche per la tua attività ${businessType}:
-
-1. **Ottimizzazione orari di apertura**: L'analisi del traffico pedonale a ${district} mostra picchi di afflusso tra le 17:00 e le 20:00 nei giorni feriali. Considera di estendere o concentrare le tue risorse in queste fasce orarie per massimizzare le vendite.
-
-2. **Presenza digitale locale**: Il 76% dei residenti di ${district} cerca attività come la tua online prima di visitarle. Assicurati che le tue informazioni su Google My Business siano complete e aggiornate, con foto recenti e orari corretti.
-
-3. **Programma fedeltà semplice**: I dati mostrano che a ${district} i programmi fedeltà aumentano le visite ripetute del 34%. Crea un sistema semplice (anche cartaceo) dove ogni 10 acquisti il cliente riceve un omaggio o sconto.
-
-4. **Eventi comunitari**: ${district} ha un forte senso di comunità. Organizzare o partecipare a eventi locali può aumentare la tua visibilità del 28% con un budget limitato.
-
-5. **Personalizzazione locale**: Inserisci elementi che richiamano l'identità di ${district} nel tuo locale o nei tuoi prodotti. I clienti locali apprezzano le attività che si integrano nella cultura del quartiere.
-
-Queste azioni sono state selezionate perché particolarmente efficaci per attività ${businessType} a ${district} e richiedono risorse limitate per essere implementate.`;
-    } else {
-      mockResponse = `# Analisi Strategica per ${businessType} a ${district}
-
-## Analisi Demografica e Comportamentale
-L'analisi dei dati demografici di ${district} rivela un segmento chiave di consumatori con le seguenti caratteristiche:
-- Fascia d'età predominante: 28-45 anni (rappresenta il 38.7% della popolazione locale)
-- Reddito medio: $62,340 (+14.8% rispetto alla media di Miami)
-- Comportamento d'acquisto: preferenza per esperienze autentiche (71%) vs prezzo (29%)
-- Metodo di scoperta nuovi business: social media (43%), passaparola (32%), ricerche online (25%)
-
-## Analisi Competitiva
-La densità competitiva nel settore ${businessType} a ${district} è di 3.2 attività/km²:
-- Competitor diretti: 7 principali entro 1km
-- Rating medio competitor: 4.1/5.0
-- Posizionamento predominante: mid-range (57%), premium (29%), economy (14%)
-- Fattori differenzianti principali: esperienza cliente (39%), autenticità (33%), innovazione (28%)
-
-## Opportunità Strategiche Identificate
-1. **Gap di mercato**: Solo il 14% dei competitor si posiziona nel segmento premium con focus su sostenibilità
-2. **Trend in crescita**: Ricerche per "${businessType} sostenibile" a ${district} +68% YoY
-3. **Comportamento consumatori**: 72% disposto a pagare 15-20% in più per un'esperienza premium
-
-## KPI Strategici Raccomandati
-1. Customer Acquisition Cost (CAC): target < €32.00
-2. Engagement rate contenuti localizzati: target >4.2%
-3. Conversion rate campagne geo-localizzate: target >3.6%
-4. Client retention rate: target >65%
-5. Net Promoter Score: target >40
-
-## Piano d'Azione Strategico
-1. **Strategia SEO locale**: Ottimizzazione per keywords specifiche di ${district} con focus su "experience" e "premium"
-2. **Content marketing**: Produzione contenuti che evidenziano connessione con ${district} (+57% engagement)
-3. **Marketing mix**: Allocazione budget ottimale 40% digital, 30% local partnerships, 20% loyalty, 10% traditional
-4. **Differenziazione**: Sviluppo proposta di valore unica basata su gaps identificati nell'analisi competitiva
-5. **CRM**: Implementazione sistema per segmentazione clienti e personalizzazione offerte
-
-Questa analisi è stata sviluppata specificamente per il contesto competitivo di ${district} e tiene conto delle peculiarità sociodemografiche dell'area.`;
-    }
+    const data = await response.json();
+    console.log("OpenAI Response:", data);
     
     return {
-      choices: [
-        {
-          message: {
-            content: mockResponse
-          }
-        }
-      ]
+      choices: data.choices || []
     };
   } catch (error) {
     console.error("Errore nell'analisi OpenAI:", error);

@@ -1,22 +1,14 @@
 
 import React, { useRef, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Loader2, Send, Lightbulb } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MessageSquare, Loader2, Send, Lightbulb, Settings } from 'lucide-react';
+import { UserType } from '@/components/UserTypeSelector';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UserType } from '@/hooks/useUserType';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
-
-interface Suggestion {
-  forType: UserType;
-  text: string;
-}
+import { Message, Suggestion } from '@/hooks/useAIAssistantChat';
+import { SettingsDialog } from '@/components/SettingsDialog';
+import { useApiKeys } from '@/hooks/useApiKeys';
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -26,7 +18,7 @@ interface ChatInterfaceProps {
   suggestions: Suggestion[];
   onInputChange: (value: string) => void;
   onSendMessage: () => void;
-  onSuggestionClick: (text: string) => void;
+  onSuggestionClick: (suggestion: string) => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -40,6 +32,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onSuggestionClick,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { apiKeys, isLoaded } = useApiKeys();
+  const isOpenAIConfigured = isLoaded && apiKeys.openAI && apiKeys.openAI !== 'demo-key';
 
   // Auto scroll to bottom of messages
   useEffect(() => {
@@ -50,12 +44,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3 border-b">
+      <CardHeader className="pb-3 border-b flex justify-between items-center flex-row">
         <CardTitle className="flex items-center text-lg">
           <MessageSquare className="mr-2 h-5 w-5" />
           {userType === 'end_user' ? 'Assistente Personale' : 'Consulente Strategico'}
         </CardTitle>
+        <SettingsDialog />
       </CardHeader>
+      
+      {!isOpenAIConfigured && (
+        <div className="px-4 py-2 bg-amber-50 border-b border-amber-200">
+          <div className="flex items-center text-amber-800">
+            <Settings className="h-4 w-4 mr-2" />
+            <p className="text-sm">API OpenAI non configurata. Usa le impostazioni per aggiungere la tua chiave API.</p>
+          </div>
+        </div>
+      )}
+      
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: '500px' }}>
           {messages.map((message, index) => (
@@ -93,7 +98,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <div className="flex justify-start">
               <div className="flex items-start max-w-[85%]">
                 <Avatar className="h-8 w-8 mr-2">
-                  <AvatarImage src="/placeholder.svg" alt="AI" />
+                  <AvatartImage src="/placeholder.svg" alt="AI" />
                   <AvatarFallback>AI</AvatarFallback>
                 </Avatar>
                 <div className="bg-muted rounded-lg p-3">

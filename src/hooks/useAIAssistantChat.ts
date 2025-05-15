@@ -27,7 +27,7 @@ export const useAIAssistantChat = (
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
-  const { apiKeys, isLoaded } = useApiKeys();
+  const { apiKeys, isLoaded, areKeysSet } = useApiKeys();
   const { selectedDistrict } = useDistrictSelection();
   const { userType } = useUserType();
   
@@ -81,7 +81,19 @@ export const useAIAssistantChat = (
     setInput('');
     setIsProcessing(true);
     
-    if (!isLoaded || !apiKeys.openAI || apiKeys.openAI === 'demo-key') {
+    // Verifica se l'API key di OpenAI è configurata
+    const isOpenAIConfigured = apiKeys.openAI && apiKeys.openAI !== 'demo-key';
+    
+    if (!isLoaded || !isOpenAIConfigured) {
+      // Se l'API key non è configurata, mostra un toast di errore e aggiungi un messaggio informativo
+      if (isLoaded && !isOpenAIConfigured) {
+        toast({
+          title: "Configurazione API mancante",
+          description: "L'API key di OpenAI non è configurata. Vai nelle impostazioni per configurarla.",
+          variant: "destructive",
+        });
+      }
+      
       setTimeout(() => {
         // Check if this is still the current request
         if (currentRequestId !== requestId) return;
@@ -115,9 +127,13 @@ La densità competitiva è di 3.7 attività simili per km², con un rating medio
 - Engagement Rate sui social: benchmark di settore +15%
 - Conversion Rate: obiettivo 4.2%`;
         
+        // Aggiungi un avviso se l'API key non è configurata
+        const apiKeyWarning = !isOpenAIConfigured ? 
+          "\n\n**NOTA: Questa è una risposta di esempio. Per ottenere analisi personalizzate, configura la tua API key di OpenAI nelle impostazioni.**" : "";
+        
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: demoResponse,
+          content: demoResponse + apiKeyWarning,
           timestamp: new Date()
         }]);
         
@@ -128,6 +144,9 @@ La densità competitiva è di 3.7 attività simili per km², con un rating medio
     }
     
     try {
+      // Log per debug
+      console.log("Utilizzando API key OpenAI:", apiKeys.openAI.substring(0, 5) + "...");
+      
       // Create the enhanced prompt based on user type
       const enhancedPrompt = buildPrompt(input, userType, businessType, selectedDistrict, businessName);
       
@@ -191,7 +210,8 @@ La densità competitiva è di 3.7 attività simili per km², con un rating medio
     suggestions: getSuggestions(),
     handleInputChange,
     handleSendMessage,
-    handleSuggestionClick
+    handleSuggestionClick,
+    isOpenAIConfigured: isLoaded && apiKeys.openAI && apiKeys.openAI !== 'demo-key'
   };
 };
 

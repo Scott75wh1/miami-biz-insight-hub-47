@@ -15,6 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ApiKeysInfo } from "@/components/settings/ApiKeysInfo";
 import { ApiKeysForm, apiFormSchema, SettingsFormValues } from "@/components/settings/ApiKeysForm";
+import { ApiConnectionTester } from "@/components/settings/ApiConnectionTester";
 
 export function SettingsDialog() {
   const { toast } = useToast();
@@ -158,6 +159,11 @@ export function SettingsDialog() {
           onSubmit={onSubmit} 
           testApiKey={testApiKey}
         />
+        
+        <div className="mt-6">
+          <h3 className="text-sm font-medium mb-2">Test di connessione API</h3>
+          <ApiConnectionTester />
+        </div>
         
         <div className="text-xs text-muted-foreground mt-4 flex items-center">
           <p>
