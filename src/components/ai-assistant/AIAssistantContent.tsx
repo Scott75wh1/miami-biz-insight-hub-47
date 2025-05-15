@@ -1,85 +1,54 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import BusinessTypeSelector, { BusinessType } from '@/components/BusinessTypeSelector';
-import { Input } from '@/components/ui/input';
-import EnhancedAIAssistantRefactored from './EnhancedAIAssistantRefactored';
-import AssistantSettingsPanel from './AssistantSettingsPanel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AIAssistant from './AIAssistant';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
+import BusinessTypeSelector, { BusinessType } from '@/components/BusinessTypeSelector';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const AIAssistantContent: React.FC = () => {
-  const [businessName, setBusinessName] = useState('');
+  const { selectedDistrict } = useDistrictSelection();
   const [businessType, setBusinessType] = useState<BusinessType>('restaurant');
+  const [businessName, setBusinessName] = useState('');
 
-  // Utilizzo sicuro del context
-  let selectedDistrict = "Miami Beach"; // Default fallback
-  
-  try {
-    // Try to use the district selection hook, but don't crash if it's not available
-    const districtContext = useDistrictSelection();
-    selectedDistrict = districtContext?.selectedDistrict || "Miami Beach";
-  } catch (error) {
-    console.warn("District selection not available in AIAssistantContent, using default");
-  }
-
-  // Handle business type change
   const handleBusinessTypeChange = (type: BusinessType) => {
     setBusinessType(type);
   };
-  
-  // Handle business name change
-  const handleBusinessNameChange = (name: string) => {
-    setBusinessName(name);
-  };
 
   return (
-    <div className="container py-6">
+    <div className="container py-6 space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight">Assistente AI</h1>
+      
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Impostazioni Assistant</CardTitle>
-              <CardDescription>
-                Informazioni sulla tua attività
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Nome dell'attività (opzionale)
-                </label>
-                <Input
-                  placeholder="Inserisci il nome dell'attività"
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="business-name">Nome della tua attività</Label>
+                <Input 
+                  id="business-name" 
+                  placeholder="Nome attività" 
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Tipo di attività
-                </label>
+              
+              <div className="space-y-2">
+                <Label>Tipo di attività</Label>
                 <BusinessTypeSelector
                   selectedType={businessType}
-                  onTypeChange={handleBusinessTypeChange}
-                />
-              </div>
-
-              <div className="pt-2">
-                <AssistantSettingsPanel 
-                  businessType={businessType}
-                  businessName={businessName}
-                  onBusinessTypeChange={handleBusinessTypeChange}
-                  onBusinessNameChange={handleBusinessNameChange}
+                  onSelectType={handleBusinessTypeChange}
                 />
               </div>
               
-              <div className="pt-2">
+              <div>
                 <p className="text-sm text-muted-foreground">
-                  <strong>Distretto attuale:</strong> {selectedDistrict}
+                  Distretto corrente: <span className="font-semibold">{selectedDistrict}</span>
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Puoi cambiare il distretto dall'header in alto.
+                <p className="text-xs text-muted-foreground mt-1">
+                  Cambia il distretto nella sezione Competitors
                 </p>
               </div>
             </CardContent>
@@ -87,20 +56,18 @@ const AIAssistantContent: React.FC = () => {
         </div>
 
         <div className="lg:col-span-3">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>AI Assistant</CardTitle>
-              <CardDescription>
-                Fai domande e ricevi consigli strategici per la tua attività a {selectedDistrict}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pb-6">
-              <EnhancedAIAssistantRefactored
+          <Tabs defaultValue="chat">
+            <TabsList className="mb-4">
+              <TabsTrigger value="chat">Assistente Chat</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="chat" className="h-[70vh]">
+              <AIAssistant 
                 businessType={businessType}
-                businessName={businessName || undefined}
+                businessName={businessName}
               />
-            </CardContent>
-          </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
