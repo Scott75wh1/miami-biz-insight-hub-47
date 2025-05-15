@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BusinessTypeSelector } from '@/components/BusinessTypeSelector';
+import BusinessTypeSelector, { BusinessType } from '@/components/BusinessTypeSelector';
 import { Input } from '@/components/ui/input';
 import EnhancedAIAssistantRefactored from './EnhancedAIAssistantRefactored';
 import AssistantSettingsPanel from './AssistantSettingsPanel';
@@ -9,7 +9,7 @@ import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 
 const AIAssistantContent: React.FC = () => {
   const [businessName, setBusinessName] = useState('');
-  const [businessType, setBusinessType] = useState('restaurant');
+  const [businessType, setBusinessType] = useState<BusinessType>('restaurant');
 
   // Utilizzo sicuro del context
   let selectedDistrict = "Miami Beach"; // Default fallback
@@ -21,6 +21,16 @@ const AIAssistantContent: React.FC = () => {
   } catch (error) {
     console.warn("District selection not available in AIAssistantContent, using default");
   }
+
+  // Handle business type change
+  const handleBusinessTypeChange = (type: BusinessType) => {
+    setBusinessType(type);
+  };
+  
+  // Handle business name change
+  const handleBusinessNameChange = (name: string) => {
+    setBusinessName(name);
+  };
 
   return (
     <div className="container py-6">
@@ -50,13 +60,18 @@ const AIAssistantContent: React.FC = () => {
                   Tipo di attività
                 </label>
                 <BusinessTypeSelector
-                  value={businessType}
-                  onChange={setBusinessType}
+                  selectedType={businessType}
+                  onTypeChange={handleBusinessTypeChange}
                 />
               </div>
 
               <div className="pt-2">
-                <AssistantSettingsPanel />
+                <AssistantSettingsPanel 
+                  businessType={businessType}
+                  businessName={businessName}
+                  onBusinessTypeChange={handleBusinessTypeChange}
+                  onBusinessNameChange={handleBusinessNameChange}
+                />
               </div>
               
               <div className="pt-2">
@@ -81,7 +96,7 @@ const AIAssistantContent: React.FC = () => {
             </CardHeader>
             <CardContent className="pb-6">
               <EnhancedAIAssistantRefactored
-                businessType={businessType as any}
+                businessType={businessType}
                 businessName={businessName || undefined}
               />
             </CardContent>
