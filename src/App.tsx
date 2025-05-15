@@ -19,9 +19,9 @@ import ApiLogViewer from './components/debug/ApiLogViewer';
 
 function App() {
   return (
-    <UserTypeProvider>
+    <DataCollectionProvider>
       <DistrictSelectionProvider>
-        <DataCollectionProvider>
+        <UserTypeProvider>
           <Router>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -30,7 +30,7 @@ function App() {
               <Route path="/explore" element={<DataExplorerPage />} />
               <Route path="/competitor-analysis" element={<CompetitorAnalysisPage />} />
               <Route path="/traffic" element={<TrafficPage />} />
-              <Route path="/ai-assistant" element={<AIAssistantPage />} />
+              <Route path="/ai-assistant" element={<Index />} />
               <Route path="/market-trends" element={<MarketTrendsPage />} />
               <Route path="/census" element={<CensusPage />} />
               <Route path="/census/:district" element={<CensusDetail />} />
@@ -39,9 +39,9 @@ function App() {
             <ApiLogViewer />
             <Toaster />
           </Router>
-        </DataCollectionProvider>
+        </UserTypeProvider>
       </DistrictSelectionProvider>
-    </UserTypeProvider>
+    </DataCollectionProvider>
   );
 }
 

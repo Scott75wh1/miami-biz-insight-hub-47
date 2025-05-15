@@ -12,12 +12,15 @@ import {
   Search,
   BarChart4,
   Settings,
-  RefreshCcw
+  RefreshCcw,
+  Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDataCollection } from '@/hooks/useDataCollection';
+import { Link as ScrollLink } from 'react-scroll';
+import { Link } from 'react-router-dom';
 
 interface SidebarProps {
   className?: string;
@@ -33,6 +36,8 @@ const Sidebar = ({ className }: SidebarProps) => {
     e.preventDefault();
     refreshAllData();
   };
+
+  const isHomePage = location.pathname === '/';
 
   return (
     <aside className={cn(
@@ -56,12 +61,50 @@ const Sidebar = ({ className }: SidebarProps) => {
       
       <nav className="flex-1 p-2 space-y-1">
         <SidebarItem 
-          icon={MapIcon} 
-          label="Dashboard" 
+          icon={Home} 
+          label="Home" 
           collapsed={collapsed} 
           active={location.pathname === '/'} 
           onClick={() => navigate('/')}
         />
+
+        {/* Conversione in anchors nella home page */}
+        {isHomePage ? (
+          <>
+            <SidebarItemAnchor 
+              icon={MessageSquare}
+              label="Assistente AI"
+              collapsed={collapsed}
+              to="assistant"
+            />
+
+            <SidebarItemAnchor 
+              icon={Building}
+              label="Configura Attività"
+              collapsed={collapsed}
+              to="setup"
+            />
+          </>
+        ) : (
+          <>
+            <SidebarItem 
+              icon={MessageSquare} 
+              label="Assistente AI" 
+              collapsed={collapsed}
+              active={location.pathname === '/ai-assistant'} 
+              onClick={() => navigate('/')}
+            />
+
+            <SidebarItem 
+              icon={Building} 
+              label="La mia Attività" 
+              collapsed={collapsed} 
+              active={location.pathname === '/my-business'} 
+              onClick={() => navigate('/my-business')}
+            />
+          </>
+        )}
+
         <SidebarItem 
           icon={Database} 
           label="Dati del Censimento" 
@@ -69,20 +112,15 @@ const Sidebar = ({ className }: SidebarProps) => {
           active={location.pathname.startsWith('/census')} 
           onClick={() => navigate('/census')}
         />
-        <SidebarItem 
-          icon={Building} 
-          label="La mia Attività" 
-          collapsed={collapsed} 
-          active={location.pathname === '/my-business'} 
-          onClick={() => navigate('/my-business')}
-        />
+        
         <SidebarItem 
           icon={Search} 
           label="Esplora Dati" 
           collapsed={collapsed} 
-          active={location.pathname === '/data-explorer'} 
+          active={location.pathname === '/data-explorer' || location.pathname === '/explore'} 
           onClick={() => navigate('/data-explorer')}
         />
+        
         <SidebarItem 
           icon={ChartBar} 
           label="Trend di Mercato" 
@@ -90,19 +128,13 @@ const Sidebar = ({ className }: SidebarProps) => {
           active={location.pathname === '/market-trends'} 
           onClick={() => navigate('/market-trends')}
         />
+        
         <SidebarItem 
           icon={BarChart4} 
           label="Analisi Competitiva" 
           collapsed={collapsed}
           active={location.pathname === '/competitor-analysis'} 
           onClick={() => navigate('/competitor-analysis')}
-        />
-        <SidebarItem 
-          icon={MessageSquare} 
-          label="Assistente AI" 
-          collapsed={collapsed}
-          active={location.pathname === '/ai-assistant'} 
-          onClick={() => navigate('/ai-assistant')}
         />
       </nav>
       
@@ -169,6 +201,30 @@ const SidebarItem = ({ icon: Icon, label, collapsed, active, onClick }: SidebarI
       <Icon className={cn("h-5 w-5", active ? "" : "text-muted-foreground")} />
       {!collapsed && <span className="ml-2">{label}</span>}
     </Button>
+  );
+};
+
+interface SidebarItemAnchorProps {
+  icon: React.ElementType;
+  label: string;
+  collapsed: boolean;
+  to: string;
+}
+
+const SidebarItemAnchor = ({ icon: Icon, label, collapsed, to }: SidebarItemAnchorProps) => {
+  return (
+    <ScrollLink to={to} smooth={true} duration={500}>
+      <Button
+        variant="ghost"
+        className={cn(
+          "w-full justify-start",
+          collapsed ? "px-2" : "px-3"
+        )}
+      >
+        <Icon className="h-5 w-5 text-muted-foreground" />
+        {!collapsed && <span className="ml-2">{label}</span>}
+      </Button>
+    </ScrollLink>
   );
 };
 

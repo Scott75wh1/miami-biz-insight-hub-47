@@ -1,71 +1,77 @@
 
 import React from 'react';
 import Layout from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Database, Search } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Search, Database, BarChart4 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
-const DataExplorerPage = () => {
+const DataExplorerPage: React.FC = () => {
+  const navigate = useNavigate();
+  
   return (
     <Layout>
       <div className="container py-6">
-        <h1 className="text-2xl font-bold mb-6 flex items-center">
-          <Database className="mr-2 h-6 w-6" />
-          Esplora Dati
-        </h1>
+        <h1 className="text-2xl font-bold mb-6">Esplora Dati</h1>
         
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Search className="h-5 w-5 mr-2" />
-              Esplora i dati demografici e commerciali
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Questa sezione ti permette di esplorare i dati demografici e commerciali di Miami.
-              Seleziona un distretto e una categoria di dati per iniziare.
-            </p>
-            
-            <div className="rounded-md bg-blue-50 p-4 text-blue-800 border border-blue-100">
-              <p>
-                Benvenuto nell'esploratore dati. Da qui puoi accedere ai dettagli 
-                demografici, economici e commerciali specifici per ogni distretto.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
             <CardHeader>
-              <CardTitle>Dati Demografici</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Dati Demografici
+              </CardTitle>
+              <CardDescription>
+                Esplora i dati demografici di Miami per distretto
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Esplora i dati demografici di ogni distretto, inclusi età, reddito, e composizione familiare.
+              <p className="text-sm mb-4">
+                Accedi a informazioni dettagliate sulla popolazione, età media, reddito, livello di istruzione e altre statistiche demografiche.
               </p>
+              <Button onClick={() => navigate('/census')} className="w-full">
+                Esplora Dati Demografici
+              </Button>
             </CardContent>
           </Card>
           
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card>
             <CardHeader>
-              <CardTitle>Dati Economici</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart4 className="h-5 w-5" />
+                Analisi Competitiva
+              </CardTitle>
+              <CardDescription>
+                Analizza la concorrenza nei distretti di Miami
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Analizza i dati economici come occupazione, settori in crescita e reddito medio per distretto.
+              <p className="text-sm mb-4">
+                Visualizza dati sui competitor, recensioni, prezzi medi e altri indicatori di mercato per la tua tipologia di business.
               </p>
+              <Button onClick={() => navigate('/competitor-analysis')} className="w-full">
+                Analizza Concorrenza
+              </Button>
             </CardContent>
           </Card>
           
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card>
             <CardHeader>
-              <CardTitle>Dati Commerciali</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="h-5 w-5" />
+                Assistente AI
+              </CardTitle>
+              <CardDescription>
+                Ottieni risposte personalizzate tramite l'assistente AI
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Esplora i dati sulle attività commerciali, inclusi i tipi di attività, la loro distribuzione e concentrazione.
+              <p className="text-sm mb-4">
+                Utilizza l'intelligenza artificiale per ricevere analisi dettagliate, consigli pratici e risposte alle tue domande specifiche.
               </p>
+              <Button onClick={() => navigate('/')} className="w-full">
+                Consulta Assistente AI
+              </Button>
             </CardContent>
           </Card>
         </div>
