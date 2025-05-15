@@ -9,15 +9,27 @@ interface District {
   coordinates: { x: number; y: number };
 }
 
+interface InteractiveMapProps {
+  onHoverDistrict?: (district: string | null) => void;
+}
+
 const MIAMI_DISTRICT_COORDINATES: District[] = [
   { name: 'Miami Beach', coordinates: { x: 75, y: 45 } },
   { name: 'Wynwood', coordinates: { x: 40, y: 60 } },
   { name: 'Brickell', coordinates: { x: 55, y: 75 } },
 ];
 
-const InteractiveMap = () => {
+const InteractiveMap: React.FC<InteractiveMapProps> = ({ onHoverDistrict }) => {
   const { selectedDistrict, handleDistrictChange } = useDistrictSelection();
   const [hoveredDistrict, setHoveredDistrict] = useState<string | null>(null);
+  
+  // Handle hover with callback if provided
+  const handleHoverDistrict = (district: string | null) => {
+    setHoveredDistrict(district);
+    if (onHoverDistrict) {
+      onHoverDistrict(district);
+    }
+  };
 
   return (
     <Card className="mb-6">
@@ -63,8 +75,8 @@ const InteractiveMap = () => {
               <g 
                 key={district.name}
                 onClick={() => handleDistrictChange(district.name)}
-                onMouseEnter={() => setHoveredDistrict(district.name)}
-                onMouseLeave={() => setHoveredDistrict(null)}
+                onMouseEnter={() => handleHoverDistrict(district.name)}
+                onMouseLeave={() => handleHoverDistrict(null)}
                 className="cursor-pointer"
               >
                 <circle

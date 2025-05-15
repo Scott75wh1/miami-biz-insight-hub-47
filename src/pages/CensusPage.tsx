@@ -129,6 +129,21 @@ interface DistrictSummaryProps {
 }
 
 const DistrictSummary: React.FC<DistrictSummaryProps> = ({ district }) => {
+  // Get basic data for the district
+  const getDistrictData = (district: string): CensusDataSummary => {
+    const districtData = DISTRICT_CENSUS_DATA[district];
+    if (!districtData) return {};
+    
+    return {
+      population: districtData.demographics?.population,
+      medianAge: districtData.demographics?.median_age,
+      medianIncome: districtData.economics?.median_income 
+        ? `$${districtData.economics.median_income.toLocaleString()}`
+        : undefined,
+      businesses: districtData.economics?.business_count
+    };
+  };
+  
   const data = getDistrictData(district);
   
   return (
