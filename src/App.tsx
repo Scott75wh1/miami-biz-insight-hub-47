@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import Index from './pages/Index';
+import Dashboard from './pages/Dashboard';
 import MyBusinessPage from './pages/MyBusinessPage';
 import DataExplorerPage from './pages/DataExplorerPage';
 import CompetitorAnalysisPage from './pages/CompetitorAnalysisPage';
@@ -25,6 +26,7 @@ function App() {
           <DataCollectionProvider>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/my-business" element={<MyBusinessPage />} />
               <Route path="/data-explorer" element={<DataExplorerPage />} />
               <Route path="/explore" element={<DataExplorerPage />} />

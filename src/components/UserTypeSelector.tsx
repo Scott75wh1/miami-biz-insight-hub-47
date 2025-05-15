@@ -30,7 +30,7 @@ const UserTypeSelector: React.FC<UserTypeSelectorProps> = ({
         onClick={() => onTypeChange('marketer')}
       >
         <PieChart className="h-4 w-4" />
-        <span>Professionista</span>
+        <span>Modalità PRO</span>
       </Button>
     </div>
   );
