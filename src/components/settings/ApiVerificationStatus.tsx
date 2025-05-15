@@ -87,7 +87,12 @@ export const ApiVerificationStatus: React.FC = () => {
                 {getStatusIcon(isValid)}
                 <span className="text-sm">{label}</span>
               </div>
-              <Badge variant={isValid ? "success" : "outline"} className={isValid ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-amber-100 text-amber-800 hover:bg-amber-100"}>
+              <Badge 
+                variant="outline" 
+                className={isValid ? 
+                  "bg-green-100 text-green-800 hover:bg-green-100" : 
+                  "bg-amber-100 text-amber-800 hover:bg-amber-100"}
+              >
                 {isValid ? "Attiva" : "Demo"}
               </Badge>
             </div>

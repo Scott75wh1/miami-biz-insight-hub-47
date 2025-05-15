@@ -1,37 +1,29 @@
 
-import { useState } from 'react';
-import { useApiKeys } from './useApiKeys';
+import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useApiKeys } from '@/hooks/useApiKeys';
 
 export function useTrafficData() {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { apiKeys } = useApiKeys();
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { apiKeys } = useApiKeys();
 
-  const isTrafficLayerAvailable = () => {
+  const isTrafficLayerAvailable = useCallback(() => {
     return apiKeys.googlePlaces && apiKeys.googlePlaces !== 'demo-key';
-  };
+  }, [apiKeys.googlePlaces]);
 
-  const showErrorToast = (message: string) => {
+  const showErrorToast = useCallback((message: string) => {
     toast({
-      title: "Errore nella visualizzazione del traffico",
+      title: "Errore dati di traffico",
       description: message,
       variant: "destructive",
-    } as any);
-  };
-
-  const showSuccessToast = (message: string) => {
-    toast({
-      title: "Traffico visualizzato",
-      description: message,
-    } as any);
-  };
+    });
+  }, [toast]);
 
   return {
-    isLoading,
-    setIsLoading,
     isTrafficLayerAvailable,
     showErrorToast,
-    showSuccessToast
+    isLoading,
+    setIsLoading
   };
 }

@@ -1,51 +1,69 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { useApiKeys } from '@/hooks/useApiKeys';
-import { Badge } from '@/components/ui/badge';
-import { Shield, AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
-export const ApiSummary: React.FC = () => {
-  const { apiKeys, isApiKeyValid } = useApiKeys();
+export const ApiSummary = () => {
+  const { areKeysSet, isUsingRealData } = useApiKeys();
+  const navigate = useNavigate();
+  const [isDismissed, setIsDismissed] = React.useState(false);
   
-  // Calcola lo stato generale delle API
-  const validKeys = Object.keys(apiKeys).filter(key => isApiKeyValid(key as keyof typeof apiKeys));
-  const allKeysCount = Object.keys(apiKeys).length;
-  const validKeysCount = validKeys.length;
-  
-  // Stato complessivo
-  const overallStatus = validKeysCount === 0 ? "demo" : 
-                        validKeysCount < allKeysCount ? "partial" : "complete";
-  
-  return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className={`h-4 w-4 ${overallStatus === 'complete' ? 'text-green-500' : 'text-amber-500'}`} />
-            <span className="font-medium text-sm">API Status</span>
+  // Se tutte le API sono in modalità demo, mostra un avviso
+  if (!areKeysSet() && !isDismissed) {
+    return (
+      <Alert variant="default" className="bg-amber-50 border-amber-200 text-amber-800">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription className="flex justify-between items-center text-sm">
+          <span>
+            Stai utilizzando dati demo. Per ottenere dati reali, configura le API keys nelle impostazioni.
+          </span>
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-8 border-amber-300 hover:bg-amber-100"
+              onClick={() => navigate('/settings')}
+            >
+              Configura API
+            </Button>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-8 hover:bg-amber-100"
+              onClick={() => setIsDismissed(true)}
+            >
+              Nascondi
+            </Button>
           </div>
-          
-          <Badge 
-            variant={overallStatus === 'complete' ? 'success' : 'default'}
-            className={overallStatus === 'demo' ? 'bg-amber-100 text-amber-800 border-amber-200' : 
-                    overallStatus === 'partial' ? 'bg-blue-100 text-blue-800 border-blue-200' : ''}>
-            {overallStatus === 'complete' ? 'Tutte attive' : 
-            overallStatus === 'partial' ? 'Parziale' : 'Demo'}
-          </Badge>
-        </div>
-        
-        {overallStatus !== 'complete' && (
-          <div className="mt-2 text-xs flex items-start gap-1.5 text-muted-foreground">
-            <AlertTriangle className="h-3 w-3 text-amber-500 mt-0.5 flex-shrink-0" />
-            <span>
-              {overallStatus === 'demo' 
-                ? "Usando dati demo per tutte le API" 
-                : `${validKeysCount}/${allKeysCount} API keys attive`}
-            </span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
+  // Se alcune API sono configurate ma non tutte
+  if (areKeysSet() && !isUsingRealData() && !isDismissed) {
+    return (
+      <Alert variant="default" className="bg-blue-50 border-blue-200 text-blue-800">
+        <CheckCircle2 className="h-4 w-4" />
+        <AlertDescription className="flex justify-between items-center text-sm">
+          <span>
+            Alcune API keys sono configurate. Completa la configurazione per utilizzare tutte le funzionalità.
+          </span>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 hover:bg-blue-100"
+            onClick={() => setIsDismissed(true)}
+          >
+            Nascondi
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
+  return null;
 };

@@ -6,21 +6,21 @@ import {
   Database, 
   Building, 
   MessageSquare,
-  MapIcon,
+  MapPin,
   ChevronLeft,
   ChevronRight,
   Search,
   BarChart4,
   Settings,
   RefreshCcw,
-  Home
+  Home,
+  Map
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useDataCollection } from '@/hooks/useDataCollection';
-import { Link as ScrollLink } from 'react-scroll';
-import { Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface SidebarProps {
   className?: string;
@@ -31,13 +31,19 @@ const Sidebar = ({ className }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { refreshAllData, isLoading } = useDataCollection();
+  const { toast } = useToast();
 
   const handleRefreshAllData = (e: React.MouseEvent) => {
     e.preventDefault();
     refreshAllData();
+    toast({
+      title: "Aggiornamento dati",
+      description: "Stiamo aggiornando tutti i dati disponibili...",
+    });
   };
 
   const isHomePage = location.pathname === '/';
+  const currentPath = location.pathname;
 
   return (
     <aside className={cn(
@@ -47,7 +53,7 @@ const Sidebar = ({ className }: SidebarProps) => {
     )}>
       <div className="p-4 flex justify-between items-center">
         {!collapsed && (
-          <span className="font-semibold text-lg">Dashboard</span>
+          <span className="font-semibold text-lg">Miami Insights</span>
         )}
         <Button 
           variant="ghost" 
@@ -64,52 +70,31 @@ const Sidebar = ({ className }: SidebarProps) => {
           icon={Home} 
           label="Home" 
           collapsed={collapsed} 
-          active={location.pathname === '/'} 
+          active={currentPath === '/'} 
           onClick={() => navigate('/')}
         />
 
-        {/* Conversione in anchors nella home page */}
-        {isHomePage ? (
-          <>
-            <SidebarItemAnchor 
-              icon={MessageSquare}
-              label="Assistente AI"
-              collapsed={collapsed}
-              to="assistant"
-            />
+        <SidebarItem 
+          icon={MessageSquare} 
+          label="Assistente AI" 
+          collapsed={collapsed}
+          active={currentPath === '/ai-assistant'} 
+          onClick={() => navigate('/ai-assistant')}
+        />
 
-            <SidebarItemAnchor 
-              icon={Building}
-              label="Configura Attività"
-              collapsed={collapsed}
-              to="setup"
-            />
-          </>
-        ) : (
-          <>
-            <SidebarItem 
-              icon={MessageSquare} 
-              label="Assistente AI" 
-              collapsed={collapsed}
-              active={location.pathname === '/ai-assistant'} 
-              onClick={() => navigate('/')}
-            />
-
-            <SidebarItem 
-              icon={Building} 
-              label="La mia Attività" 
-              collapsed={collapsed} 
-              active={location.pathname === '/my-business'} 
-              onClick={() => navigate('/my-business')}
-            />
-          </>
-        )}
+        <SidebarItem 
+          icon={Building} 
+          label="La mia Attività" 
+          collapsed={collapsed} 
+          active={currentPath === '/my-business'} 
+          onClick={() => navigate('/my-business')}
+        />
 
         <SidebarItem 
           icon={Database} 
           label="Dati del Censimento" 
           collapsed={collapsed}
-          active={location.pathname.startsWith('/census')} 
+          active={currentPath.startsWith('/census')} 
           onClick={() => navigate('/census')}
         />
         
@@ -117,7 +102,7 @@ const Sidebar = ({ className }: SidebarProps) => {
           icon={Search} 
           label="Esplora Dati" 
           collapsed={collapsed} 
-          active={location.pathname === '/data-explorer' || location.pathname === '/explore'} 
+          active={currentPath === '/data-explorer'} 
           onClick={() => navigate('/data-explorer')}
         />
         
@@ -125,7 +110,7 @@ const Sidebar = ({ className }: SidebarProps) => {
           icon={ChartBar} 
           label="Trend di Mercato" 
           collapsed={collapsed}
-          active={location.pathname === '/market-trends'} 
+          active={currentPath === '/market-trends'} 
           onClick={() => navigate('/market-trends')}
         />
         
@@ -133,8 +118,16 @@ const Sidebar = ({ className }: SidebarProps) => {
           icon={BarChart4} 
           label="Analisi Competitiva" 
           collapsed={collapsed}
-          active={location.pathname === '/competitor-analysis'} 
+          active={currentPath === '/competitor-analysis'} 
           onClick={() => navigate('/competitor-analysis')}
+        />
+        
+        <SidebarItem 
+          icon={Map} 
+          label="Traffico" 
+          collapsed={collapsed}
+          active={currentPath === '/traffic'} 
+          onClick={() => navigate('/traffic')}
         />
       </nav>
       
@@ -150,7 +143,7 @@ const Sidebar = ({ className }: SidebarProps) => {
           disabled={isLoading}
         >
           <RefreshCcw className={cn(
-            "h-5 w-5 text-muted-foreground mr-2",
+            "h-5 w-5 mr-2",
             isLoading && "animate-spin"
           )} />
           {!collapsed && <span>{isLoading ? "Aggiornamento..." : "Aggiorna Dati"}</span>}
@@ -161,10 +154,12 @@ const Sidebar = ({ className }: SidebarProps) => {
           size="sm" 
           className={cn(
             "w-full justify-start mt-1",
-            collapsed ? "px-2" : "px-3"
+            collapsed ? "px-2" : "px-3",
+            currentPath === '/settings' && "bg-accent"
           )}
+          onClick={() => navigate('/settings')}
         >
-          <Settings className="h-5 w-5 text-muted-foreground mr-2" />
+          <Settings className="h-5 w-5 mr-2" />
           {!collapsed && <span>Impostazioni</span>}
         </Button>
       </div>
@@ -201,30 +196,6 @@ const SidebarItem = ({ icon: Icon, label, collapsed, active, onClick }: SidebarI
       <Icon className={cn("h-5 w-5", active ? "" : "text-muted-foreground")} />
       {!collapsed && <span className="ml-2">{label}</span>}
     </Button>
-  );
-};
-
-interface SidebarItemAnchorProps {
-  icon: React.ElementType;
-  label: string;
-  collapsed: boolean;
-  to: string;
-}
-
-const SidebarItemAnchor = ({ icon: Icon, label, collapsed, to }: SidebarItemAnchorProps) => {
-  return (
-    <ScrollLink to={to} smooth={true} duration={500}>
-      <Button
-        variant="ghost"
-        className={cn(
-          "w-full justify-start",
-          collapsed ? "px-2" : "px-3"
-        )}
-      >
-        <Icon className="h-5 w-5 text-muted-foreground" />
-        {!collapsed && <span className="ml-2">{label}</span>}
-      </Button>
-    </ScrollLink>
   );
 };
 

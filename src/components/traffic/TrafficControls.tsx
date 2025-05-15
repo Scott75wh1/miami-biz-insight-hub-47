@@ -1,110 +1,100 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { MIAMI_DISTRICTS } from '../competitor/constants';
 import { RefreshCw } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
 
 interface TrafficControlsProps {
-  selectedDistrict?: string;
-  onDistrictChange?: (district: string) => void;
-  onRefresh?: () => void;
-  isLoading?: boolean;
+  selectedDistrict: string;
+  onDistrictChange: (district: string) => void;
+  onRefresh: () => void;
+  isLoading: boolean;
 }
 
-const TrafficControls: React.FC<TrafficControlsProps> = ({ 
+const TrafficControls: React.FC<TrafficControlsProps> = ({
   selectedDistrict,
   onDistrictChange,
   onRefresh,
-  isLoading = false
+  isLoading
 }) => {
-  const [trafficMode, setTrafficMode] = useState<'driving' | 'walking' | 'bicycling'>('driving');
-  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening'>('morning');
-  const [sensitivity, setSensitivity] = useState(50);
-  const [realTime, setRealTime] = useState(true);
-  const { toast } = useToast();
+  type TransportMode = 'driving' | 'walking' | 'bicycling';
+  type TimeOfDay = 'morning' | 'afternoon' | 'evening';
+  
+  const [transportMode, setTransportMode] = useState<TransportMode>('driving');
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('morning');
 
-  const handleTrafficModeChange = (value: string) => {
-    setTrafficMode(value as 'driving' | 'walking' | 'bicycling');
+  const handleTransportModeChange = (value: string) => {
+    setTransportMode(value as TransportMode);
   };
 
   const handleTimeOfDayChange = (value: string) => {
-    setTimeOfDay(value as 'morning' | 'afternoon' | 'evening');
-  };
-
-  const handleRefresh = () => {
-    toast({
-      title: "Aggiornamento dati traffico",
-      description: "Richiesta di nuovi dati traffico...",
-    });
-    if (onRefresh) onRefresh();
+    setTimeOfDay(value as TimeOfDay);
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Controlli Traffico</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-4">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="traffic-mode">Modalità Traffico</Label>
-          <Select value={trafficMode} onValueChange={handleTrafficModeChange}>
-            <SelectTrigger id="traffic-mode">
-              <SelectValue placeholder="Seleziona modalità" />
+          <label className="text-sm font-medium">Quartiere</label>
+          <Select value={selectedDistrict} onValueChange={onDistrictChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Seleziona un quartiere" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="driving">Guida</SelectItem>
+              {MIAMI_DISTRICTS.map((district) => (
+                <SelectItem key={district} value={district}>
+                  {district}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Mezzo di trasporto</label>
+          <Select value={transportMode} onValueChange={handleTransportModeChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Mezzo di trasporto" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="driving">Auto</SelectItem>
               <SelectItem value="walking">A piedi</SelectItem>
-              <SelectItem value="bicycling">In bici</SelectItem>
+              <SelectItem value="bicycling">Bicicletta</SelectItem>
             </SelectContent>
           </Select>
         </div>
+        
         <div className="space-y-2">
-          <Label htmlFor="time-of-day">Ora del Giorno</Label>
+          <label className="text-sm font-medium">Orario</label>
           <Select value={timeOfDay} onValueChange={handleTimeOfDayChange}>
-            <SelectTrigger id="time-of-day">
-              <SelectValue placeholder="Seleziona ora" />
+            <SelectTrigger>
+              <SelectValue placeholder="Seleziona orario" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="morning">Mattina</SelectItem>
-              <SelectItem value="afternoon">Pomeriggio</SelectItem>
-              <SelectItem value="evening">Sera</SelectItem>
+              <SelectItem value="morning">Mattina (8:00-10:00)</SelectItem>
+              <SelectItem value="afternoon">Pomeriggio (14:00-16:00)</SelectItem>
+              <SelectItem value="evening">Sera (18:00-20:00)</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="sensitivity">Sensibilità</Label>
-          <Slider
-            id="sensitivity"
-            defaultValue={[50]}
-            max={100}
-            step={1}
-            onValueChange={(value) => setSensitivity(value[0])}
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <Label htmlFor="real-time">Tempo Reale</Label>
-          <Switch id="real-time" checked={realTime} onCheckedChange={setRealTime} />
-        </div>
-        <Button onClick={handleRefresh} disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Aggiornamento...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Aggiorna Dati
-            </>
-          )}
-        </Button>
-      </CardContent>
-    </Card>
+      </div>
+      
+      <Button 
+        onClick={onRefresh} 
+        disabled={isLoading}
+        className="w-full flex items-center justify-center"
+      >
+        <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        {isLoading ? "Aggiornamento dati..." : "Aggiorna dati di traffico"}
+      </Button>
+    </div>
   );
 };
 
