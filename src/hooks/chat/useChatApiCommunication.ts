@@ -10,7 +10,7 @@ interface UseChatApiCommunicationProps {
   input: string;
   setInput: (input: string) => void;
   messages: Message[];
-  setMessages: (messages: Message[]) => void;
+  setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
   isProcessing: boolean;
   setIsProcessing: (isProcessing: boolean) => void;
   apiKeys: {
@@ -25,7 +25,7 @@ interface UseChatApiCommunicationProps {
   currentRequestId: string | null;
   setCurrentRequestId: (id: string | null) => void;
   connectionAttempts: number;
-  setConnectionAttempts: (attempts: number) => void;
+  setConnectionAttempts: (attempts: number | ((prev: number) => number)) => void;
 }
 
 export const useChatApiCommunication = ({

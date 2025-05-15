@@ -17,6 +17,11 @@ import {
 // Re-export types for convenience
 export type { Message, Suggestion } from '@/types/chatTypes';
 
+interface ApiKeysWithIndex {
+  openAI: string;
+  [key: string]: string;
+}
+
 export const useAIAssistantChat = (
   businessType: BusinessType,
   businessName?: string,
@@ -25,6 +30,9 @@ export const useAIAssistantChat = (
   const { selectedDistrict } = useDistrictSelection();
   const { userType } = useUserType();
   const isOpenAIConfigured = isLoaded && apiKeys.openAI && apiKeys.openAI !== 'demo-key';
+  
+  // Convert apiKeys to the required format
+  const apiKeysWithIndex: ApiKeysWithIndex = apiKeys as ApiKeysWithIndex;
   
   // Use the extracted hooks for specific functionality
   const { 
@@ -47,7 +55,7 @@ export const useAIAssistantChat = (
     setMessages,
     isProcessing,
     setIsProcessing,
-    apiKeys,
+    apiKeys: apiKeysWithIndex,
     isLoaded,
     userType,
     businessType,
