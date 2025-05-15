@@ -2,6 +2,7 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
+import { getCurrentDistrict } from '@/utils/districtUtils';
 
 interface DataState {
   // Census data
@@ -30,9 +31,30 @@ interface DataCollectionContextType {
   refreshData: (dataType: keyof DataState) => void;
   refreshAllData: () => void;
   isLoading: boolean;
+  currentDistrict: string; // Added to ensure district is available
 }
 
-const DataCollectionContext = createContext<DataCollectionContextType | undefined>(undefined);
+// Default context value
+const defaultContext: DataCollectionContextType = {
+  dataState: {
+    censusLoaded: false,
+    censusLastUpdated: null,
+    placesLoaded: false,
+    placesLastUpdated: null,
+    businessAnalysisLoaded: false,
+    businessAnalysisLastUpdated: null,
+    competitorsLoaded: false,
+    competitorsLastUpdated: null,
+    trendsLoaded: false,
+    trendsLastUpdated: null,
+  },
+  refreshData: () => console.log("Default refresh data called"),
+  refreshAllData: () => console.log("Default refresh all data called"),
+  isLoading: false,
+  currentDistrict: "Miami Beach"
+};
+
+const DataCollectionContext = createContext<DataCollectionContextType>(defaultContext);
 
 interface DataCollectionProviderProps {
   children: ReactNode;
@@ -40,17 +62,24 @@ interface DataCollectionProviderProps {
 
 export function DataCollectionProvider({ children }: DataCollectionProviderProps) {
   const { toast } = useToast();
-  let selectedDistrict = "Miami Beach"; // Default value
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentDistrict, setCurrentDistrict] = useState(getCurrentDistrict());
+  
+  // Tentativo sicuro di accesso al context del distretto
+  let selectedDistrict = currentDistrict;
   
   try {
-    // Try to use the district selection hook, but don't crash if it's not available
-    const districtSelection = useDistrictSelection();
-    selectedDistrict = districtSelection.selectedDistrict;
+    const districtContext = useDistrictSelection();
+    if (districtContext) {
+      selectedDistrict = districtContext.selectedDistrict;
+      // Aggiorna lo stato locale se diverso
+      if (selectedDistrict !== currentDistrict) {
+        setCurrentDistrict(selectedDistrict);
+      }
+    }
   } catch (error) {
-    console.warn("District selection not available, using default district");
+    console.warn("District selection not available in DataCollectionProvider, using local state");
   }
-  
-  const [isLoading, setIsLoading] = useState(false);
   
   const [dataState, setDataState] = useState<DataState>({
     censusLoaded: false,
@@ -71,15 +100,39 @@ export function DataCollectionProvider({ children }: DataCollectionProviderProps
   
   // Reset data states when district changes
   useEffect(() => {
-    setDataState(prev => ({
-      ...prev,
-      censusLoaded: false,
-      placesLoaded: false,
-      businessAnalysisLoaded: false,
-      competitorsLoaded: false,
-      trendsLoaded: false,
-    }));
-  }, [selectedDistrict]);
+    if (selectedDistrict !== currentDistrict) {
+      console.log(`District changed from ${currentDistrict} to ${selectedDistrict}, resetting data state`);
+      setCurrentDistrict(selectedDistrict);
+      
+      setDataState(prev => ({
+        ...prev,
+        censusLoaded: false,
+        placesLoaded: false,
+        businessAnalysisLoaded: false,
+        competitorsLoaded: false,
+        trendsLoaded: false,
+      }));
+    }
+  }, [selectedDistrict, currentDistrict]);
+  
+  // Ascolta l'evento personalizzato per i cambi di distretto
+  useEffect(() => {
+    const handleDistrictChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const newDistrict = customEvent.detail?.district;
+      
+      if (newDistrict && newDistrict !== currentDistrict) {
+        console.log(`District event received in DataCollection: ${newDistrict}`);
+        setCurrentDistrict(newDistrict);
+      }
+    };
+
+    window.addEventListener('districtChanged', handleDistrictChange);
+    
+    return () => {
+      window.removeEventListener('districtChanged', handleDistrictChange);
+    };
+  }, [currentDistrict]);
   
   // Simulated refresh data function
   const refreshData = async (dataType: keyof DataState) => {
@@ -99,7 +152,7 @@ export function DataCollectionProvider({ children }: DataCollectionProviderProps
     
     toast({
       title: "Dati aggiornati",
-      description: `I dati ${baseKey} sono stati aggiornati con successo.`,
+      description: `I dati ${baseKey} per ${currentDistrict} sono stati aggiornati con successo.`,
     });
     
     setIsLoading(false);
@@ -132,19 +185,22 @@ export function DataCollectionProvider({ children }: DataCollectionProviderProps
     
     toast({
       title: "Dati completi aggiornati",
-      description: `Tutti i dati per ${selectedDistrict} sono stati aggiornati con successo.`,
+      description: `Tutti i dati per ${currentDistrict} sono stati aggiornati con successo.`,
     });
     
     setIsLoading(false);
   };
   
+  const contextValue: DataCollectionContextType = {
+    dataState,
+    refreshData,
+    refreshAllData,
+    isLoading,
+    currentDistrict
+  };
+  
   return (
-    <DataCollectionContext.Provider value={{
-      dataState,
-      refreshData,
-      refreshAllData,
-      isLoading
-    }}>
+    <DataCollectionContext.Provider value={contextValue}>
       {children}
     </DataCollectionContext.Provider>
   );
@@ -152,8 +208,9 @@ export function DataCollectionProvider({ children }: DataCollectionProviderProps
 
 export const useDataCollection = () => {
   const context = useContext(DataCollectionContext);
-  if (context === undefined) {
-    throw new Error('useDataCollection must be used within a DataCollectionProvider');
+  if (!context) {
+    console.error("useDataCollection must be used within a DataCollectionProvider");
+    return defaultContext;
   }
   return context;
 };

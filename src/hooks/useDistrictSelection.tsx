@@ -13,8 +13,15 @@ interface DistrictSelectionProviderProps {
   defaultDistrict?: string;
 }
 
+// Create context with default values to avoid undefined errors
+const defaultContextValue: DistrictSelectionContextType = {
+  districts: ["Miami Beach", "Wynwood", "Brickell", "Little Havana", "Downtown"],
+  selectedDistrict: "Miami Beach",
+  handleDistrictChange: () => console.log("Default district handler called"),
+};
+
 // Create context
-const DistrictSelectionContext = createContext<DistrictSelectionContextType | undefined>(undefined);
+const DistrictSelectionContext = createContext<DistrictSelectionContextType>(defaultContextValue);
 
 // Provider component
 export function DistrictSelectionProvider({ 
@@ -31,11 +38,30 @@ export function DistrictSelectionProvider({
       // Adding a custom event to notify the application of district change
       const event = new CustomEvent('districtChanged', { detail: { district } });
       window.dispatchEvent(event);
+      
+      // Store in localStorage for persistence
+      try {
+        localStorage.setItem('selectedDistrict', district);
+      } catch (e) {
+        console.warn("Could not store district in localStorage:", e);
+      }
     }
   };
 
-  // Ensure districts is always an array, even if MIAMI_DISTRICTS is undefined
-  const districts = MIAMI_DISTRICTS || ["Miami Beach", "Wynwood", "Brickell"];
+  // Load from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedDistrict = localStorage.getItem('selectedDistrict');
+      if (storedDistrict) {
+        setSelectedDistrict(storedDistrict);
+      }
+    } catch (e) {
+      console.warn("Could not read from localStorage:", e);
+    }
+  }, []);
+
+  // Ensure districts is always an array
+  const districts = MIAMI_DISTRICTS || ["Miami Beach", "Wynwood", "Brickell", "Little Havana", "Downtown"];
 
   const value = {
     districts,
@@ -53,9 +79,10 @@ export function DistrictSelectionProvider({
 // Hook to use the district selection context
 export function useDistrictSelection() {
   const context = useContext(DistrictSelectionContext);
-  if (context === undefined) {
+  if (!context) {
     console.error("useDistrictSelection must be used within a DistrictSelectionProvider");
-    throw new Error('useDistrictSelection must be used within a DistrictSelectionProvider');
+    // Return default context instead of throwing to prevent app crashes
+    return defaultContextValue;
   }
   return context;
 }
