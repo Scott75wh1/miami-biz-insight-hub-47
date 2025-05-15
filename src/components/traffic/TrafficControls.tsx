@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,23 +10,38 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 
 interface TrafficControlsProps {
-  onRefresh: () => void;
-  isLoading: boolean;
+  selectedDistrict?: string;
+  onDistrictChange?: (district: string) => void;
+  onRefresh?: () => void;
+  isLoading?: boolean;
 }
 
-const TrafficControls: React.FC<TrafficControlsProps> = ({ onRefresh, isLoading }) => {
+const TrafficControls: React.FC<TrafficControlsProps> = ({ 
+  selectedDistrict,
+  onDistrictChange,
+  onRefresh,
+  isLoading = false
+}) => {
   const [trafficMode, setTrafficMode] = useState<'driving' | 'walking' | 'bicycling'>('driving');
   const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening'>('morning');
   const [sensitivity, setSensitivity] = useState(50);
   const [realTime, setRealTime] = useState(true);
   const { toast } = useToast();
 
+  const handleTrafficModeChange = (value: string) => {
+    setTrafficMode(value as 'driving' | 'walking' | 'bicycling');
+  };
+
+  const handleTimeOfDayChange = (value: string) => {
+    setTimeOfDay(value as 'morning' | 'afternoon' | 'evening');
+  };
+
   const handleRefresh = () => {
     toast({
       title: "Aggiornamento dati traffico",
       description: "Richiesta di nuovi dati traffico...",
     });
-    onRefresh();
+    if (onRefresh) onRefresh();
   };
 
   return (
@@ -36,7 +52,7 @@ const TrafficControls: React.FC<TrafficControlsProps> = ({ onRefresh, isLoading 
       <CardContent className="grid gap-4">
         <div className="space-y-2">
           <Label htmlFor="traffic-mode">Modalità Traffico</Label>
-          <Select value={trafficMode} onValueChange={setTrafficMode}>
+          <Select value={trafficMode} onValueChange={handleTrafficModeChange}>
             <SelectTrigger id="traffic-mode">
               <SelectValue placeholder="Seleziona modalità" />
             </SelectTrigger>
@@ -49,7 +65,7 @@ const TrafficControls: React.FC<TrafficControlsProps> = ({ onRefresh, isLoading 
         </div>
         <div className="space-y-2">
           <Label htmlFor="time-of-day">Ora del Giorno</Label>
-          <Select value={timeOfDay} onValueChange={setTimeOfDay}>
+          <Select value={timeOfDay} onValueChange={handleTimeOfDayChange}>
             <SelectTrigger id="time-of-day">
               <SelectValue placeholder="Seleziona ora" />
             </SelectTrigger>

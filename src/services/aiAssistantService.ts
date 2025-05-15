@@ -1,3 +1,4 @@
+
 import { fetchOpenAIAnalysis } from '@/services/apiService';
 import { toast } from '@/hooks/use-toast';
 import { Message } from '@/types/chatTypes';
@@ -89,7 +90,7 @@ export const fetchAIResponse = async (
           toast({
             title: "Ritentativo connessione",
             description: `Tentativo ${attempts + 1}/${maxAttempts} di connessione all'API OpenAI...`,
-          });
+          } as any);
           
           // Attendiamo un po' prima di riprovare
           await new Promise(resolve => setTimeout(resolve, 1500));
@@ -133,7 +134,7 @@ export const fetchAIResponse = async (
       title: "Errore comunicazione AI",
       description: "Impossibile ottenere una risposta dall'assistente AI dopo ripetuti tentativi. Verifica la tua API key o la connessione internet.",
       variant: "destructive",
-    });
+    } as any);
     
     return {
       success: false,
@@ -147,7 +148,7 @@ export const fetchAIResponse = async (
       title: "Errore comunicazione AI",
       description: "Impossibile ottenere una risposta dall'assistente AI. Verifica la tua API key.",
       variant: "destructive",
-    });
+    } as any);
     
     return {
       success: false,

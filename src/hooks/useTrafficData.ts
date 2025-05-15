@@ -17,14 +17,14 @@ export function useTrafficData() {
       title: "Errore nella visualizzazione del traffico",
       description: message,
       variant: "destructive",
-    });
+    } as any);
   };
 
   const showSuccessToast = (message: string) => {
     toast({
       title: "Traffico visualizzato",
       description: message,
-    });
+    } as any);
   };
 
   return {

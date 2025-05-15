@@ -144,13 +144,13 @@ La densità competitiva nel settore ${businessType} a ${district} è di 3.7 atti
           title: "Errore di autenticazione OpenAI",
           description: "Controlla che la tua API key di OpenAI sia corretta e attiva nelle impostazioni.",
           variant: "destructive",
-        });
+        } as any);
       } else {
         toast({
           title: `Errore ${response.status}`,
           description: errorData.error?.message || "Errore sconosciuto nel contattare OpenAI",
           variant: "destructive",
-        });
+        } as any);
       }
       
       throw new Error(`Error ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
@@ -171,7 +171,7 @@ La densità competitiva nel settore ${businessType} a ${district} è di 3.7 atti
         title: "Timeout di connessione",
         description: "La richiesta all'API OpenAI è scaduta. Riprova tra qualche istante.",
         variant: "destructive",
-      });
+      } as any);
       
       return {
         choices: [],

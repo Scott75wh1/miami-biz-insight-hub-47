@@ -6,18 +6,23 @@ import { TrafficMap } from '@/components/traffic/TrafficMap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
-import { TrafficControls } from '@/components/traffic/TrafficControls';
+import TrafficControls from '@/components/traffic/TrafficControls';
 import { useTrafficData } from '@/hooks/useTrafficData';
 
 const TrafficPage = () => {
   const { selectedDistrict, handleDistrictChange } = useDistrictSelection();
-  const { isTrafficLayerAvailable, showErrorToast } = useTrafficData();
+  const { isTrafficLayerAvailable, showErrorToast, isLoading, setIsLoading } = useTrafficData();
 
   React.useEffect(() => {
     if (!isTrafficLayerAvailable()) {
       showErrorToast("È necessaria una chiave API di Google Maps valida. Configura una chiave API nelle impostazioni.");
     }
   }, [isTrafficLayerAvailable, showErrorToast]);
+
+  const handleRefresh = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 1500); // Simulate data refresh
+  };
 
   return (
     <Layout>
@@ -46,7 +51,9 @@ const TrafficPage = () => {
             <CardContent>
               <TrafficControls 
                 selectedDistrict={selectedDistrict} 
-                onDistrictChange={handleDistrictChange} 
+                onDistrictChange={handleDistrictChange}
+                onRefresh={handleRefresh}
+                isLoading={isLoading}
               />
             </CardContent>
           </Card>
