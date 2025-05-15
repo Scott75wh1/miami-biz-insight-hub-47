@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { UserType } from '@/components/UserTypeSelector';
 import { BusinessType } from '@/components/BusinessTypeSelector';
@@ -208,6 +207,6 @@ export const useAIAssistantChat = (
     handleSendMessage,
     handleSuggestionClick,
     isOpenAIConfigured: isLoaded && apiKeys.openAI && apiKeys.openAI !== 'demo-key',
-    connectionStatus: connectionAttempts > 0 ? 'unstable' : 'good'
+    connectionStatus: connectionAttempts > 0 ? 'unstable' : 'good' as 'good' | 'unstable' | 'error'
   };
 };

@@ -1,11 +1,7 @@
 
 import { UserType } from '@/components/UserTypeSelector';
 import { BusinessType } from '@/components/BusinessTypeSelector';
-
-export interface Suggestion {
-  forType: UserType;
-  text: string;
-}
+import { Suggestion } from '@/types/chatTypes';
 
 export const getSuggestions = (
   userType: UserType,

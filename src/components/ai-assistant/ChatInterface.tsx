@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import ReactMarkdown from 'react-markdown';
-import { Message } from '@/types/chatTypes';
+import { Message, Suggestion } from '@/types/chatTypes';
 import { UserType } from '@/components/UserTypeSelector';
-import { Suggestion } from '@/utils/aiAssistant/suggestionProvider';
 import ApiConnectionStatus from './ApiConnectionStatus';
 
 interface ChatInterfaceProps {

@@ -18,7 +18,7 @@ const ApiConnectionStatus: React.FC<ApiConnectionStatusProps> = ({
 
   return (
     <div className="mb-4">
-      <Alert variant={status === 'unstable' ? 'warning' : 'destructive'}>
+      <Alert variant={status === 'unstable' ? 'default' : 'destructive'}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {status === 'unstable' ? (

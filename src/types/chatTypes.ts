@@ -11,3 +11,9 @@ export interface ChatState {
   isProcessing: boolean;
   currentRequestId: string | null;
 }
+
+export interface Suggestion {
+  forType: string;
+  text: string;
+  label?: string; // Added optional label property
+}
