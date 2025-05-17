@@ -1,16 +1,15 @@
 
 import React from 'react';
-import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart as RechartsPieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { CategoryData } from '@/api/dashboardData';
 
 interface PieChartProps {
-  data: { name: string; value: number }[];
-  colors?: string[];
+  data: CategoryData[];
 }
 
-export function PieChart({ 
-  data, 
-  colors = ["#4f46e5", "#7c3aed", "#a78bfa", "#c4b5fd", "#ddd6fe"] 
-}: PieChartProps) {
+export function PieChart({ data }: PieChartProps) {
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
   return (
     <ResponsiveContainer width="100%" height={200}>
       <RechartsPieChart>
@@ -18,25 +17,17 @@ export function PieChart({
           data={data}
           cx="50%"
           cy="50%"
-          innerRadius={60}
+          labelLine={false}
           outerRadius={80}
-          paddingAngle={5}
+          fill="#8884d8"
           dataKey="value"
+          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
         >
           {data.map((entry, index) => (
-            <Cell 
-              key={`cell-${index}`} 
-              fill={colors[index % colors.length]} 
-            />
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip 
-          contentStyle={{ 
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-            fontSize: '12px'
-          }}
-        />
+        <Tooltip />
       </RechartsPieChart>
     </ResponsiveContainer>
   );
