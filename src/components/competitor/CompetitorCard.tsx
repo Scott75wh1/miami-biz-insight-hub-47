@@ -17,8 +17,8 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({ competitor, isEx
   return (
     <div className={`w-full ${isExpanded ? 'pb-2' : ''}`}>
       <div>
-        <h3 className="font-medium">{competitor.name}</h3>
-        <div className="flex items-center text-sm text-muted-foreground">
+        <h3 className="font-medium text-base">{competitor.name}</h3>
+        <div className="flex flex-wrap gap-1 items-center text-sm text-muted-foreground">
           <span>{competitor.type}</span>
           <span className="mx-1">·</span>
           <div className="flex items-center">
@@ -96,4 +96,3 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({ competitor, isEx
     </div>
   );
 };
-

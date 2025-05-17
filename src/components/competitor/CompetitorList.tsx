@@ -5,6 +5,8 @@ import { Loader2, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 
 interface CompetitorListProps {
   competitors: Competitor[];
@@ -19,6 +21,7 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
 }) => {
   const [expandedCompetitorId, setExpandedCompetitorId] = useState<string | null>(null);
   const [popoverCompetitor, setPopoverCompetitor] = useState<Competitor | null>(null);
+  const isMobile = useIsMobile();
   
   // Normalize the district name for "North Miami"
   const normalizedDistrict = selectedDistrict.toLowerCase().includes('north miami') ? 'North Miami' : selectedDistrict;
@@ -69,7 +72,7 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
 
   if (competitors.length === 0) {
     return (
-      <div className="text-center p-8 text-muted-foreground">
+      <div className="text-center p-8 text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
         <div className="mb-3">
           Nessun competitor trovato per questa categoria in {normalizedDistrict}
         </div>
@@ -97,23 +100,30 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
               <div className="flex items-center">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button 
-                      onClick={(e) => handleViewDetails(competitor, e)} 
-                      className="ml-2 p-1.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded"
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => handleViewDetails(competitor, e)}
+                      className="ml-2 text-xs"
                     >
                       Dettagli
-                    </button>
+                    </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80" align="end">
-                    <div className="space-y-2">
+                  <PopoverContent className="w-80 p-0" align="end">
+                    <div className="space-y-2 p-4">
                       <div className="flex justify-between items-center">
                         <h3 className="font-medium text-base">{competitor.name}</h3>
-                        <button onClick={handleClosePopover} className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0" 
+                          onClick={handleClosePopover}
+                        >
                           <X size={16} />
-                        </button>
+                        </Button>
                       </div>
                       
-                      <div className="p-2 bg-muted rounded-md">
+                      <div className="p-3 bg-muted/20 rounded-md">
                         <h4 className="text-sm font-medium mb-1">Informazioni</h4>
                         <div className="grid grid-cols-2 gap-1 text-sm">
                           <div className="text-muted-foreground">Tipo:</div>
@@ -131,7 +141,7 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
                       </div>
                       
                       {competitor.strengths && (
-                        <div className="p-2 bg-amber-50 rounded-md border border-amber-100">
+                        <div className="p-3 bg-amber-50 rounded-md border border-amber-100">
                           <h4 className="text-sm font-medium mb-1">Punti di Forza</h4>
                           <ul className="list-disc pl-4 text-sm">
                             {competitor.strengths.map((strength, idx) => (
@@ -142,7 +152,7 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
                       )}
                       
                       {competitor.reviewHighlight && (
-                        <div className="p-2 bg-primary-50 rounded-md border border-primary-100">
+                        <div className="p-3 bg-primary/5 rounded-md border border-primary/10">
                           <h4 className="text-sm font-medium mb-1">Recensione in evidenza</h4>
                           <p className="text-sm italic">"{competitor.reviewHighlight}"</p>
                         </div>
@@ -169,9 +179,13 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
                   </PopoverContent>
                 </Popover>
                 <CollapsibleTrigger asChild>
-                  <button className="p-1.5 ml-2 text-muted-foreground hover:text-foreground rounded hover:bg-muted">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-1.5 ml-2 h-8 w-8"
+                  >
                     {expandedCompetitorId === competitor.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </button>
+                  </Button>
                 </CollapsibleTrigger>
               </div>
             </div>
@@ -207,7 +221,7 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
                 
                 <div className="space-y-1">
                   <h4 className="text-sm font-medium">Informazioni Aggiuntive</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                     <div className="p-2 bg-muted/30 rounded-md">
                       <span className="text-xs text-muted-foreground block">Località</span>
                       <span>{competitor.location}</span>
@@ -234,12 +248,14 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
 
       {competitors.length > 0 && (
         <div className="text-center mt-4">
-          <button type="button" className="text-primary text-sm hover:underline">
+          <Button 
+            variant="link" 
+            className="text-primary text-sm"
+          >
             Visualizza tutti i competitor in {normalizedDistrict}
-          </button>
+          </Button>
         </div>
       )}
     </div>
   );
 };
-
