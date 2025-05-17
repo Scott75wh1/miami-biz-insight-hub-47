@@ -1,28 +1,29 @@
 
 import { useState, useEffect } from 'react';
 
-export function useIsMobile() {
+export interface UseIsMobileResult {
+  isMobile: boolean;
+}
+
+export const useIsMobile = (): UseIsMobileResult => {
   const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
 
   useEffect(() => {
-    // Funzione per verificare la dimensione dello schermo
-    const checkScreenSize = () => {
+    const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
     };
 
-    // Verificare al caricamento iniziale
-    checkScreenSize();
+    // Initial check
+    checkIfMobile();
 
-    // Aggiungere un listener per ricontrollare se la dimensione della finestra cambia
-    window.addEventListener('resize', checkScreenSize);
+    // Add event listener
+    window.addEventListener('resize', checkIfMobile);
 
-    // Rimuovere l'event listener quando il componente viene smontato
+    // Clean up
     return () => {
-      window.removeEventListener('resize', checkScreenSize);
+      window.removeEventListener('resize', checkIfMobile);
     };
   }, []);
 
-  return { isMobile, isTablet, isDesktop: !isMobile && !isTablet };
-}
+  return { isMobile };
+};
