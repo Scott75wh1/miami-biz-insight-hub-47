@@ -20,7 +20,7 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
 }) => {
   const [expandedCompetitorId, setExpandedCompetitorId] = useState<string | null>(null);
   const [popoverCompetitor, setPopoverCompetitor] = useState<Competitor | null>(null);
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   
   // Normalize the district name for "North Miami"
   const normalizedDistrict = selectedDistrict.toLowerCase().includes('north miami') ? 'North Miami' : selectedDistrict;
