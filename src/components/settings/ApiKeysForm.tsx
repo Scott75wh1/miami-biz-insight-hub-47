@@ -8,6 +8,7 @@ import {
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ApiKeyField } from './ApiKeyField';
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   googlePlacesApiKey: z.string().min(1, "L'API Key di Google Places è richiesta"),
@@ -23,57 +24,69 @@ interface ApiKeysFormProps {
   form: UseFormReturn<SettingsFormValues>;
   onSubmit: (data: SettingsFormValues) => void;
   testApiKey?: (service: string, key: string) => Promise<boolean>;
+  isSaving?: boolean;
 }
 
 export const apiFormSchema = formSchema;
 
-export const ApiKeysForm = ({ form, onSubmit, testApiKey }: ApiKeysFormProps) => {
+export const ApiKeysForm = ({ form, onSubmit, testApiKey, isSaving = false }: ApiKeysFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-        <ApiKeyField
-          form={form}
-          name="googlePlacesApiKey"
-          label="Google Places API Key"
-          description="Utilizzata per cercare e visualizzare informazioni sui luoghi a Miami."
-          placeholder="Inserisci la tua API key di Google Places"
-        />
+        <div className="space-y-5">
+          <ApiKeyField
+            form={form}
+            name="googlePlacesApiKey"
+            label="Google Places API Key"
+            description="Utilizzata per cercare e visualizzare informazioni sui luoghi a Miami."
+            placeholder="Inserisci la tua API key di Google Places"
+          />
 
-        <ApiKeyField
-          form={form}
-          name="censusGovApiKey"
-          label="Census.gov API Key"
-          description="Utilizzata per accedere ai dati demografici di Miami."
-          placeholder="Inserisci la tua API key di Census.gov"
-        />
+          <ApiKeyField
+            form={form}
+            name="censusGovApiKey"
+            label="Census.gov API Key"
+            description="Utilizzata per accedere ai dati demografici di Miami."
+            placeholder="Inserisci la tua API key di Census.gov"
+          />
 
-        <ApiKeyField
-          form={form}
-          name="yelpApiKey"
-          label="Yelp API Key"
-          description="Utilizzata per l'analisi dei competitor tramite le recensioni di Yelp."
-          placeholder="Inserisci la tua API key di Yelp"
-        />
+          <ApiKeyField
+            form={form}
+            name="yelpApiKey"
+            label="Yelp API Key"
+            description="Utilizzata per l'analisi dei competitor tramite le recensioni di Yelp."
+            placeholder="Inserisci la tua API key di Yelp"
+          />
 
-        <ApiKeyField
-          form={form}
-          name="googleTrendsApiKey"
-          label="Google Trends API Key"
-          description="Utilizzata per analizzare i trend di mercato a Miami."
-          placeholder="Inserisci la tua API key di Google Trends"
-        />
+          <ApiKeyField
+            form={form}
+            name="googleTrendsApiKey"
+            label="Google Trends API Key"
+            description="Utilizzata per analizzare i trend di mercato a Miami."
+            placeholder="Inserisci la tua API key di Google Trends"
+          />
 
-        <ApiKeyField
-          form={form}
-          name="openAIApiKey"
-          label="OpenAI API Key"
-          description="Utilizzata dall'assistente AI per interpretare e contestualizzare i dati."
-          placeholder="Inserisci la tua API key di OpenAI"
-          type="password"
-        />
+          <ApiKeyField
+            form={form}
+            name="openAIApiKey"
+            label="OpenAI API Key"
+            description="Utilizzata dall'assistente AI per interpretare e contestualizzare i dati."
+            placeholder="Inserisci la tua API key di OpenAI"
+            type="password"
+          />
+        </div>
         
         <DialogFooter>
-          <Button type="submit">Salva Impostazioni</Button>
+          <Button type="submit" disabled={isSaving} className="min-w-[120px]">
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvataggio...
+              </>
+            ) : (
+              "Salva Impostazioni"
+            )}
+          </Button>
         </DialogFooter>
       </form>
     </Form>

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { BusinessType } from '@/components/BusinessTypeSelector';
@@ -24,13 +24,14 @@ const CompetitorAnalysis = ({
   district, 
   businessAddress, 
   cuisineType, 
-  title, 
+  title = "Competitor Analysis", 
   showCard = true 
 }: CompetitorAnalysisProps) => {
   // Se viene passato un distretto specifico, lo usiamo, altrimenti prendiamo quello selezionato
   const { selectedDistrict } = useDistrictSelection();
   const effectiveDistrict = district || selectedDistrict;
   const { apiKeys, isLoaded } = useApiKeys();
+  const [forceRefresh, setForceRefresh] = useState(0);
   
   const { competitors, isLoading, refreshCompetitors } = useCompetitorData(
     businessType,
@@ -41,21 +42,21 @@ const CompetitorAnalysis = ({
     businessAddress
   );
   
-  // Log per debug
-  useEffect(() => {
-    console.log(`CompetitorAnalysis rendered for ${businessType} in ${effectiveDistrict}${businessAddress ? ` with address: ${businessAddress}` : ''}`);
-    console.log(`Competitor count: ${competitors.length}`);
-  }, [effectiveDistrict, businessType, competitors.length, businessAddress]);
+  // Create memoized refresh handler
+  const handleRefresh = () => {
+    setForceRefresh(prev => prev + 1);
+    refreshCompetitors();
+  };
   
   const content = (
     <>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
-          <CardTitle>{title || "Competitor Analysis"}</CardTitle>
+          <CardTitle>{title}</CardTitle>
           <Button
             variant="outline"
             size="sm"
-            onClick={refreshCompetitors}
+            onClick={handleRefresh}
             disabled={isLoading}
             className="flex items-center"
           >
@@ -86,7 +87,7 @@ const CompetitorAnalysis = ({
   }
   
   return (
-    <Card className="h-full">
+    <Card className="h-full shadow-sm">
       {content}
     </Card>
   );
