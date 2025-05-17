@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { CompetitorCard, Competitor } from './CompetitorCard';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface CompetitorListProps {
   competitors: Competitor[];
@@ -15,8 +17,28 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
   isLoading,
   selectedDistrict,
 }) => {
-  // Normalizza il nome del distretto per gestire "North Miami" correttamente
+  const [expandedCompetitorId, setExpandedCompetitorId] = useState<string | null>(null);
+  const [popoverCompetitor, setPopoverCompetitor] = useState<Competitor | null>(null);
+  
+  // Normalize the district name for "North Miami"
   const normalizedDistrict = selectedDistrict.toLowerCase().includes('north miami') ? 'North Miami' : selectedDistrict;
+  
+  const handleCompetitorClick = (competitor: Competitor) => {
+    if (expandedCompetitorId === competitor.id) {
+      setExpandedCompetitorId(null);
+    } else {
+      setExpandedCompetitorId(competitor.id);
+    }
+  };
+  
+  const handleViewDetails = (competitor: Competitor, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPopoverCompetitor(competitor);
+  };
+  
+  const handleClosePopover = () => {
+    setPopoverCompetitor(null);
+  };
   
   if (isLoading) {
     return (
@@ -61,7 +83,153 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
   return (
     <div className="space-y-4">
       {competitors.map((competitor, index) => (
-        <CompetitorCard key={`${competitor.name}-${index}`} competitor={competitor} />
+        <Collapsible 
+          key={`${competitor.id || competitor.name}-${index}`}
+          open={expandedCompetitorId === competitor.id}
+          onOpenChange={() => handleCompetitorClick(competitor)}
+          className="border rounded-md p-0 overflow-hidden transition-all duration-200 hover:shadow-md"
+        >
+          <div className={`p-3 ${expandedCompetitorId === competitor.id ? 'bg-muted/20' : ''}`}>
+            <div className="flex justify-between items-start">
+              <CollapsibleTrigger className="w-full text-left flex-1">
+                <CompetitorCard competitor={competitor} isExpanded={expandedCompetitorId === competitor.id} />
+              </CollapsibleTrigger>
+              <div className="flex items-center">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button 
+                      onClick={(e) => handleViewDetails(competitor, e)} 
+                      className="ml-2 p-1.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded"
+                    >
+                      Dettagli
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="end">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-medium text-base">{competitor.name}</h3>
+                        <button onClick={handleClosePopover} className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted">
+                          <X size={16} />
+                        </button>
+                      </div>
+                      
+                      <div className="p-2 bg-muted rounded-md">
+                        <h4 className="text-sm font-medium mb-1">Informazioni</h4>
+                        <div className="grid grid-cols-2 gap-1 text-sm">
+                          <div className="text-muted-foreground">Tipo:</div>
+                          <div>{competitor.type}</div>
+                          <div className="text-muted-foreground">Località:</div>
+                          <div>{competitor.location}</div>
+                          <div className="text-muted-foreground">Prezzo:</div>
+                          <div>{competitor.priceLevel}</div>
+                          <div className="text-muted-foreground">Valutazione:</div>
+                          <div className="flex items-center">
+                            <span className="mr-1">{competitor.rating.toFixed(1)}</span>
+                            <span className="text-xs">({competitor.reviews} recensioni)</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {competitor.strengths && (
+                        <div className="p-2 bg-amber-50 rounded-md border border-amber-100">
+                          <h4 className="text-sm font-medium mb-1">Punti di Forza</h4>
+                          <ul className="list-disc pl-4 text-sm">
+                            {competitor.strengths.map((strength, idx) => (
+                              <li key={idx}>{strength}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {competitor.reviewHighlight && (
+                        <div className="p-2 bg-primary-50 rounded-md border border-primary-100">
+                          <h4 className="text-sm font-medium mb-1">Recensione in evidenza</h4>
+                          <p className="text-sm italic">"{competitor.reviewHighlight}"</p>
+                        </div>
+                      )}
+                      
+                      <div className="pt-2">
+                        <h4 className="text-sm font-medium mb-1">Sentimento Recensioni</h4>
+                        <div className="flex h-2 w-full rounded-full overflow-hidden bg-gray-200">
+                          {competitor.sentiments && (
+                            <>
+                              <div className="bg-green-500 h-full" style={{ width: `${competitor.sentiments.positive}%` }}></div>
+                              <div className="bg-yellow-500 h-full" style={{ width: `${competitor.sentiments.neutral}%` }}></div>
+                              <div className="bg-red-500 h-full" style={{ width: `${competitor.sentiments.negative}%` }}></div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                          <span>{competitor.sentiments?.positive || 0}% Positivo</span>
+                          <span>{competitor.sentiments?.neutral || 0}% Neutro</span>
+                          <span>{competitor.sentiments?.negative || 0}% Negativo</span>
+                        </div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <CollapsibleTrigger asChild>
+                  <button className="p-1.5 ml-2 text-muted-foreground hover:text-foreground rounded hover:bg-muted">
+                    {expandedCompetitorId === competitor.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                </CollapsibleTrigger>
+              </div>
+            </div>
+          </div>
+          
+          <CollapsibleContent>
+            <div className="p-3 pt-0 border-t bg-muted/10">
+              <div className="space-y-3 pt-3">
+                {competitor.strengths && (
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-medium">Punti di Forza</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {competitor.strengths.map((strength, idx) => (
+                        <span 
+                          key={idx} 
+                          className="text-xs px-2 py-1 bg-amber-50 text-amber-800 rounded-full border border-amber-100"
+                        >
+                          {strength}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {competitor.reviewHighlight && (
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-medium">Recensione in evidenza</h4>
+                    <div className="text-sm bg-muted/30 p-2 rounded-md italic">
+                      "{competitor.reviewHighlight}"
+                    </div>
+                  </div>
+                )}
+                
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium">Informazioni Aggiuntive</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="p-2 bg-muted/30 rounded-md">
+                      <span className="text-xs text-muted-foreground block">Località</span>
+                      <span>{competitor.location}</span>
+                    </div>
+                    <div className="p-2 bg-muted/30 rounded-md">
+                      <span className="text-xs text-muted-foreground block">Categoria</span>
+                      <span>{competitor.type}</span>
+                    </div>
+                    <div className="p-2 bg-muted/30 rounded-md">
+                      <span className="text-xs text-muted-foreground block">Fascia di prezzo</span>
+                      <span>{competitor.priceLevel}</span>
+                    </div>
+                    <div className="p-2 bg-muted/30 rounded-md">
+                      <span className="text-xs text-muted-foreground block">Fonte dati</span>
+                      <span>{competitor.yelpMatch ? 'Google & Yelp' : 'Google Places'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       ))}
 
       {competitors.length > 0 && (
@@ -74,3 +242,4 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
     </div>
   );
 };
+
