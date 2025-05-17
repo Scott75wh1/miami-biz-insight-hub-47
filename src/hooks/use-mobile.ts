@@ -1,7 +1,11 @@
 
 import { useState, useEffect } from 'react';
 
-export const useIsMobile = () => {
+export interface UseIsMobileResult {
+  isMobile: boolean;
+}
+
+export const useIsMobile = (): boolean => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -19,5 +23,5 @@ export const useIsMobile = () => {
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
-  return { isMobile };
+  return isMobile;
 };
