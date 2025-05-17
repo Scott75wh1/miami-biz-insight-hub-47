@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { CompetitorCard, Competitor } from './CompetitorCard';
+import { CompetitorCard } from './CompetitorCard';
+import { Competitor } from './types';
 import { Loader2, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -21,7 +22,7 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
 }) => {
   const [expandedCompetitorId, setExpandedCompetitorId] = useState<string | null>(null);
   const [popoverCompetitor, setPopoverCompetitor] = useState<Competitor | null>(null);
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
   
   // Normalize the district name for "North Miami"
   const normalizedDistrict = selectedDistrict.toLowerCase().includes('north miami') ? 'North Miami' : selectedDistrict;
@@ -95,7 +96,11 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
           <div className={`p-3 ${expandedCompetitorId === competitor.id ? 'bg-muted/20' : ''}`}>
             <div className="flex justify-between items-start">
               <CollapsibleTrigger className="w-full text-left flex-1">
-                <CompetitorCard competitor={competitor} isExpanded={expandedCompetitorId === competitor.id} />
+                <CompetitorCard 
+                  competitor={competitor} 
+                  isExpanded={expandedCompetitorId === competitor.id}
+                  index={index}
+                />
               </CollapsibleTrigger>
               <div className="flex items-center">
                 <Popover>
@@ -129,13 +134,13 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
                           <div className="text-muted-foreground">Tipo:</div>
                           <div>{competitor.type}</div>
                           <div className="text-muted-foreground">Località:</div>
-                          <div>{competitor.location}</div>
+                          <div>{typeof competitor.location === 'string' ? competitor.location : competitor.location?.address1 || 'Non disponibile'}</div>
                           <div className="text-muted-foreground">Prezzo:</div>
                           <div>{competitor.priceLevel}</div>
                           <div className="text-muted-foreground">Valutazione:</div>
                           <div className="flex items-center">
                             <span className="mr-1">{competitor.rating.toFixed(1)}</span>
-                            <span className="text-xs">({competitor.reviews} recensioni)</span>
+                            <span className="text-xs">({competitor.reviews || 0} recensioni)</span>
                           </div>
                         </div>
                       </div>
@@ -224,7 +229,7 @@ export const CompetitorList: React.FC<CompetitorListProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                     <div className="p-2 bg-muted/30 rounded-md">
                       <span className="text-xs text-muted-foreground block">Località</span>
-                      <span>{competitor.location}</span>
+                      <span>{typeof competitor.location === 'string' ? competitor.location : competitor.location?.address1 || 'Non disponibile'}</span>
                     </div>
                     <div className="p-2 bg-muted/30 rounded-md">
                       <span className="text-xs text-muted-foreground block">Categoria</span>

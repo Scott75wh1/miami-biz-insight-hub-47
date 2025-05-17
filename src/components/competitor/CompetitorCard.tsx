@@ -18,13 +18,18 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useUserType } from '@/hooks/useUserType';
 
-interface CompetitorCardProps {
+export interface CompetitorCardProps {
   competitor: Competitor;
-  index: number;
+  index?: number;
+  isExpanded?: boolean;
 }
 
-export const CompetitorCard: React.FC<CompetitorCardProps> = ({ competitor, index }) => {
-  const [expanded, setExpanded] = useState(false);
+export const CompetitorCard: React.FC<CompetitorCardProps> = ({ 
+  competitor, 
+  index = 0, 
+  isExpanded = false 
+}) => {
+  const [expanded, setExpanded] = useState(isExpanded);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { userType } = useUserType();
   const isPro = userType === 'marketer';
@@ -40,7 +45,9 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({ competitor, inde
   const ratingColor = getRatingColor(competitor.rating);
   
   // Formatta l'indirizzo per la visualizzazione
-  const formattedAddress = competitor.location?.address1 || 'Indirizzo non disponibile';
+  const formattedAddress = typeof competitor.location === 'string' 
+    ? competitor.location 
+    : competitor.location?.address1 || 'Indirizzo non disponibile';
   
   return (
     <>
@@ -65,7 +72,7 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({ competitor, inde
                 <Star className="h-3 w-3 mr-1 fill-current" />
                 <span>{competitor.rating}</span>
                 <span className="text-muted-foreground text-xs ml-1">
-                  ({competitor.review_count || 0})
+                  ({competitor.reviews || competitor.review_count || 0})
                 </span>
               </div>
               
@@ -185,7 +192,7 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({ competitor, inde
                 <Star className="h-4 w-4 mr-1 fill-current" />
                 <span>{competitor.rating}</span>
                 <span className="text-muted-foreground text-xs ml-1">
-                  ({competitor.review_count || 0} recensioni)
+                  ({competitor.reviews || competitor.review_count || 0} recensioni)
                 </span>
               </div>
             </div>
@@ -244,7 +251,7 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({ competitor, inde
               <>
                 <div>
                   <h5 className="text-sm font-medium mb-1">Recensioni</h5>
-                  {competitor.reviews && competitor.reviews.length > 0 ? (
+                  {competitor.reviews && Array.isArray(competitor.reviews) && competitor.reviews.length > 0 ? (
                     <div className="space-y-2">
                       {competitor.reviews.map((review, idx) => (
                         <div key={idx} className="bg-muted/30 p-2 rounded">

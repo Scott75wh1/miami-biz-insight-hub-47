@@ -6,6 +6,12 @@ export interface ApiErrorResponse {
   message: string;
   error?: any;
   status?: number;
+  errorType?: string;
+  service?: string;
+  timestamp?: string;
+  usingMockData?: boolean;
+  trends?: any[]; // Added to match TrendsDataResponse
+  district?: string; // Added to match TrendsDataResponse
 }
 
 /**
@@ -35,11 +41,16 @@ export function handleApiError(error: any, serviceName: string = 'API'): ApiErro
     });
   }
   
+  // Create an object with all required fields to match both API error response interfaces
   return {
     success: false,
     message,
     error,
-    status
+    status,
+    errorType: error.errorType || 'api_error',
+    service: serviceName,
+    timestamp: new Date().toISOString(),
+    usingMockData: false
   };
 }
 
