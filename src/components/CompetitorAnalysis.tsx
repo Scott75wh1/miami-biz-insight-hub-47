@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApiKeys } from '@/hooks/useApiKeys';
 import { BusinessType } from '@/components/BusinessTypeSelector';
-import { CompetitorList } from './competitor/CompetitorList';
+import CompetitorList from './competitor/CompetitorList';
 import { CompetitorHeader } from './competitor/CompetitorHeader';
 import { useCompetitorData } from './competitor/useCompetitorData';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
@@ -74,9 +73,8 @@ const CompetitorAnalysis = ({
       </CardHeader>
       <CardContent>
         <CompetitorList 
-          competitors={competitors} 
-          isLoading={isLoading} 
-          selectedDistrict={effectiveDistrict} 
+          businessType={businessType} 
+          district={effectiveDistrict} 
         />
       </CardContent>
     </>

@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { useCompetitorData } from './hooks/useCompetitorData';
-import CompetitorItem from './card/CompetitorItem';
+import { CompetitorItem } from './card/CompetitorItem';
 import { CompetitorSkeleton } from './card/CompetitorSkeleton';
-import CompetitorEmptyState from './card/CompetitorEmptyState';
+import { CompetitorEmptyState } from './card/CompetitorEmptyState';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CompetitorListProps {
@@ -17,7 +17,7 @@ const CompetitorList: React.FC<CompetitorListProps> = ({
   district,
   limit 
 }) => {
-  const { competitors, isLoading, error } = useCompetitorData(businessType, district);
+  const { competitors, isLoading } = useCompetitorData(businessType, district);
   const isMobile = useIsMobile();
   
   // Limita il numero di competitors da mostrare se specificato
@@ -33,8 +33,8 @@ const CompetitorList: React.FC<CompetitorListProps> = ({
     );
   }
 
-  if (error || !displayCompetitors.length) {
-    return <CompetitorEmptyState district={district} businessType={businessType} />;
+  if (!displayCompetitors.length) {
+    return <CompetitorEmptyState district={district || "questo distretto"} />;
   }
 
   return (

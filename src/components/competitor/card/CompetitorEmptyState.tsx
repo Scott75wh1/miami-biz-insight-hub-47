@@ -3,9 +3,10 @@ import React from 'react';
 
 interface CompetitorEmptyStateProps {
   district: string;
+  businessType?: string;
 }
 
-export const CompetitorEmptyState: React.FC<CompetitorEmptyStateProps> = ({ district }) => {
+export const CompetitorEmptyState: React.FC<CompetitorEmptyStateProps> = ({ district, businessType }) => {
   return (
     <div className="text-center p-8 text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
       <div className="mb-3">
