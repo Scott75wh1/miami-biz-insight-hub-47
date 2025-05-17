@@ -1,21 +1,14 @@
 
 import React from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
 import { 
   Collapsible, 
   CollapsibleContent, 
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { CompetitorCard } from '../CompetitorCard';
 import { type Competitor } from '../types';
-import { CompetitorPopoverContent } from './CompetitorPopoverContent';
 import { CompetitorExpandedContent } from './CompetitorExpandedContent';
+import { CompetitorItemActions } from './CompetitorItemActions';
 
 interface CompetitorItemProps {
   competitor: Competitor;
@@ -49,35 +42,12 @@ export const CompetitorItem: React.FC<CompetitorItemProps> = ({
               index={index}
             />
           </CollapsibleTrigger>
-          <div className="flex items-center">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => onViewDetails(competitor, e)}
-                  className="ml-2 text-xs"
-                >
-                  Dettagli
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end">
-                <CompetitorPopoverContent 
-                  competitor={competitor} 
-                  onClose={onViewDetails}
-                />
-              </PopoverContent>
-            </Popover>
-            <CollapsibleTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="p-1.5 ml-2 h-8 w-8"
-              >
-                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </Button>
-            </CollapsibleTrigger>
-          </div>
+          
+          <CompetitorItemActions 
+            competitor={competitor} 
+            isExpanded={isExpanded} 
+            onViewDetails={onViewDetails}
+          />
         </div>
       </div>
       
