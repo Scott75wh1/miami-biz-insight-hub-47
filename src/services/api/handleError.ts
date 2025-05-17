@@ -41,6 +41,8 @@ export function handleApiError(error: any, serviceName: string = 'API'): ApiErro
     });
   }
   
+  const timestamp = new Date().toISOString();
+  
   // Create an object with all required fields to match both API error response interfaces
   return {
     success: false,
@@ -49,7 +51,7 @@ export function handleApiError(error: any, serviceName: string = 'API'): ApiErro
     status,
     errorType: error.errorType || 'api_error',
     service: serviceName,
-    timestamp: new Date().toISOString(),
+    timestamp,
     usingMockData: false
   };
 }

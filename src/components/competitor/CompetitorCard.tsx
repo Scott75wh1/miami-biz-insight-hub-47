@@ -6,17 +6,13 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Star, MapPin, Info, ChevronDown, ChevronUp,
-  ExternalLink, ThumbsUp, AlertCircle
-} from 'lucide-react';
-import { Competitor } from './types';
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, 
-  DialogDescription, DialogFooter
-} from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
+import { MapPin, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { type Competitor } from './types';
 import { useUserType } from '@/hooks/useUserType';
+import { CompetitorRating } from './card/CompetitorRating';
+import { StrengthsWeaknessSection } from './card/StrengthsWeaknessSection';
+import { CategoryBadges } from './card/CategoryBadges';
+import { CompetitorDetailsDialog } from './card/CompetitorDetailsDialog';
 
 export interface CompetitorCardProps {
   competitor: Competitor;
@@ -34,17 +30,7 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({
   const { userType } = useUserType();
   const isPro = userType === 'marketer';
   
-  // Creiamo un colore dinamico basato sul rating
-  const getRatingColor = (rating: number) => {
-    if (rating >= 4.5) return 'text-green-600';
-    if (rating >= 4) return 'text-green-500';
-    if (rating >= 3.5) return 'text-amber-500';
-    return 'text-red-500';
-  };
-  
-  const ratingColor = getRatingColor(competitor.rating);
-  
-  // Formatta l'indirizzo per la visualizzazione
+  // Format address for display
   const formattedAddress = typeof competitor.location === 'string' 
     ? competitor.location 
     : competitor.location?.address1 || 'Indirizzo non disponibile';
@@ -68,13 +54,11 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({
             </div>
             
             <div className="flex flex-col items-end">
-              <div className={`flex items-center ${ratingColor} font-medium`}>
-                <Star className="h-3 w-3 mr-1 fill-current" />
-                <span>{competitor.rating}</span>
-                <span className="text-muted-foreground text-xs ml-1">
-                  ({competitor.reviews || competitor.review_count || 0})
-                </span>
-              </div>
+              <CompetitorRating 
+                rating={competitor.rating} 
+                reviews={competitor.reviews}
+                review_count={competitor.review_count}
+              />
               
               {isPro && competitor.price && (
                 <Badge variant="outline" className="mt-1">
@@ -88,35 +72,10 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({
         {expanded && (
           <CardContent className="pt-0 pb-2">
             {isPro ? (
-              <>
-                {competitor.strengths && competitor.strengths.length > 0 && (
-                  <div className="mt-2">
-                    <h5 className="text-xs font-medium mb-1 flex items-center">
-                      <ThumbsUp className="h-3 w-3 mr-1 text-green-600" />
-                      Punti di forza
-                    </h5>
-                    <ul className="text-xs text-muted-foreground ml-4 list-disc">
-                      {competitor.strengths.slice(0, 2).map((strength, idx) => (
-                        <li key={idx} className="my-0.5">{strength}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                {competitor.weaknesses && competitor.weaknesses.length > 0 && (
-                  <div className="mt-2">
-                    <h5 className="text-xs font-medium mb-1 flex items-center">
-                      <AlertCircle className="h-3 w-3 mr-1 text-amber-600" />
-                      Aree di miglioramento
-                    </h5>
-                    <ul className="text-xs text-muted-foreground ml-4 list-disc">
-                      {competitor.weaknesses.slice(0, 2).map((weakness, idx) => (
-                        <li key={idx} className="my-0.5">{weakness}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </>
+              <StrengthsWeaknessSection 
+                strengths={competitor.strengths}
+                weaknesses={competitor.weaknesses}
+              />
             ) : (
               <div className="py-1">
                 {competitor.reviewHighlight && (
@@ -125,17 +84,10 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({
                   </div>
                 )}
                 
-                {competitor.category && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {(Array.isArray(competitor.category) ? competitor.category : [competitor.category])
-                      .slice(0, 3)
-                      .map((cat, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">
-                          {cat}
-                        </Badge>
-                      ))}
-                  </div>
-                )}
+                <CategoryBadges 
+                  category={competitor.category} 
+                  className="mt-2"
+                />
               </div>
             )}
           </CardContent>
@@ -173,140 +125,12 @@ export const CompetitorCard: React.FC<CompetitorCardProps> = ({
         </CardFooter>
       </Card>
       
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{competitor.name}</DialogTitle>
-            <DialogDescription>
-              Analisi dettagliata del competitor
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="mt-2 space-y-4">
-            <div className="flex justify-between">
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
-                <span className="text-sm">{formattedAddress}</span>
-              </div>
-              <div className={`flex items-center ${ratingColor} font-medium`}>
-                <Star className="h-4 w-4 mr-1 fill-current" />
-                <span>{competitor.rating}</span>
-                <span className="text-muted-foreground text-xs ml-1">
-                  ({competitor.reviews || competitor.review_count || 0} recensioni)
-                </span>
-              </div>
-            </div>
-            
-            <Separator />
-            
-            {isPro && (
-              <>
-                {competitor.competitiveAdvantage && (
-                  <div>
-                    <h5 className="text-sm font-medium mb-1">Vantaggio competitivo</h5>
-                    <p className="text-sm text-muted-foreground">{competitor.competitiveAdvantage}</p>
-                  </div>
-                )}
-                
-                {competitor.marketPosition && (
-                  <div>
-                    <h5 className="text-sm font-medium mb-1">Posizionamento</h5>
-                    <p className="text-sm text-muted-foreground">{competitor.marketPosition}</p>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {competitor.strengths && competitor.strengths.length > 0 && (
-                    <div>
-                      <h5 className="text-sm font-medium mb-1 flex items-center">
-                        <ThumbsUp className="h-3.5 w-3.5 mr-1 text-green-600" />
-                        Punti di forza
-                      </h5>
-                      <ul className="text-sm text-muted-foreground ml-4 list-disc">
-                        {competitor.strengths.map((strength, idx) => (
-                          <li key={idx} className="my-1">{strength}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {competitor.weaknesses && competitor.weaknesses.length > 0 && (
-                    <div>
-                      <h5 className="text-sm font-medium mb-1 flex items-center">
-                        <AlertCircle className="h-3.5 w-3.5 mr-1 text-amber-600" />
-                        Aree di miglioramento
-                      </h5>
-                      <ul className="text-sm text-muted-foreground ml-4 list-disc">
-                        {competitor.weaknesses.map((weakness, idx) => (
-                          <li key={idx} className="my-1">{weakness}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-            
-            {!isPro && (
-              <>
-                <div>
-                  <h5 className="text-sm font-medium mb-1">Recensioni</h5>
-                  {competitor.reviews && Array.isArray(competitor.reviews) && competitor.reviews.length > 0 ? (
-                    <div className="space-y-2">
-                      {competitor.reviews.map((review, idx) => (
-                        <div key={idx} className="bg-muted/30 p-2 rounded">
-                          <div className="flex items-center mb-1">
-                            {Array(Math.floor(review.rating || 4)).fill(0).map((_, i) => (
-                              <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
-                            ))}
-                          </div>
-                          <p className="text-xs italic">{review.text}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Nessuna recensione disponibile</p>
-                  )}
-                </div>
-                
-                <div>
-                  <h5 className="text-sm font-medium mb-1">Categorie</h5>
-                  {competitor.category ? (
-                    <div className="flex flex-wrap gap-1">
-                      {(Array.isArray(competitor.category) ? competitor.category : [competitor.category]).map((cat, idx) => (
-                        <Badge key={idx} variant="outline">
-                          {cat}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Categorie non disponibili</p>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDialogOpen(false)}
-              className="mr-2"
-            >
-              Chiudi
-            </Button>
-            {competitor.url && (
-              <Button
-                onClick={() => window.open(competitor.url, '_blank')}
-                className="flex items-center"
-              >
-                Visita pagina
-                <ExternalLink className="h-4 w-4 ml-1" />
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CompetitorDetailsDialog
+        competitor={competitor}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        isPro={isPro}
+      />
     </>
   );
 };

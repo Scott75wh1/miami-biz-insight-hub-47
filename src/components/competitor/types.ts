@@ -25,5 +25,5 @@ export interface Competitor {
   reviews?: Array<{ rating: number; text: string }>; // Added for detailed reviews
 }
 
-// Export the Competitor interface
-export { Competitor };
+// Export using 'export type' to avoid conflicts with 'isolatedModules'
+export type { Competitor };

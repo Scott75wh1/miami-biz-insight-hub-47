@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { CompetitorCard } from './CompetitorCard';
-import { Competitor } from './types';
+import { type Competitor } from './types';
 import { Loader2, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
