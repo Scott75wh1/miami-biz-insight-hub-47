@@ -1,39 +1,51 @@
 
-export const handleApiError = (error: any, serviceName: string) => {
-  const errorMessage = error?.message || 'Unknown error occurred';
-  const errorDetails = {
-    timestamp: new Date().toISOString(),
-    service: serviceName,
-    message: errorMessage,
-    stack: error?.stack,
-    status: error?.response?.status || 'unknown'
-  };
-  
-  console.error(`Error with ${serviceName} API:`, errorDetails);
-  
-  // Return a standardized error response
-  return {
-    error: true,
-    errorType: 'API_CONNECTION_ERROR',
-    service: serviceName,
-    message: `Failed to connect to ${serviceName} API: ${errorMessage}`,
-    timestamp: new Date().toISOString(),
-    // Include mock data flag to indicate this is not real data
-    usingMockData: true
-  };
-};
+import { toast } from '@/hooks/use-toast';
 
-// Helper to check API responses for common issues
-export const validateApiResponse = (data: any, serviceName: string) => {
-  if (!data) {
-    console.warn(`Empty response from ${serviceName} API, using mock data`);
-    return false;
+export interface ApiErrorResponse {
+  success: false;
+  message: string;
+  error?: any;
+  status?: number;
+}
+
+/**
+ * Gestisce gli errori delle API in modo uniforme in tutta l'applicazione
+ */
+export function handleApiError(error: any, serviceName: string = 'API'): ApiErrorResponse {
+  console.error(`Errore in ${serviceName}:`, error);
+  
+  // Determina il messaggio di errore più appropriato
+  let message = '';
+  let status = error.status || 500;
+  
+  if (error.message) {
+    message = error.message;
+  } else if (typeof error === 'string') {
+    message = error;
+  } else {
+    message = `Si è verificato un errore durante la comunicazione con ${serviceName}`;
   }
   
-  if (data.error) {
-    console.warn(`Error in ${serviceName} API response:`, data.error);
-    return false;
+  // Condizionalmente mostra un toast per errori critici
+  if (status >= 500 || error.isCritical) {
+    toast({
+      title: `Errore ${serviceName}`,
+      description: message,
+      variant: "destructive",
+    });
   }
   
-  return true;
-};
+  return {
+    success: false,
+    message,
+    error,
+    status
+  };
+}
+
+/**
+ * Verifica se una risposta è un errore API
+ */
+export function isApiError(response: any): response is ApiErrorResponse {
+  return response && response.success === false && typeof response.message === 'string';
+}

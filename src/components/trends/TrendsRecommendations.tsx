@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, ArrowRight } from 'lucide-react';
+import { TrendingUp, ArrowRight, ExternalLink } from 'lucide-react';
 import { Lightbulb } from '@/components/ui/icons/Lightbulb';
 import { useUserType } from '@/hooks/useUserType';
 
@@ -34,7 +34,7 @@ const TrendsRecommendations = ({ summary, recommendations, isLoading }: TrendsRe
     <div className="mt-6">
       <h4 className="text-sm font-medium mb-3 flex items-center">
         <Lightbulb className="h-4 w-4 mr-1" />
-        {isPro ? "Consigli Strategici" : "Azioni Consigliate"}
+        {isPro ? "Insights Strategici" : "Azioni Consigliate"}
       </h4>
       
       <Card className={`p-3 ${isPro ? 'bg-primary/5 border-primary/20' : 'bg-green-50 border-green-200'}`}>
@@ -59,13 +59,16 @@ const TrendsRecommendations = ({ summary, recommendations, isLoading }: TrendsRe
                   </div>
                   <div>
                     <p className="text-xs">{recommendation}</p>
+                    <Button variant="link" size="sm" className="h-auto p-0 text-xs text-green-700 mt-1">
+                      Come implementare <ExternalLink className="h-3 w-3 ml-1" />
+                    </Button>
                   </div>
                 </div>
               </div>
             ))}
             
             <Button size="sm" variant="default" className="w-full mt-2 text-xs">
-              <span>Scopri come implementare questi consigli</span>
+              <span>Ricevi piano d'azione completo</span>
               <ArrowRight className="h-3.5 w-3.5 ml-1" />
             </Button>
           </div>

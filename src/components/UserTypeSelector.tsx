@@ -26,11 +26,11 @@ const UserTypeSelector: React.FC<UserTypeSelectorProps> = ({
               onClick={() => onTypeChange('end_user')}
             >
               <UserRound className="h-4 w-4" />
-              <span>Utente Finale</span>
+              <span>Modalità Semplificata</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Modalità semplificata con suggerimenti pratici</p>
+            <p className="text-xs">Suggerimenti pratici e azioni concrete per la tua attività</p>
           </TooltipContent>
         </Tooltip>
         
@@ -46,7 +46,7 @@ const UserTypeSelector: React.FC<UserTypeSelectorProps> = ({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Analisi dettagliate e dati avanzati</p>
+            <p className="text-xs">Analisi dettagliate, dati avanzati e trend di mercato</p>
           </TooltipContent>
         </Tooltip>
       </div>

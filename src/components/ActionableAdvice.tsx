@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Info, CheckCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, Info, CheckCircle, ArrowRight, ExternalLink } from 'lucide-react';
+import { useUserType } from '@/hooks/useUserType';
 
 interface ActionStep {
   title: string;
@@ -16,6 +17,7 @@ interface ActionableAdviceProps {
   steps: ActionStep[];
   onActionClick?: () => void;
   actionLabel?: string;
+  learnMoreLink?: string;
 }
 
 const getPriorityColor = (priority: string): string => {
@@ -51,12 +53,15 @@ const ActionableAdvice: React.FC<ActionableAdviceProps> = ({
   steps,
   onActionClick,
   actionLabel = 'Inizia Ora',
+  learnMoreLink
 }) => {
   const priorityColor = getPriorityColor(priority);
   const PriorityIcon = getPriorityIcon(priority);
+  const { userType } = useUserType();
+  const isPro = userType === 'marketer';
   
   return (
-    <Card className="overflow-hidden border-l-4 border-l-primary shadow hover:shadow-md transition-shadow">
+    <Card className={`overflow-hidden border-l-4 ${isPro ? 'border-l-primary' : 'border-l-green-500'} shadow hover:shadow-md transition-shadow`}>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-base">{title}</CardTitle>
@@ -72,7 +77,7 @@ const ActionableAdvice: React.FC<ActionableAdviceProps> = ({
           <div className="space-y-2">
             {steps.map((step, index) => (
               <div key={index} className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2 mt-0.5">
+                <div className={`flex-shrink-0 w-6 h-6 rounded-full ${isPro ? 'bg-primary/10 text-primary' : 'bg-green-100 text-green-700'} flex items-center justify-center mr-2 mt-0.5`}>
                   {index + 1}
                 </div>
                 <div>
@@ -83,15 +88,28 @@ const ActionableAdvice: React.FC<ActionableAdviceProps> = ({
             ))}
           </div>
           
-          {onActionClick && (
-            <Button 
-              onClick={onActionClick} 
-              className="w-full justify-between"
-            >
-              {actionLabel}
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          )}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            {onActionClick && (
+              <Button 
+                onClick={onActionClick} 
+                className="w-full justify-center sm:justify-between sm:flex-1"
+              >
+                {actionLabel}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
+            
+            {learnMoreLink && (
+              <Button 
+                variant="outline"
+                className="w-full justify-center sm:justify-between"
+                onClick={() => window.open(learnMoreLink, '_blank')}
+              >
+                Approfondisci
+                <ExternalLink className="h-4 w-4 ml-2" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
