@@ -5,9 +5,19 @@ import { Competitor } from '../types';
 import { loadCompetitorData } from '../services/competitorDataService';
 import { getDefaultCompetitors } from '../utils/defaultCompetitorsUtil';
 import { useToast } from '@/hooks/use-toast';
-import { apiLogger } from '@/services/logService';
 import { useCompetitorToasts } from './useCompetitorToasts';
-import { normalizeValue } from '../utils/normalizeUtils';
+import { 
+  processCompetitorData,
+  prepareRequestParams,
+  checkParamsUnchanged
+} from '../utils/dataProcessingUtils';
+import {
+  prepareFetchStatus,
+  resetFetchStatus,
+  logFetchAttempt,
+  showInitialToast
+} from '../utils/fetchStatusUtils';
+import { handleCompetitorFetchError } from '../utils/errorHandlingUtils';
 
 interface UseFetchCompetitorResult {
   fetchCompetitorData: () => Promise<void>;
@@ -76,16 +86,21 @@ export const useFetchCompetitor = ({
     // Generate a unique ID for this request
     const currentFetchId = `${businessType}-${selectedDistrict}-${Date.now()}`;
     
-    // Check if parameters have changed (normalizing types)
-    const normalizedCuisine = normalizeValue(cuisineType);
-    const normalizedAddress = normalizeValue(businessAddress);
-    const normalizedBusinessType = normalizeValue(businessType) || '';
+    // Prepare normalized parameters
+    const { normalizedCuisine, normalizedAddress, normalizedBusinessType } = 
+      prepareRequestParams(businessType, selectedDistrict, cuisineType, businessAddress);
     
-    const paramsUnchanged = 
-      selectedDistrict === lastLoadedDistrict && 
-      normalizedBusinessType === lastLoadedType && 
-      normalizedCuisine === lastCuisineType && 
-      normalizedAddress === lastBusinessAddress;
+    // Check if parameters have changed
+    const paramsUnchanged = checkParamsUnchanged(
+      selectedDistrict,
+      normalizedBusinessType,
+      normalizedCuisine,
+      normalizedAddress,
+      lastLoadedDistrict,
+      lastLoadedType,
+      lastCuisineType,
+      lastBusinessAddress
+    );
     
     if (paramsUnchanged) {
       console.log('[Competitor] Parameters unchanged, using existing data');
@@ -93,12 +108,15 @@ export const useFetchCompetitor = ({
     }
     
     // Set loading flags
-    setIsLoading(true);
-    isFetchingRef.current = true;
-    fetchAttemptId.current = currentFetchId;
+    prepareFetchStatus({
+      currentFetchId,
+      setIsLoading,
+      isFetchingRef,
+      fetchAttemptId
+    });
     
     // Log API call attempt
-    const logIndex = apiLogger.logAPICall(
+    const logIndex = logFetchAttempt(
       'CompetitorService',
       'loadCompetitorData',
       { 
@@ -117,10 +135,7 @@ export const useFetchCompetitor = ({
       setLastBusinessAddress(normalizedAddress);
       
       // Show a toast to notify loading start
-      toast({
-        title: "Aggiornamento dati",
-        description: `Caricamento dati concorrenti per ${selectedDistrict}...`,
-      });
+      showInitialToast(toast, selectedDistrict);
       
       // Use the service to load competitor data
       const competitorData = await loadCompetitorData(
@@ -131,57 +146,42 @@ export const useFetchCompetitor = ({
         normalizedAddress
       );
       
-      // Check if this is still the most recent request
-      if (fetchAttemptId.current !== currentFetchId) {
-        console.log('[Competitor] A new request was started, ignoring these results');
-        return;
-      }
-      
-      // Log successful API response
-      apiLogger.logAPIResponse(logIndex, { 
-        count: competitorData?.length || 0, 
-        isDefault: competitorData?.length === getDefaultCompetitors(businessType, selectedDistrict, normalizedCuisine).length 
+      // Process the loaded data
+      processCompetitorData({
+        competitorData,
+        currentFetchId,
+        fetchAttemptId,
+        logIndex,
+        setCompetitors,
+        businessType,
+        selectedDistrict,
+        normalizedCuisine,
+        getDefaultCompetitors,
+        showSuccessToast,
+        showDefaultDataToast
       });
-      
-      if (competitorData && competitorData.length) {
-        // Update state with competitor data
-        setCompetitors(competitorData as Competitor[]);
-        
-        // Show appropriate toast based on data source
-        const isDefaultData = competitorData.length === getDefaultCompetitors(businessType, selectedDistrict, normalizedCuisine).length;
-        if (isDefaultData) {
-          showDefaultDataToast();
-        } else {
-          showSuccessToast(businessType, selectedDistrict);
-        }
-      } else {
-        // Use default data as fallback
-        const defaultData = getDefaultCompetitors(businessType, selectedDistrict, normalizedCuisine);
-        setCompetitors(defaultData as Competitor[]);
-        showDefaultDataToast();
-      }
     } catch (error) {
-      // Check if this is still the most recent request
-      if (fetchAttemptId.current !== currentFetchId) {
-        console.log('[Competitor] A new request was started while an error occurred, ignoring');
-        return;
-      }
-      
-      // Log error
-      apiLogger.logAPIError(logIndex, error);
-      console.error("Error fetching competitor data:", error);
-      
-      // Use default data on error
-      const defaultData = getDefaultCompetitors(businessType, selectedDistrict, normalizedCuisine);
-      setCompetitors(defaultData as Competitor[]);
-      showErrorToast();
+      // Handle errors
+      handleCompetitorFetchError({
+        logIndex,
+        error,
+        businessType,
+        selectedDistrict,
+        normalizedCuisine,
+        fetchAttemptId,
+        currentFetchId,
+        setCompetitors,
+        getDefaultCompetitors,
+        showErrorToast
+      });
     } finally {
-      // Reset flags only if this is still the current request
-      if (fetchAttemptId.current === currentFetchId) {
-        setIsLoading(false);
-        isFetchingRef.current = false;
-        fetchAttemptId.current = null;
-      }
+      // Reset status flags
+      resetFetchStatus({
+        currentFetchId,
+        fetchAttemptId,
+        setIsLoading,
+        isFetchingRef
+      });
     }
   }, [
     businessType, selectedDistrict, cuisineType, businessAddress, apiKeys, 
