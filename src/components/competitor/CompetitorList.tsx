@@ -7,9 +7,10 @@ import { CompetitorEmptyState } from './card/CompetitorEmptyState';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Competitor } from './types';
 import { useApiKeys } from '@/hooks/useApiKeys';
+import { BusinessType } from '@/components/BusinessTypeSelector';
 
 interface CompetitorListProps {
-  businessType?: string;
+  businessType?: BusinessType;
   district?: string;
   limit?: number;
 }
