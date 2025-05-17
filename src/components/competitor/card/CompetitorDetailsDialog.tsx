@@ -88,7 +88,7 @@ export const CompetitorDetailsDialog: React.FC<CompetitorDetailsDialogProps> = (
             <>
               <div>
                 <h5 className="text-sm font-medium mb-1">Recensioni</h5>
-                <CompetitorReviews reviews={competitor.reviews} />
+                <CompetitorReviews reviews={competitor.reviewsData} />
               </div>
               
               <div>

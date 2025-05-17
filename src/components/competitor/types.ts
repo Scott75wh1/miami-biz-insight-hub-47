@@ -7,8 +7,8 @@ export interface Competitor {
   priceLevel: string;
   rating: number;
   reviews: number;
-  review_count?: number; // Added for backwards compatibility
-  price?: string; // Added for price display
+  review_count?: number; // For backwards compatibility
+  price?: string; // For price display
   sentiments: {
     positive: number;
     neutral: number;
@@ -16,14 +16,12 @@ export interface Competitor {
   };
   yelpMatch?: boolean;
   strengths?: string[];
-  weaknesses?: string[]; // Added for weakness analysis
+  weaknesses?: string[];
   reviewHighlight?: string;
-  competitiveAdvantage?: string; // Added for competitive analysis
-  marketPosition?: string; // Added for market positioning
-  category?: string | string[]; // Added for business categories
-  url?: string; // Added for external links
-  reviews?: Array<{ rating: number; text: string }>; // Added for detailed reviews
+  competitiveAdvantage?: string;
+  marketPosition?: string;
+  category?: string | string[];
+  url?: string;
+  // Define reviews array as a separate property with a different name to avoid conflicts
+  reviewsData?: Array<{ rating: number; text: string }>;
 }
-
-// Export using 'export type' to avoid conflicts with 'isolatedModules'
-export type { Competitor };
