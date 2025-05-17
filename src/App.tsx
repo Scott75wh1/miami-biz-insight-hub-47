@@ -14,6 +14,7 @@ import MarketTrendsPage from '@/pages/MarketTrendsPage';
 import CompetitorAnalysisPage from '@/pages/CompetitorAnalysisPage';
 import TrafficPage from '@/pages/TrafficPage';
 import HomePage from '@/pages/Index';
+import { QueryProvider } from '@/providers/QueryProvider';
 
 const router = createBrowserRouter([
   {
@@ -60,14 +61,16 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <UserTypeProvider>
-      <DistrictSelectionProvider>
-        <DataCollectionProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </DataCollectionProvider>
-      </DistrictSelectionProvider>
-    </UserTypeProvider>
+    <QueryProvider>
+      <UserTypeProvider>
+        <DistrictSelectionProvider>
+          <DataCollectionProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+          </DataCollectionProvider>
+        </DistrictSelectionProvider>
+      </UserTypeProvider>
+    </QueryProvider>
   );
 }
 

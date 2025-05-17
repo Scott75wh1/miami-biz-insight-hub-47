@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,10 @@ import AIAssistant from '@/components/ai-assistant/AIAssistant';
 import { useUserType } from '@/hooks/useUserType';
 import { useDistrictSelection } from '@/hooks/useDistrictSelection';
 import { useToast } from '@/hooks/use-toast';
+import { RevenueWidget } from './widgets/RevenueWidget';
+import { VisitorWidget } from './widgets/VisitorWidget';
+import { CategoryWidget } from './widgets/CategoryWidget';
+import LatestAnalytics from './LatestAnalytics';
 
 const Dashboard: React.FC = () => {
   const { userType } = useUserType();
@@ -95,6 +100,12 @@ const Dashboard: React.FC = () => {
                 />
               </CardContent>
             </Card>
+            
+            {/* Dashboard Widgets */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <RevenueWidget />
+              <VisitorWidget />
+            </div>
           </div>
           
           {userType === 'marketer' && (
@@ -111,6 +122,17 @@ const Dashboard: React.FC = () => {
                     district={selectedDistrict}
                     businessType={businessInfo.type}
                   />
+                </CardContent>
+              </Card>
+              
+              <CategoryWidget />
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Analisi Recente</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <LatestAnalytics />
                 </CardContent>
               </Card>
             </div>
